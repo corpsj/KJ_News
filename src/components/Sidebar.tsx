@@ -1,8 +1,7 @@
-import { getMostViewedArticles } from "@/lib/utils";
+import type { Article } from "@/lib/types";
 import ArticleCardHorizontal from "./ArticleCardHorizontal";
 
-export default function Sidebar() {
-  const mostViewed = getMostViewedArticles(5);
+export default function Sidebar({ articles }: { articles: Article[] }) {
 
   return (
     <aside className="space-y-8">
@@ -11,7 +10,7 @@ export default function Sidebar() {
           많이 본 뉴스
         </h3>
         <div>
-          {mostViewed.map((article, i) => (
+          {articles.map((article, i) => (
             <ArticleCardHorizontal
               key={article.id}
               article={article}

@@ -1,15 +1,16 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { categories } from "@/lib/mock-data";
 import {
+  getCategoryBySlug,
+  getCategorySlugs,
   getArticlesByCategory,
   getMostViewedArticles,
-  formatDate,
-  formatDateShort,
-} from "@/lib/utils";
-import type { Article } from "@/lib/types";
+} from "@/lib/db";
+import { formatDate, formatDateShort } from "@/lib/utils";
 import CategoryBadge from "@/components/CategoryBadge";
+
+export const revalidate = 60;
 
 function hasImage(url: string | undefined | null): boolean {
   return !!url && url.trim().length > 0;
@@ -19,13 +20,14 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return categories.map((cat) => ({ slug: cat.slug }));
+export async function generateStaticParams() {
+  const slugs = await getCategorySlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const category = categories.find((c) => c.slug === slug);
+  const category = await getCategoryBySlug(slug);
   if (!category) return {};
   return {
     title: `${category.name} - 광전타임즈`,
@@ -35,11 +37,13 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function CategoryPage({ params }: PageProps) {
   const { slug } = await params;
-  const category = categories.find((c) => c.slug === slug);
+  const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const allArticles = getArticlesByCategory(slug);
-  const mostViewed = getMostViewedArticles(5);
+  const [allArticles, mostViewed] = await Promise.all([
+    getArticlesByCategory(slug),
+    getMostViewedArticles(5),
+  ]);
 
   if (allArticles.length === 0) {
     return (

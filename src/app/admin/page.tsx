@@ -1,14 +1,13 @@
 "use client";
 
 import { useAdmin } from "@/contexts/AdminContext";
-import { categories } from "@/lib/mock-data";
 import { ARTICLE_STATUS_LABELS, type ArticleStatus } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import StatCard from "@/components/admin/StatCard";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  const { articles } = useAdmin();
+  const { articles, categories } = useAdmin();
 
   const today = new Date().toISOString().slice(0, 10);
   const todayCount = articles.filter((a) => a.publishedAt.slice(0, 10) === today).length;

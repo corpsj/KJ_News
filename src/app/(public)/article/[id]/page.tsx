@@ -1,11 +1,18 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { articles } from "@/lib/mock-data";
-import { getArticleById, getRelatedArticles, formatDate } from "@/lib/utils";
+import {
+  getArticleById,
+  getRelatedArticles,
+  getPublishedArticleIds,
+  getMostViewedArticles,
+} from "@/lib/db";
+import { formatDate } from "@/lib/utils";
 import CategoryBadge from "@/components/CategoryBadge";
 import ArticleCard from "@/components/ArticleCard";
 import Sidebar from "@/components/Sidebar";
+
+export const revalidate = 3600;
 
 function hasImage(url: string | undefined | null): boolean {
   return !!url && url.trim().length > 0;
@@ -15,13 +22,14 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export function generateStaticParams() {
-  return articles.map((a) => ({ id: a.id }));
+export async function generateStaticParams() {
+  const ids = await getPublishedArticleIds();
+  return ids.map((id) => ({ id }));
 }
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const article = getArticleById(id);
+  const article = await getArticleById(id);
   if (!article) return {};
   return {
     title: `${article.title} - 광전타임즈`,
@@ -31,10 +39,13 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ArticlePage({ params }: PageProps) {
   const { id } = await params;
-  const article = getArticleById(id);
+  const article = await getArticleById(id);
   if (!article) notFound();
 
-  const related = getRelatedArticles(article, 4);
+  const [related, mostViewed] = await Promise.all([
+    getRelatedArticles(article, 4),
+    getMostViewedArticles(5),
+  ]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -137,7 +148,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
         <div className="hidden lg:block">
           <div className="sticky top-36">
-            <Sidebar />
+            <Sidebar articles={mostViewed} />
           </div>
         </div>
       </div>

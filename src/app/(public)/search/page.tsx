@@ -1,6 +1,8 @@
-import { searchArticles } from "@/lib/utils";
+import { searchArticles } from "@/lib/db";
 import ArticleCard from "@/components/ArticleCard";
 import SearchBar from "@/components/SearchBar";
+
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -16,7 +18,7 @@ export async function generateMetadata({ searchParams }: PageProps) {
 export default async function SearchPage({ searchParams }: PageProps) {
   const { q } = await searchParams;
   const query = q || "";
-  const results = query ? searchArticles(query) : [];
+  const results = query ? await searchArticles(query) : [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">

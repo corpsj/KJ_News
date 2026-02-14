@@ -75,10 +75,10 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} 광전타임즈. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-xs">
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               이용약관
             </Link>
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               개인정보처리방침
             </Link>
             <Link href="#" className="hover:text-white transition-colors">

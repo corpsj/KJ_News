@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin, type ArticleFormData } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
-import { categories, authors } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/client";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import ArticlePreview from "@/components/admin/ArticlePreview";
 import type { Article, ArticleStatus } from "@/lib/types";
@@ -13,28 +13,39 @@ const steps = ["기본 정보", "본문 작성", "태그 & 설정"];
 
 export default function ArticleForm({ article }: { article?: Article }) {
   const router = useRouter();
-  const { addArticle, updateArticle } = useAdmin();
+  const { addArticle, updateArticle, categories, authors } = useAdmin();
   const { toast } = useToast();
   const isEdit = !!article;
+  const supabase = useMemo(() => createClient(), []);
 
   const [step, setStep] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [form, setForm] = useState<ArticleFormData>({
     title: article?.title ?? "",
     subtitle: article?.subtitle ?? "",
     excerpt: article?.excerpt ?? "",
     content: article?.content ?? "",
-    categorySlug: article?.category.slug ?? categories[0].slug,
-    authorId: article?.author.id ?? authors[0].id,
+    categorySlug: article?.category.slug ?? "",
+    authorId: article?.author.id ?? "",
     thumbnailUrl: article?.thumbnailUrl ?? "",
     tags: article?.tags.join(", ") ?? "",
   });
+
+  useEffect(() => {
+    if (!form.categorySlug && categories.length > 0) {
+      setForm((prev) => ({ ...prev, categorySlug: categories[0].slug }));
+    }
+    if (!form.authorId && authors.length > 0) {
+      setForm((prev) => ({ ...prev, authorId: authors[0].id }));
+    }
+  }, [authors, categories, form.authorId, form.categorySlug]);
 
   function update(field: keyof ArticleFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit(status: ArticleStatus = "draft") {
+  async function handleSubmit(status: ArticleStatus = "draft") {
     if (!form.title.trim()) {
       toast("제목을 입력해주세요.", "error");
       setStep(0);
@@ -47,10 +58,18 @@ export default function ArticleForm({ article }: { article?: Article }) {
     }
 
     if (isEdit && article) {
-      updateArticle(article.id, { ...form, status });
+      const updated = await updateArticle(article.id, { ...form, status });
+      if (!updated) {
+        toast("기사 수정에 실패했습니다.", "error");
+        return;
+      }
       toast("기사가 수정되었습니다.", "success");
     } else {
-      addArticle({ ...form, status });
+      const created = await addArticle({ ...form, status });
+      if (!created) {
+        toast("기사 저장에 실패했습니다.", "error");
+        return;
+      }
       const msgs: Record<string, string> = {
         draft: "임시저장되었습니다.",
         pending_review: "검토 요청되었습니다.",
@@ -59,6 +78,27 @@ export default function ArticleForm({ article }: { article?: Article }) {
       toast(msgs[status] || "저장되었습니다.", "success");
     }
     router.push("/admin/articles");
+  }
+
+  async function handleImageUpload(file: File | null) {
+    if (!file) return;
+    setIsUploadingImage(true);
+
+    const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+    const filePath = `articles/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    const { error } = await supabase.storage.from("press_image").upload(filePath, file);
+
+    if (error) {
+      setIsUploadingImage(false);
+      toast("이미지 업로드에 실패했습니다.", "error");
+      return;
+    }
+
+    const { data } = supabase.storage.from("press_image").getPublicUrl(filePath);
+    update("thumbnailUrl", data.publicUrl);
+    setIsUploadingImage(false);
+    toast("이미지가 업로드되었습니다.", "success");
   }
 
   return (
@@ -154,6 +194,15 @@ export default function ArticleForm({ article }: { article?: Article }) {
               value={form.thumbnailUrl}
               onChange={(e) => update("thumbnailUrl", e.target.value)}
             />
+            <label className="block text-[13px] font-medium text-gray-700 mt-3 mb-1.5">이미지 업로드</label>
+            <input
+              className="admin-input"
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload(e.target.files?.[0] || null)}
+              disabled={isUploadingImage}
+            />
+            {isUploadingImage && <p className="text-[11px] text-gray-400 mt-1">업로드 중...</p>}
             <p className="text-[11px] text-gray-400 mt-1">비워두면 텍스트 기사로 표시됩니다.</p>
           </div>
         </div>

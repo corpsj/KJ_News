@@ -7,17 +7,21 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: { preventDefault: () => void }) {
     e.preventDefault();
     setError(false);
-    if (login(username, password)) {
+    const ok = await login(email, password);
+    if (ok) {
       router.push("/admin");
     } else {
       setError(true);
+      setToastMessage("이메일 또는 비밀번호가 올바르지 않습니다.");
+      window.setTimeout(() => setToastMessage(""), 2400);
     }
   }
 
@@ -38,13 +42,14 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-            아이디
+            이메일
           </label>
           <input
             className="admin-input"
-            placeholder="아이디 입력"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            placeholder="admin@kjtimes.co.kr"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             autoFocus
           />
         </div>
@@ -63,7 +68,7 @@ export default function LoginPage() {
 
         {error && (
           <p className="text-[12px] text-gray-900 font-medium">
-            아이디 또는 비밀번호가 올바르지 않습니다.
+            이메일 또는 비밀번호가 올바르지 않습니다.
           </p>
         )}
 
@@ -73,8 +78,15 @@ export default function LoginPage() {
       </form>
 
       <p className="text-[11px] text-gray-400 mt-6 text-center">
-        테스트 계정: admin / 1234
+        테스트 계정: admin@kjtimes.co.kr / kjtimes2026!
       </p>
+
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-[100] flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium shadow-sm border bg-white text-gray-900 border-gray-200">
+          <svg className="w-4 h-4 text-gray-900 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

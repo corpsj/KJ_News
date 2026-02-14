@@ -5,19 +5,42 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
+  useEffect,
   type ReactNode,
 } from "react";
-import type { Article, ArticleStatus } from "@/lib/types";
-import { articles as initialArticles, categories, authors } from "@/lib/mock-data";
+import type { Article, ArticleStatus, Author, Category } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+
+interface DbArticle {
+  id: number;
+  title: string;
+  subtitle: string;
+  excerpt: string;
+  content: string;
+  category_id: number | null;
+  author_id: number | null;
+  published_at: string | null;
+  thumbnail_url: string;
+  view_count: number;
+  tags: string[];
+  status: string;
+  source: string;
+  source_url: string;
+  categories: { id: number; name: string; slug: string; description: string; color: string } | null;
+  authors: { id: number; name: string; role: string; avatar_url: string } | null;
+}
 
 interface AdminContextValue {
   articles: Article[];
-  addArticle: (data: ArticleFormData) => Article;
-  updateArticle: (id: string, data: ArticleFormData) => Article | null;
-  updateArticleStatus: (id: string, status: ArticleStatus) => void;
-  deleteArticle: (id: string) => void;
+  categories: Category[];
+  authors: Author[];
+  addArticle: (data: ArticleFormData) => Promise<Article | null>;
+  updateArticle: (id: string, data: ArticleFormData) => Promise<Article | null>;
+  updateArticleStatus: (id: string, status: ArticleStatus) => Promise<void>;
+  deleteArticle: (id: string) => Promise<void>;
   getArticle: (id: string) => Article | undefined;
-  importArticle: (data: ImportArticleData) => Article;
+  importArticle: (data: ImportArticleData) => Promise<Article | null>;
 }
 
 export interface ArticleFormData {
@@ -43,8 +66,86 @@ export interface ImportArticleData {
 
 const AdminContext = createContext<AdminContextValue | null>(null);
 
+function mapCategory(row: {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  color: string;
+}): Category {
+  return {
+    id: String(row.id),
+    name: row.name,
+    slug: row.slug,
+    description: row.description || "",
+    color: row.color || "#64748b",
+  };
+}
+
+function mapAuthor(row: { id: number; name: string; role: string; avatar_url: string }): Author {
+  return {
+    id: String(row.id),
+    name: row.name,
+    role: row.role,
+    avatarUrl: row.avatar_url || "",
+  };
+}
+
+function mapArticle(row: DbArticle): Article {
+  return {
+    id: String(row.id),
+    title: row.title,
+    subtitle: row.subtitle || "",
+    excerpt: row.excerpt || "",
+    content: row.content || "",
+    category: row.categories
+      ? mapCategory(row.categories)
+      : { id: "0", name: "미분류", slug: "uncategorized", description: "", color: "#64748b" },
+    author: row.authors
+      ? mapAuthor(row.authors)
+      : { id: "0", name: "알 수 없음", role: "", avatarUrl: "" },
+    publishedAt: row.published_at || "",
+    thumbnailUrl: row.thumbnail_url || "",
+    viewCount: row.view_count || 0,
+    tags: row.tags || [],
+    status: row.status as ArticleStatus,
+    source: row.source || undefined,
+    sourceUrl: row.source_url || undefined,
+  };
+}
+
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [articles, setArticles] = useState<Article[]>(() => [...initialArticles]);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      const [articleRes, categoryRes, authorRes] = await Promise.all([
+        supabase
+          .from("articles")
+          .select("*, categories(*), authors(*)")
+          .order("published_at", { ascending: false }),
+        supabase.from("categories").select("*").order("id"),
+        supabase.from("authors").select("*").order("id"),
+      ]);
+
+      if (!mounted) return;
+
+      setArticles(((articleRes.data as unknown as DbArticle[] | null) || []).map(mapArticle));
+      setCategories((categoryRes.data || []).map(mapCategory));
+      setAuthors((authorRes.data || []).map(mapAuthor));
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
 
   const getArticle = useCallback(
     (id: string) => articles.find((a) => a.id === id),
@@ -52,114 +153,167 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   );
 
   const addArticle = useCallback(
-    (data: ArticleFormData): Article => {
+    async (data: ArticleFormData): Promise<Article | null> => {
       const category = categories.find((c) => c.slug === data.categorySlug) ?? categories[0];
       const author = authors.find((a) => a.id === data.authorId) ?? authors[0];
-      const newArticle: Article = {
-        id: String(Date.now()),
-        title: data.title,
-        subtitle: data.subtitle,
-        excerpt: data.excerpt,
-        content: data.content,
-        category,
-        author,
-        publishedAt: data.status === "published" ? new Date().toISOString() : "",
-        thumbnailUrl: data.thumbnailUrl || "",
-        viewCount: 0,
-        tags: data.tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-        status: data.status || "draft",
-      };
-      setArticles((prev) => [newArticle, ...prev]);
-      return newArticle;
+      if (!category || !author) return null;
+
+      const status = data.status || "draft";
+      const { data: row, error } = await supabase
+        .from("articles")
+        .insert({
+          title: data.title,
+          subtitle: data.subtitle,
+          excerpt: data.excerpt,
+          content: data.content,
+          category_id: Number(category.id),
+          author_id: Number(author.id),
+          published_at: status === "published" ? new Date().toISOString() : null,
+          thumbnail_url: data.thumbnailUrl || "",
+          tags: data.tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+          status,
+        })
+        .select("*, categories(*), authors(*)")
+        .single();
+
+      if (error || !row) return null;
+
+      const mapped = mapArticle(row as unknown as DbArticle);
+      setArticles((prev) => [mapped, ...prev]);
+      return mapped;
     },
-    []
+    [authors, categories, supabase]
   );
 
   const updateArticle = useCallback(
-    (id: string, data: ArticleFormData): Article | null => {
-      let updated: Article | null = null;
-      setArticles((prev) =>
-        prev.map((a) => {
-          if (a.id !== id) return a;
-          const category = categories.find((c) => c.slug === data.categorySlug) ?? a.category;
-          const author = authors.find((au) => au.id === data.authorId) ?? a.author;
-          updated = {
-            ...a,
-            title: data.title,
-            subtitle: data.subtitle,
-            excerpt: data.excerpt,
-            content: data.content,
-            category,
-            author,
-            thumbnailUrl: data.thumbnailUrl || a.thumbnailUrl,
-            tags: data.tags
-              .split(",")
-              .map((t) => t.trim())
-              .filter(Boolean),
-            status: data.status || a.status,
-            publishedAt: data.status === "published" && a.status !== "published"
+    async (id: string, data: ArticleFormData): Promise<Article | null> => {
+      const existing = articles.find((a) => a.id === id);
+      if (!existing) return null;
+
+      const category = categories.find((c) => c.slug === data.categorySlug) ?? existing.category;
+      const author = authors.find((a) => a.id === data.authorId) ?? existing.author;
+      const status = data.status || existing.status;
+
+      const { data: row, error } = await supabase
+        .from("articles")
+        .update({
+          title: data.title,
+          subtitle: data.subtitle,
+          excerpt: data.excerpt,
+          content: data.content,
+          category_id: Number(category.id),
+          author_id: Number(author.id),
+          thumbnail_url: data.thumbnailUrl || "",
+          tags: data.tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+          status,
+          published_at:
+            status === "published" && existing.status !== "published"
               ? new Date().toISOString()
-              : a.publishedAt,
-          };
-          return updated;
+              : existing.publishedAt || null,
         })
-      );
-      return updated;
+        .eq("id", Number(id))
+        .select("*, categories(*), authors(*)")
+        .single();
+
+      if (error || !row) return null;
+
+      const mapped = mapArticle(row as unknown as DbArticle);
+      setArticles((prev) => prev.map((article) => (article.id === id ? mapped : article)));
+      return mapped;
     },
-    []
+    [articles, authors, categories, supabase]
   );
 
-  const updateArticleStatus = useCallback((id: string, status: ArticleStatus) => {
-    setArticles((prev) =>
-      prev.map((a) => {
-        if (a.id !== id) return a;
-        return {
-          ...a,
-          status,
-          publishedAt: status === "published" && a.status !== "published"
-            ? new Date().toISOString()
-            : a.publishedAt,
-        };
-      })
-    );
-  }, []);
+  const updateArticleStatus = useCallback(
+    async (id: string, status: ArticleStatus) => {
+      const existing = articles.find((a) => a.id === id);
+      if (!existing) return;
 
-  const deleteArticle = useCallback((id: string) => {
-    setArticles((prev) => prev.filter((a) => a.id !== id));
-  }, []);
+      const { data: row, error } = await supabase
+        .from("articles")
+        .update({
+          status,
+          published_at:
+            status === "published" && existing.status !== "published"
+              ? new Date().toISOString()
+              : existing.publishedAt || null,
+        })
+        .eq("id", Number(id))
+        .select("*, categories(*), authors(*)")
+        .single();
+
+      if (error || !row) return;
+
+      const mapped = mapArticle(row as unknown as DbArticle);
+      setArticles((prev) => prev.map((article) => (article.id === id ? mapped : article)));
+    },
+    [articles, supabase]
+  );
+
+  const deleteArticle = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from("articles").delete().eq("id", Number(id));
+      if (error) return;
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+    },
+    [supabase]
+  );
 
   const importArticle = useCallback(
-    (data: ImportArticleData): Article => {
+    async (data: ImportArticleData): Promise<Article | null> => {
       const category = categories.find((c) => c.slug === data.categorySlug) ?? categories[0];
       const author = authors[0];
-      const newArticle: Article = {
-        id: String(Date.now()),
-        title: data.title,
-        subtitle: "",
-        excerpt: data.excerpt || data.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 160),
-        content: data.content,
-        category,
-        author,
-        publishedAt: new Date().toISOString(),
-        thumbnailUrl: "",
-        viewCount: 0,
-        tags: [],
-        status: "pending_review",
-        source: data.source,
-        sourceUrl: data.sourceUrl,
-      };
-      setArticles((prev) => [newArticle, ...prev]);
-      return newArticle;
+      if (!category || !author) return null;
+
+      const { data: row, error } = await supabase
+        .from("articles")
+        .insert({
+          title: data.title,
+          subtitle: "",
+          excerpt:
+            data.excerpt ||
+            data.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 160),
+          content: data.content,
+          category_id: Number(category.id),
+          author_id: Number(author.id),
+          thumbnail_url: "",
+          tags: [],
+          status: "pending_review",
+          source: data.source || "",
+          source_url: data.sourceUrl || "",
+          published_at: null,
+        })
+        .select("*, categories(*), authors(*)")
+        .single();
+
+      if (error || !row) return null;
+
+      const mapped = mapArticle(row as unknown as DbArticle);
+      setArticles((prev) => [mapped, ...prev]);
+      return mapped;
     },
-    []
+    [authors, categories, supabase]
   );
 
   return (
     <AdminContext.Provider
-      value={{ articles, addArticle, updateArticle, updateArticleStatus, deleteArticle, getArticle, importArticle }}
+      value={{
+        articles,
+        categories,
+        authors,
+        addArticle,
+        updateArticle,
+        updateArticleStatus,
+        deleteArticle,
+        getArticle,
+        importArticle,
+      }}
     >
       {children}
     </AdminContext.Provider>

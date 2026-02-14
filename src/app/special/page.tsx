@@ -1,14 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { categories } from "@/lib/mock-data";
 import {
   getSpecialEditionArticles,
   getMostViewedArticles,
-  formatDate,
-  formatDateShort,
-} from "@/lib/utils";
+  getCategories,
+} from "@/lib/db";
+import { formatDate, formatDateShort } from "@/lib/utils";
 import type { Article } from "@/lib/types";
 import CategoryBadge from "@/components/CategoryBadge";
+
+export const revalidate = 60;
 
 function hasImage(url: string | undefined | null): boolean {
   return !!url && url.trim().length > 0;
@@ -49,9 +50,12 @@ function HeadlineRow({
   );
 }
 
-export default function SpecialEditionPage() {
-  const allArticles = getSpecialEditionArticles();
-  const mostViewed = getMostViewedArticles(5);
+export default async function SpecialEditionPage() {
+  const [allArticles, mostViewed, categories] = await Promise.all([
+    getSpecialEditionArticles(),
+    getMostViewedArticles(5),
+    getCategories(),
+  ]);
 
   const withImages = allArticles.filter((a) => hasImage(a.thumbnailUrl));
   const heroArticle = withImages[0];

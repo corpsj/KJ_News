@@ -1,13 +1,16 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   getArticleById,
-  getSpecialEditionArticles,
   getSpecialRelatedArticles,
-  formatDate,
-} from "@/lib/utils";
+  getPublishedArticleIds,
+} from "@/lib/db";
+import { formatDate } from "@/lib/utils";
 import CategoryBadge from "@/components/CategoryBadge";
+
+export const revalidate = 3600;
 
 function hasImage(url: string | undefined | null): boolean {
   return !!url && url.trim().length > 0;
@@ -17,13 +20,14 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export function generateStaticParams() {
-  return getSpecialEditionArticles().map((a) => ({ id: a.id }));
+export async function generateStaticParams() {
+  const ids = await getPublishedArticleIds();
+  return ids.map((id) => ({ id }));
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const article = getArticleById(id);
+  const article = await getArticleById(id);
   if (!article) return {};
   return {
     title: `${article.title} - 창간특별호 - 광전타임즈`,
@@ -33,10 +37,10 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function SpecialArticlePage({ params }: PageProps) {
   const { id } = await params;
-  const article = getArticleById(id);
+  const article = await getArticleById(id);
   if (!article) notFound();
 
-  const related = getSpecialRelatedArticles(article, 4);
+  const related = await getSpecialRelatedArticles(article, 4);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

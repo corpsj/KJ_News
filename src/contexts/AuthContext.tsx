@@ -6,60 +6,92 @@ import {
   useState,
   useCallback,
   useEffect,
+  useMemo,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
 interface User {
-  username: string;
+  email: string;
+  name: string;
+  role: string;
 }
 
 interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const AUTH_KEY = "kj_auth";
+
+function mapUser(user: SupabaseUser | null): User | null {
+  if (!user || !user.email) return null;
+  const metadata = user.user_metadata as Record<string, string | undefined> | undefined;
+  return {
+    email: user.email,
+    name: metadata?.name || metadata?.full_name || user.email,
+    role: metadata?.role || "admin",
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(AUTH_KEY);
-      if (stored) {
-        setUser(JSON.parse(stored));
-      }
-    } catch {
-      /* empty */
-    }
-    setIsLoading(false);
-  }, []);
+    let mounted = true;
 
-  const login = useCallback((username: string, password: string): boolean => {
-    if (username === "admin" && password === "1234") {
-      const u: User = { username };
-      setUser(u);
-      sessionStorage.setItem(AUTH_KEY, JSON.stringify(u));
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSession(data.session);
+      setUser(mapUser(data.session?.user ?? null));
+      setIsLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setUser(mapUser(nextSession?.user ?? null));
+      setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const login = useCallback(
+    async (email: string, password: string): Promise<boolean> => {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.session) return false;
+      setSession(data.session);
+      setUser(mapUser(data.session.user));
       return true;
-    }
-    return false;
-  }, []);
+    },
+    [supabase]
+  );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    setSession(null);
     setUser(null);
-    sessionStorage.removeItem(AUTH_KEY);
     router.push("/admin/login");
-  }, [router]);
+  }, [router, supabase]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: !!user, isLoading, user, login, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated: !!session, isLoading, user, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

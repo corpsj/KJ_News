@@ -1,16 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
-import { articles, categories } from "@/lib/mock-data";
-import { getLatestArticles, getArticlesByCategory, getMostViewedArticles } from "@/lib/utils";
+import {
+  getPublishedArticles,
+  getArticlesByCategory,
+  getMostViewedArticles,
+  getCategories,
+} from "@/lib/db";
 import { formatDate, formatDateShort } from "@/lib/utils";
+import type { Article } from "@/lib/types";
 import CategoryBadge from "@/components/CategoryBadge";
 import BreakingNewsTicker from "@/components/BreakingNewsTicker";
+
+export const revalidate = 60;
 
 function hasImage(url: string | undefined | null): boolean {
   return !!url && url.trim().length > 0;
 }
 
-function HeadlineRow({ article, showExcerpt = false }: { article: typeof articles[0]; showExcerpt?: boolean }) {
+function HeadlineRow({ article, showExcerpt = false }: { article: Article; showExcerpt?: boolean }) {
   return (
     <Link
       href={`/article/${article.id}`}
@@ -39,9 +46,12 @@ function HeadlineRow({ article, showExcerpt = false }: { article: typeof article
   );
 }
 
-export default function Home() {
-  const latestArticles = getLatestArticles(18);
-  const mostViewed = getMostViewedArticles(5);
+export default async function Home() {
+  const [latestArticles, mostViewed, categories] = await Promise.all([
+    getPublishedArticles(18),
+    getMostViewedArticles(5),
+    getCategories(),
+  ]);
 
   /* 1면 장식: 이미지 있는 기사 중 최신 3개만 선별 */
   const withImages = latestArticles.filter((a) => hasImage(a.thumbnailUrl));
@@ -54,6 +64,12 @@ export default function Home() {
 
   /* 카테고리별 기사 (상위 6개 카테고리) */
   const displayCategories = categories.slice(0, 6);
+  const categoryArticles = await Promise.all(
+    displayCategories.map(async (category) => ({
+      category,
+      articles: await getArticlesByCategory(category.slug),
+    }))
+  );
 
   return (
     <>
@@ -146,8 +162,7 @@ export default function Home() {
           {/* ── 좌: 카테고리별 텍스트 기사 목록 (2단) ── */}
           <div className="lg:col-span-9">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
-              {displayCategories.map((category) => {
-                const catArticles = getArticlesByCategory(category.slug);
+              {categoryArticles.map(({ category, articles: catArticles }) => {
                 if (catArticles.length === 0) return null;
                 return (
                   <section key={category.id}>

@@ -4,13 +4,12 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
-import { categories } from "@/lib/mock-data";
 import { ARTICLE_STATUS_LABELS, type ArticleStatus, type Article } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import ArticlePreview from "@/components/admin/ArticlePreview";
 
 export default function ArticlesPage() {
-  const { articles, deleteArticle } = useAdmin();
+  const { articles, categories, deleteArticle } = useAdmin();
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
@@ -45,16 +44,16 @@ export default function ArticlesPage() {
     }
   }
 
-  function handleBulkDelete() {
+  async function handleBulkDelete() {
     if (!confirm(`${selected.size}개의 기사를 삭제하시겠습니까?`)) return;
-    selected.forEach((id) => deleteArticle(id));
+    await Promise.all(Array.from(selected).map((id) => deleteArticle(id)));
     toast(`${selected.size}개 기사가 삭제되었습니다.`, "success");
     setSelected(new Set());
   }
 
-  function handleDelete(id: string, title: string) {
+  async function handleDelete(id: string, title: string) {
     if (!confirm(`"${title}" 기사를 삭제하시겠습니까?`)) return;
-    deleteArticle(id);
+    await deleteArticle(id);
     toast("기사가 삭제되었습니다.", "success");
     setSelected((prev) => {
       const next = new Set(prev);
