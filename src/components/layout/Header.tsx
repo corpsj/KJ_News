@@ -47,9 +47,13 @@ export default function Header({ categories }: { categories: Category[] }) {
       <div className="bg-gray-50 border-b border-gray-100 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
           <span>{getTodayKorean()}</span>
-          {isAdmin && (
+          {isAdmin ? (
             <Link href="/admin" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
               관리자
+            </Link>
+          ) : (
+            <Link href="/admin/login" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
+              로그인
             </Link>
           )}
         </div>
@@ -189,13 +193,21 @@ export default function Header({ categories }: { categories: Category[] }) {
               {cat.name}
             </Link>
           ))}
-          {isAdmin && (
+          {isAdmin ? (
             <Link
               href="/admin"
               className="block py-3 text-sm font-medium text-gray-500 border-t border-gray-100 mt-2 pt-3"
               onClick={() => setMobileMenuOpen(false)}
             >
               관리자 페이지
+            </Link>
+          ) : (
+            <Link
+              href="/admin/login"
+              className="block py-3 text-sm font-medium text-gray-500 border-t border-gray-100 mt-2 pt-3"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              로그인
             </Link>
           )}
         </nav>
