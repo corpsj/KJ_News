@@ -101,9 +101,39 @@ export default async function ArticlePage({ params }: PageProps) {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <article aria-label={article.title} className="lg:col-span-2">
-          <ViewCounter articleId={id} />
-          <div className="mb-4">
+         <article aria-label={article.title} className="lg:col-span-2">
+           <ViewCounter articleId={id} />
+           <script
+             type="application/ld+json"
+             dangerouslySetInnerHTML={{
+               __html: JSON.stringify({
+                 "@context": "https://schema.org",
+                 "@type": "NewsArticle",
+                 "headline": article.title,
+                 "description": article.excerpt,
+                 "image": article.thumbnailUrl || DEFAULT_OG_IMAGE,
+                 "datePublished": article.publishedAt,
+                 "dateModified": article.publishedAt,
+                 "author": {
+                   "@type": "Person",
+                   "name": article.author.name
+                 },
+                 "publisher": {
+                   "@type": "Organization",
+                   "name": SITE_NAME,
+                   "logo": {
+                     "@type": "ImageObject",
+                     "url": `${SITE_URL}/brand/KJ_sloganLogo.png`
+                   }
+                 },
+                 "mainEntityOfPage": {
+                   "@type": "WebPage",
+                   "@id": `${SITE_URL}/article/${id}`
+                 }
+               })
+             }}
+           />
+           <div className="mb-4">
             <CategoryBadge category={article.category} size="md" />
           </div>
 
