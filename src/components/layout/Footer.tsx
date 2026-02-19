@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getCategories } from "@/lib/db";
-import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 
 export default async function Footer() {
   const categories = await getCategories();
@@ -74,13 +73,7 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-8 border-t border-gray-800">
-          <div className="mb-8 flex justify-center">
-            <NewsletterSubscribe />
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-10 pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
             &copy; {new Date().getFullYear()} 광전타임즈. All rights reserved.
           </p>

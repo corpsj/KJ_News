@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
-import { nfSyncLogs } from "@/lib/nf-mock-data";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  try {
-    return NextResponse.json(nfSyncLogs);
-  } catch (error) {
-    void error;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
     return NextResponse.json(
-      { error: "Failed to fetch sync logs" },
-      { status: 500 }
+      { error: "Unauthorized: User not authenticated" },
+      { status: 401 }
     );
   }
+
+  return NextResponse.json({ deliveries: [], total: 0 });
 }

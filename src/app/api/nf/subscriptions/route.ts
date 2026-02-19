@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
-import { nfConnection } from "@/lib/nf-mock-data";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  return NextResponse.json(nfConnection);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Unauthorized: User not authenticated" },
+      { status: 401 }
+    );
+  }
+
+  return NextResponse.json({ status: "disconnected", subscriptions: [] });
 }

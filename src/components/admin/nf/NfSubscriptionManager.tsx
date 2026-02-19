@@ -13,8 +13,7 @@ function maskApiKey(key: string): string {
 export default function NfSubscriptionManager() {
   const [conn, setConn] = useState<NfConnection | null>(null);
   const [loading, setLoading] = useState(true);
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<"success" | "fail" | null>(null);
+
 
   useEffect(() => {
     fetch("/api/nf/connection")
@@ -47,15 +46,7 @@ export default function NfSubscriptionManager() {
     setConn({ ...conn, collect_categories: next, updated_at: new Date().toISOString() });
   }
 
-  function handleTestConnection() {
-    setTesting(true);
-    setTestResult(null);
-    setTimeout(() => {
-      setTesting(false);
-      setTestResult(conn?.status === "connected" ? "success" : "fail");
-      setTimeout(() => setTestResult(null), 3000);
-    }, 1200);
-  }
+
 
   if (loading) {
     return (
@@ -108,24 +99,9 @@ export default function NfSubscriptionManager() {
             <button
               type="button"
               className="admin-btn admin-btn-ghost text-[12px]"
-              onClick={handleTestConnection}
-              disabled={testing}
+              disabled
             >
-              {testing ? (
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  테스트 중
-                </span>
-              ) : testResult === "success" ? (
-                <span className="text-green-600">연결 정상</span>
-              ) : testResult === "fail" ? (
-                <span className="text-red-500">연결 실패</span>
-              ) : (
-                "연결 테스트"
-              )}
+              준비 중
             </button>
           </div>
 

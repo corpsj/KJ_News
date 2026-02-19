@@ -37,24 +37,26 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={handleKakaoShare}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
-        aria-label="카카오톡 공유"
-        title="카카오톡 공유"
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden="true"
+      {process.env.NEXT_PUBLIC_KAKAO_APP_ID && (
+        <button
+          type="button"
+          onClick={handleKakaoShare}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+          aria-label="카카오톡 공유"
+          title="카카오톡 공유"
         >
-          <path d="M12 2C6.48 2 2 5.58 2 10c0 2.54 1.19 4.85 3.15 6.37.08.5.33 1.52.88 2.88.15.38.74.42 1.01.08.27-.34 1.66-2.11 2.31-2.99.6.08 1.21.12 1.85.12 5.52 0 10-3.58 10-8s-4.48-8-10-8zm0 14c-.64 0-1.25-.04-1.85-.12l-1.89 2.4c-.3.38-.92.35-1.07-.05-.5-1.13-.7-1.95-.8-2.38C4.9 13.75 3.9 11.99 3.9 10c0-3.86 3.57-7 8.1-7s8.1 3.14 8.1 7-3.57 7-8.1 7z" />
-        </svg>
-        카카오톡
-      </button>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M12 2C6.48 2 2 5.58 2 10c0 2.54 1.19 4.85 3.15 6.37.08.5.33 1.52.88 2.88.15.38.74.42 1.01.08.27-.34 1.66-2.11 2.31-2.99.6.08 1.21.12 1.85.12 5.52 0 10-3.58 10-8s-4.48-8-10-8zm0 14c-.64 0-1.25-.04-1.85-.12l-1.89 2.4c-.3.38-.92.35-1.07-.05-.5-1.13-.7-1.95-.8-2.38C4.9 13.75 3.9 11.99 3.9 10c0-3.86 3.57-7 8.1-7s8.1 3.14 8.1 7-3.57 7-8.1 7z" />
+          </svg>
+          카카오톡
+        </button>
+      )}
 
       <button
         type="button"
