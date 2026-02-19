@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import type { NfArticle } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface NfArticlePreviewProps {
   article: NfArticle;
@@ -126,7 +127,7 @@ export default function NfArticlePreview({ article, isImported, isPublished, onI
             {article.content && (
               <div
                 className="mt-5 text-[14px] md:text-[15px] leading-[1.8] text-gray-700 [&_p]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-1"
-                dangerouslySetInnerHTML={{ __html: article.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
               />
             )}
 

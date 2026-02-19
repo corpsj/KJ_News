@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { formatDate } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface ArticlePreviewProps {
   article: {
@@ -109,12 +110,12 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
             </div>
           )}
 
-          <div className="border-t border-gray-200 mt-6 pt-6">
-            <div
-              className="text-[15px] md:text-[16px] leading-[1.8] text-gray-700 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-4 [&_ul]:my-3 [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:pl-6 [&_li]:mb-1 [&_a]:text-gray-900 [&_a]:underline"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
-          </div>
+           <div className="border-t border-gray-200 mt-6 pt-6">
+             <div
+               className="text-[15px] md:text-[16px] leading-[1.8] text-gray-700 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-4 [&_ul]:my-3 [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:pl-6 [&_li]:mb-1 [&_a]:text-gray-900 [&_a]:underline"
+               dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
+             />
+           </div>
         </div>
       </div>
     </div>
