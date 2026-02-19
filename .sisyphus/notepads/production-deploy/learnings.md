@@ -73,3 +73,54 @@
 - No breaking changes; all imports resolved correctly
 
 **Commit**: `refactor: extract NF constants from mock data file` (a5e0944)
+
+## [2026-02-19] Task 4: XSS fix (dangerouslySetInnerHTML sanitize)
+
+**Completed**: Add `sanitizeHtml()` wrapping to all `dangerouslySetInnerHTML` usages in admin preview components + TDD test
+
+**Actions taken**:
+1. Created `src/__tests__/sanitize.test.ts` with 3 tests:
+   - removes script tags
+   - removes onerror event handlers
+   - removes javascript: protocol in href
+2. Updated `src/components/admin/ArticlePreview.tsx`:
+   - Added import: `import { sanitizeHtml } from "@/lib/sanitize";`
+   - Line 115: Changed `dangerouslySetInnerHTML={{ __html: article.content }}` to `dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}`
+3. Updated `src/components/admin/nf/NfArticlePreview.tsx`:
+   - Added import: `import { sanitizeHtml } from "@/lib/sanitize";`
+   - Line 129: Changed `dangerouslySetInnerHTML={{ __html: article.content }}` to `dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}`
+4. Verified: `npm run test` passed (4 tests: 1 smoke + 3 sanitize)
+5. Verified: `npm run build` passed (51 pages generated)
+
+**Key findings**:
+- `src/lib/sanitize.ts` already exists with DOMPurify integration
+- Reference pattern: `src/app/(public)/article/[id]/page.tsx:155` already uses sanitizeHtml correctly
+- sanitizeHtml() uses DOMPurify with whitelist: p, br, strong, em, u, s, h2-h4, ul, ol, li, a, img, blockquote, pre, code, table, div, span
+- Allowed attributes: href, src, alt, title, target, rel, class
+- Data attributes disabled (ALLOW_DATA_ATTR: false)
+
+**Commit**: `fix(security): sanitize dangerouslySetInnerHTML in admin previews` (c232ce2)
+
+## [2026-02-19] Task 6: Author ID fix
+
+**Completed**: Replace hardcoded `authorId: "a1"` with logged-in user ID from AuthContext
+
+**Actions taken**:
+1. Updated `src/contexts/AuthContext.tsx`:
+   - Added `id: string` field to User interface (line 17)
+   - Updated `mapUser()` function to include `id: user.id` (line 36)
+2. Updated `src/components/admin/nf/NfArticleExplorer.tsx`:
+   - Added import: `import { useAuth } from "@/contexts/AuthContext";` (line 6)
+   - Added hook call: `const { user } = useAuth();` (line 14)
+   - Updated `authors` destructuring in useAdmin hook (line 12)
+   - Line 62: Changed `authorId: "a1"` to `authorId: user?.id ?? authors[0]?.id ?? ""`
+3. Verified: `grep -n '"a1"' src/components/admin/nf/NfArticleExplorer.tsx` returned 0 results
+4. Verified: `npm run build` passed (51 pages generated)
+
+**Key findings**:
+- Supabase User object has `id` field (UUID)
+- AuthContext now properly exposes user.id for downstream components
+- Fallback chain: user?.id (logged-in user) → authors[0]?.id (first author) → "" (empty string)
+- No breaking changes; all imports resolved correctly
+
+**Commit**: `fix: use logged-in user ID for NF article publish` (6607cde)
