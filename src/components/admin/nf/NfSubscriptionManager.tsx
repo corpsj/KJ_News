@@ -1,132 +1,195 @@
 "use client";
 
-import { useState } from "react";
-import type { NfSubscription } from "@/lib/types";
-import { nfSubscriptions as initialSubs, cronToKorean } from "@/lib/nf-mock-data";
+import { useState, useEffect } from "react";
+import type { NfConnection } from "@/lib/types";
+import { NF_CATEGORIES } from "@/lib/nf-constants";
 import { formatDate } from "@/lib/utils";
-import NfSubscriptionModal from "./NfSubscriptionModal";
+
+function maskApiKey(key: string): string {
+  if (key.length <= 16) return key;
+  return `${key.slice(0, 8)}${"*".repeat(8)}...${key.slice(-4)}`;
+}
 
 export default function NfSubscriptionManager() {
-  const [subscriptions, setSubscriptions] = useState<NfSubscription[]>(() => [...initialSubs]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingSub, setEditingSub] = useState<NfSubscription | null>(null);
+  const [conn, setConn] = useState<NfConnection | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<"success" | "fail" | null>(null);
 
-  function toggleActive(id: string) {
-    setSubscriptions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, is_active: !s.is_active } : s))
+  useEffect(() => {
+    fetch("/api/nf/connection")
+      .then((r) => r.json())
+      .then((data) => setConn(data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  function toggleActive() {
+    if (!conn) return;
+    const next = !conn.is_active;
+    fetch("/api/nf/connection", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_active: next }),
+    });
+    setConn({ ...conn, is_active: next, updated_at: new Date().toISOString() });
+  }
+
+  function toggleCategory(cat: string) {
+    if (!conn) return;
+    const next = conn.collect_categories.includes(cat)
+      ? conn.collect_categories.filter((c) => c !== cat)
+      : [...conn.collect_categories, cat];
+    fetch("/api/nf/connection", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ collect_categories: next }),
+    });
+    setConn({ ...conn, collect_categories: next, updated_at: new Date().toISOString() });
+  }
+
+  function handleTestConnection() {
+    setTesting(true);
+    setTestResult(null);
+    setTimeout(() => {
+      setTesting(false);
+      setTestResult(conn?.status === "connected" ? "success" : "fail");
+      setTimeout(() => setTestResult(null), 3000);
+    }, 1200);
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="admin-card p-5 space-y-4">
+          <div className="nf-skeleton h-5 w-40" />
+          <div className="nf-skeleton h-10 w-full rounded-lg" />
+          <div className="nf-skeleton h-10 w-full rounded-lg" />
+          <div className="flex gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={`cskel-${i}`} className="nf-skeleton h-8 w-16 rounded-full" />
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
-  function handleDelete(id: string) {
-    if (!confirm("구독을 삭제하시겠습니까?")) return;
-    setSubscriptions((prev) => prev.filter((s) => s.id !== id));
+  if (!conn) {
+    return (
+      <div className="nf-empty-state">
+        <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.54a4.5 4.5 0 00-6.364-6.364L4.5 8.25" />
+        </svg>
+        <p className="text-[13px] text-gray-400 mb-1">연동 정보 없음</p>
+        <p className="text-[12px] text-gray-300">뉴스팩토리 연동 설정을 불러올 수 없습니다</p>
+      </div>
+    );
   }
 
-  function handleEdit(sub: NfSubscription) {
-    setEditingSub(sub);
-    setShowModal(true);
-  }
-
-  function handleSave(data: Partial<NfSubscription>) {
-    if (editingSub) {
-      setSubscriptions((prev) =>
-        prev.map((s) => (s.id === editingSub.id ? { ...s, ...data, updated_at: new Date().toISOString() } : s))
-      );
-    } else {
-      const newSub: NfSubscription = {
-        id: `sub-${Date.now()}`,
-        name: data.name || "",
-        filter_regions: data.filter_regions || [],
-        filter_categories: data.filter_categories || [],
-        filter_keywords: data.filter_keywords || [],
-        schedule_cron: data.schedule_cron || "0 9 * * *",
-        max_articles: data.max_articles || 10,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setSubscriptions((prev) => [newSub, ...prev]);
-    }
-    setEditingSub(null);
-  }
+  const statusConfig = {
+    connected: { label: "연결됨", className: "admin-badge-published" },
+    disconnected: { label: "미연결", className: "admin-badge-draft" },
+    error: { label: "오류", className: "admin-badge-draft" },
+  };
+  const st = statusConfig[conn.status];
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-[15px] font-semibold text-gray-900">구독 관리</p>
-        <button
-          className="admin-btn admin-btn-primary"
-          onClick={() => { setEditingSub(null); setShowModal(true); }}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          새 구독 추가
-        </button>
-      </div>
+      <p className="text-[15px] font-semibold text-gray-900">연동 설정</p>
 
-      <div className="space-y-3">
-        {subscriptions.map((sub) => (
-          <div key={sub.id} className="admin-card p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[14px] font-medium text-gray-900">{sub.name}</h3>
-              <button
-                onClick={() => toggleActive(sub.id)}
-                className={`admin-toggle ${sub.is_active ? "active" : ""}`}
-                aria-label={sub.is_active ? "비활성화" : "활성화"}
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {sub.filter_regions.map((r) => (
-                <span key={r} className="admin-badge">{r}</span>
-              ))}
-              {sub.filter_categories.map((c) => (
-                <span key={c} className="admin-badge">{c}</span>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3 text-[12px] text-gray-400 mb-3">
-              <span>{cronToKorean(sub.schedule_cron)}</span>
-              <span>·</span>
-              <span>최대 {sub.max_articles}건</span>
-              {sub.last_delivered_at && (
-                <>
-                  <span>·</span>
-                  <span>마지막 전송: {formatDate(sub.last_delivered_at)}</span>
-                </>
-              )}
-            </div>
-
+      <div className="admin-card overflow-hidden divide-y divide-gray-100">
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <button
-                className="admin-btn admin-btn-ghost text-[12px] py-1 px-3"
-                onClick={() => handleEdit(sub)}
-              >
-                수정
-              </button>
-              <button
-                className="admin-btn admin-btn-ghost text-[12px] py-1 px-3"
-                onClick={() => handleDelete(sub.id)}
-              >
-                삭제
-              </button>
+              {conn.status === "connected" && <span className="nf-live-dot flex-shrink-0" />}
+              <span className="text-[14px] font-medium text-gray-900">연결 상태</span>
+              <span className={st.className}>{st.label}</span>
             </div>
+            <button
+              type="button"
+              className="admin-btn admin-btn-ghost text-[12px]"
+              onClick={handleTestConnection}
+              disabled={testing}
+            >
+              {testing ? (
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  테스트 중
+                </span>
+              ) : testResult === "success" ? (
+                <span className="text-green-600">연결 정상</span>
+              ) : testResult === "fail" ? (
+                <span className="text-red-500">연결 실패</span>
+              ) : (
+                "연결 테스트"
+              )}
+            </button>
           </div>
-        ))}
 
-        {subscriptions.length === 0 && (
-          <div className="py-12 text-center text-gray-400 text-[13px]">구독이 없습니다.</div>
-        )}
+          <div className="flex items-center gap-3 text-[13px]">
+            <span className="text-gray-400 flex-shrink-0">클라이언트</span>
+            <span className="font-medium text-gray-900">{conn.client_name}</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-[13px] mt-1.5">
+            <span className="text-gray-400 flex-shrink-0">API Key</span>
+            <code className="text-[12px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded font-mono">
+              {maskApiKey(conn.api_key)}
+            </code>
+          </div>
+
+          {conn.connected_at && (
+            <p className="text-[11px] text-gray-300 mt-2">
+              연결일 {formatDate(conn.connected_at)}
+            </p>
+          )}
+        </div>
+
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[14px] font-medium text-gray-900">자동 수집</span>
+              <p className="text-[12px] text-gray-400 mt-0.5">{conn.collect_schedule}</p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleActive}
+              className={`admin-toggle flex-shrink-0 ${conn.is_active ? "active" : ""}`}
+              aria-label={conn.is_active ? "자동 수집 비활성화" : "자동 수집 활성화"}
+            />
+          </div>
+
+          {conn.last_synced_at && (
+            <p className="text-[11px] text-gray-300 mt-2">
+              마지막 동기화 {formatDate(conn.last_synced_at)}
+            </p>
+          )}
+        </div>
+
+        <div className="px-5 py-4">
+          <p className="text-[14px] font-medium text-gray-900 mb-3">수집 카테고리</p>
+          <div className="flex flex-wrap gap-1.5">
+            {NF_CATEGORIES.map((cat) => (
+              <button
+                type="button"
+                key={cat}
+                onClick={() => toggleCategory(cat)}
+                className={`nf-filter-chip text-[12px] py-1 px-3 ${
+                  conn.collect_categories.includes(cat) ? "active" : ""
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-gray-300 mt-2">
+            {conn.collect_categories.length}개 카테고리 수집 중
+          </p>
+        </div>
       </div>
-
-      {showModal && (
-        <NfSubscriptionModal
-          subscription={editingSub || undefined}
-          onSave={handleSave}
-          onClose={() => { setShowModal(false); setEditingSub(null); }}
-        />
-      )}
     </div>
   );
 }

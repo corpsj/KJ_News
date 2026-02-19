@@ -1,28 +1,16 @@
-import type { NfArticle, NfSubscription, NfDelivery } from "./types";
+import type { NfArticle, NfConnection, NfSyncLog } from "./types";
 
-export const NF_REGIONS = ["광주", "전남", "전북", "서울", "경기", "부산"];
-
-export const NF_CATEGORIES = ["행정", "복지", "문화", "경제", "안전", "정치", "사회", "스포츠", "오피니언"];
-
-export const NF_CATEGORY_MAP: Record<string, string> = {
-  행정: "society",
-  복지: "society",
-  문화: "culture",
-  경제: "economy",
-  안전: "society",
-  기타: "society",
-  정치: "politics",
-  사회: "society",
-  스포츠: "sports",
-  오피니언: "opinion",
+export const nfConnection: NfConnection = {
+  api_key: "sk_live_9f4a2e7c8b1d3f6a5e0c9b8d7f2a4e6c1b3d5f8a0e9c7b6d4f2a8e1c3b5d7f",
+  status: "connected",
+  client_name: "KJTIMES",
+  is_active: true,
+  collect_categories: ["행정", "복지", "문화", "경제", "정치", "사회"],
+  collect_schedule: "하루 3회 (06:00, 12:00, 18:00)",
+  last_synced_at: "2026-02-19T06:00:45+09:00",
+  connected_at: "2026-02-01T09:00:00+09:00",
+  updated_at: "2026-02-19T06:01:00+09:00",
 };
-
-export const NF_CRON_PRESETS = [
-  { label: "매일 오전 9시", value: "0 9 * * *" },
-  { label: "매일 오후 5시", value: "0 17 * * *" },
-  { label: "하루 2회 (오전 9시, 오후 5시)", value: "0 9,17 * * *" },
-  { label: "매 시간", value: "0 * * * *" },
-];
 
 export const nfArticles: NfArticle[] = [
   {
@@ -253,156 +241,67 @@ export const nfArticles: NfArticle[] = [
   },
 ];
 
-export const nfSubscriptions: NfSubscription[] = [
+export const nfSyncLogs: NfSyncLog[] = [
   {
-    id: "nf-sub-1",
-    name: "광주 행정 뉴스",
-    filter_regions: ["광주"],
-    filter_categories: ["행정"],
-    filter_keywords: [],
-    schedule_cron: "0 9 * * *",
-    schedule_tz: "Asia/Seoul",
-    max_articles: 10,
-    is_active: true,
-    last_delivered_at: "2026-02-13T09:00:30+09:00",
-    created_at: "2026-02-01T09:00:00+09:00",
-    updated_at: "2026-02-13T09:01:00+09:00",
-  },
-  {
-    id: "nf-sub-2",
-    name: "전남 복지 소식",
-    filter_regions: ["전남"],
-    filter_categories: ["복지", "사회"],
-    filter_keywords: [],
-    schedule_cron: "0 9,17 * * *",
-    schedule_tz: "Asia/Seoul",
-    max_articles: 5,
-    is_active: true,
-    last_delivered_at: "2026-02-13T17:00:20+09:00",
-    created_at: "2026-02-02T10:15:00+09:00",
-    updated_at: "2026-02-13T17:01:00+09:00",
-  },
-  {
-    id: "nf-sub-3",
-    name: "전남 문화 행사",
-    filter_regions: ["전남", "광주"],
-    filter_categories: ["문화"],
-    filter_keywords: [],
-    schedule_cron: "0 17 * * *",
-    schedule_tz: "Asia/Seoul",
-    max_articles: 8,
-    is_active: true,
-    last_delivered_at: "2026-02-12T17:00:10+09:00",
-    created_at: "2026-02-03T08:40:00+09:00",
-    updated_at: "2026-02-12T17:01:10+09:00",
-  },
-  {
-    id: "nf-sub-4",
-    name: "경제 동향",
-    filter_regions: ["광주", "전남", "서울"],
-    filter_categories: ["경제"],
-    filter_keywords: [],
-    schedule_cron: "0 * * * *",
-    schedule_tz: "Asia/Seoul",
-    max_articles: 20,
-    is_active: false,
-    created_at: "2026-02-03T13:20:00+09:00",
-    updated_at: "2026-02-10T09:05:00+09:00",
-  },
-  {
-    id: "nf-sub-5",
-    name: "안전 속보",
-    filter_regions: ["광주", "전남"],
-    filter_categories: ["안전"],
-    filter_keywords: [],
-    schedule_cron: "0 9 * * *",
-    schedule_tz: "Asia/Seoul",
-    max_articles: 5,
-    is_active: true,
-    last_delivered_at: "2026-02-13T09:00:45+09:00",
-    created_at: "2026-02-04T07:55:00+09:00",
-    updated_at: "2026-02-13T09:01:15+09:00",
-  },
-];
-
-export const nfDeliveries: NfDelivery[] = [
-  {
-    id: "nf-delivery-1",
-    subscription_id: "nf-sub-1",
+    id: "sync-1",
     article_count: 6,
     status: "success",
-    delivered_at: "2026-02-13T09:00:30+09:00",
+    synced_at: "2026-02-19T06:00:45+09:00",
   },
   {
-    id: "nf-delivery-2",
-    subscription_id: "nf-sub-2",
+    id: "sync-2",
     article_count: 4,
     status: "success",
-    delivered_at: "2026-02-13T17:00:20+09:00",
+    synced_at: "2026-02-18T18:00:32+09:00",
   },
   {
-    id: "nf-delivery-3",
-    subscription_id: "nf-sub-3",
-    article_count: 3,
-    status: "success",
-    delivered_at: "2026-02-12T17:00:10+09:00",
-  },
-  {
-    id: "nf-delivery-4",
-    subscription_id: "nf-sub-5",
-    article_count: 2,
-    status: "success",
-    delivered_at: "2026-02-13T09:00:45+09:00",
-  },
-  {
-    id: "nf-delivery-5",
-    subscription_id: "nf-sub-2",
+    id: "sync-3",
     article_count: 5,
     status: "success",
-    delivered_at: "2026-02-12T09:00:18+09:00",
+    synced_at: "2026-02-18T12:00:18+09:00",
   },
   {
-    id: "nf-delivery-6",
-    subscription_id: "nf-sub-1",
+    id: "sync-4",
     article_count: 7,
     status: "success",
-    delivered_at: "2026-02-12T09:00:34+09:00",
+    synced_at: "2026-02-18T06:00:34+09:00",
   },
   {
-    id: "nf-delivery-7",
-    subscription_id: "nf-sub-3",
-    article_count: 1,
+    id: "sync-5",
+    article_count: 3,
     status: "success",
-    delivered_at: "2026-02-11T17:00:12+09:00",
+    synced_at: "2026-02-17T18:00:22+09:00",
   },
   {
-    id: "nf-delivery-8",
-    subscription_id: "nf-sub-4",
+    id: "sync-6",
+    article_count: 5,
+    status: "success",
+    synced_at: "2026-02-17T12:00:10+09:00",
+  },
+  {
+    id: "sync-7",
     article_count: 0,
     status: "failed",
     error_message: "API 응답 시간 초과",
-    delivered_at: "2026-02-10T10:00:00+09:00",
+    synced_at: "2026-02-17T06:00:00+09:00",
   },
   {
-    id: "nf-delivery-9",
-    subscription_id: "nf-sub-5",
+    id: "sync-8",
+    article_count: 4,
+    status: "success",
+    synced_at: "2026-02-16T18:00:28+09:00",
+  },
+  {
+    id: "sync-9",
     article_count: 0,
     status: "failed",
     error_message: "인증 토큰 만료",
-    delivered_at: "2026-02-08T09:00:00+09:00",
+    synced_at: "2026-02-15T06:00:00+09:00",
   },
   {
-    id: "nf-delivery-10",
-    subscription_id: "nf-sub-4",
+    id: "sync-10",
     article_count: 2,
-    status: "pending",
-    delivered_at: "2026-02-13T18:00:00+09:00",
+    status: "success",
+    synced_at: "2026-02-14T18:00:15+09:00",
   },
 ];
-
-export function cronToKorean(cron: string): string {
-  // Convert common cron expressions to Korean labels
-  const preset = NF_CRON_PRESETS.find((p) => p.value === cron);
-  if (preset) return preset.label;
-  return cron;
-}
