@@ -20,8 +20,8 @@ export default function AdminHeader({ onMenuToggle }: { onMenuToggle?: () => voi
 
   return (
     <header className="h-14 bg-white border-b border-gray-200 flex items-center px-5 sticky top-0 z-30">
-      <button onClick={onMenuToggle} className="p-1.5 -ml-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors lg:hidden mr-2" aria-label="메뉴">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+      <button type="button" onClick={onMenuToggle} className="p-1.5 -ml-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors lg:hidden mr-2" aria-label="메뉴">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
       </button>
 
       <div className="min-w-0">

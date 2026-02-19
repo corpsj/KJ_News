@@ -106,10 +106,10 @@ export default function ArticlesPage() {
       {selected.size > 0 && (
         <div className="flex items-center gap-3 py-2 px-4 bg-gray-50 border border-gray-200 rounded-lg">
           <span className="text-[13px] text-gray-700 font-medium">{selected.size}개 선택</span>
-          <button className="admin-btn admin-btn-danger text-[12px] py-1 px-3" onClick={handleBulkDelete}>
+          <button type="button" className="admin-btn admin-btn-danger text-[12px] py-1 px-3" onClick={handleBulkDelete}>
             선택 삭제
           </button>
-          <button className="text-[12px] text-gray-400 hover:text-gray-700" onClick={() => setSelected(new Set())}>
+          <button type="button" className="text-[12px] text-gray-400 hover:text-gray-700" onClick={() => setSelected(new Set())}>
             선택 해제
           </button>
         </div>
@@ -160,9 +160,9 @@ export default function ArticlesPage() {
                   <td className="py-3 px-3 text-right text-gray-500">{a.viewCount.toLocaleString()}</td>
                   <td className="py-3 px-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => setPreviewArticle(a)}>미리보기</button>
+                      <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => setPreviewArticle(a)}>미리보기</button>
                       <Link href={`/admin/articles/${a.id}/edit`} className="admin-btn admin-btn-ghost text-[11px] py-1 px-2">수정</Link>
-                      <button className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => handleDelete(a.id, a.title)}>삭제</button>
+                      <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => handleDelete(a.id, a.title)}>삭제</button>
                     </div>
                   </td>
                 </tr>
@@ -200,7 +200,7 @@ export default function ArticlesPage() {
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Link href={`/admin/articles/${a.id}/edit`} className="admin-btn admin-btn-ghost text-[11px] py-1 px-2">수정</Link>
-                    <button className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => handleDelete(a.id, a.title)}>삭제</button>
+                    <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => handleDelete(a.id, a.title)}>삭제</button>
                   </div>
                 </div>
               </div>

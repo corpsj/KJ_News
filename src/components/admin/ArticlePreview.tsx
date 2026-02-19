@@ -55,10 +55,11 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
 
       <div className="relative z-[71] w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl md:my-8 bg-white md:rounded-xl md:border md:border-gray-200 overflow-y-auto animate-fade-in">
         <button
+          type="button"
           onClick={onClose}
           className="sticky top-0 float-right m-3 w-10 h-10 rounded-lg bg-white/80 backdrop-blur border border-gray-200 flex items-center justify-center z-10 hover:bg-gray-100 transition-colors"
         >
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>

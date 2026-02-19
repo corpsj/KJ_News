@@ -51,11 +51,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <button
+            type="button"
             className="md:hidden fixed top-3 left-3 z-[60] w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shadow-sm"
             onClick={() => setMobileOpen(true)}
             aria-label="메뉴 열기"
           >
-            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
