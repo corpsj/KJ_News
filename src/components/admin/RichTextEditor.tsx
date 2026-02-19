@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageExtension from "@tiptap/extension-image";
@@ -55,6 +55,8 @@ export default function RichTextEditor({
   onImageUpload,
 }: RichTextEditorProps) {
   const isInternalChange = useRef(false);
+  const [showImageInput, setShowImageInput] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -82,22 +84,31 @@ export default function RichTextEditor({
     isInternalChange.current = false;
   }, [value, editor]);
 
-  async function handleImageInsert() {
-    if (onImageUpload) {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        const url = await onImageUpload(file);
-        if (url) editor?.chain().focus().setImage({ src: url }).run();
-      };
-      input.click();
-    } else {
-      const url = prompt("이미지 URL을 입력하세요:");
+  function handleImageInsert() {
+    setShowImageInput((prev) => !prev);
+    setImageUrl("");
+  }
+
+  function insertImageByUrl() {
+    const url = imageUrl.trim();
+    if (!url) return;
+    editor?.chain().focus().setImage({ src: url }).run();
+    setShowImageInput(false);
+    setImageUrl("");
+  }
+
+  function insertImageByFile() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file || !onImageUpload) return;
+      const url = await onImageUpload(file);
       if (url) editor?.chain().focus().setImage({ src: url }).run();
-    }
+      setShowImageInput(false);
+    };
+    input.click();
   }
 
   function handleLinkInsert() {
@@ -159,6 +170,44 @@ export default function RichTextEditor({
           ),
         )}
       </div>
+
+      {showImageInput && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
+          <input
+            ref={(el) => el?.focus()}
+            type="text"
+            className="flex-1 text-sm px-2.5 py-1.5 border border-gray-300 rounded bg-white focus:outline-none focus:border-gray-900"
+            placeholder="이미지 URL을 입력하세요"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") insertImageByUrl(); }}
+          />
+          <button
+            type="button"
+            className="text-xs font-medium px-3 py-1.5 bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
+            onClick={insertImageByUrl}
+          >
+            삽입
+          </button>
+          {onImageUpload && (
+            <button
+              type="button"
+              className="text-xs px-3 py-1.5 border border-gray-300 rounded text-gray-600 hover:bg-gray-100 transition-colors"
+              onClick={insertImageByFile}
+            >
+              파일 업로드
+            </button>
+          )}
+          <button
+            type="button"
+            className="text-gray-400 hover:text-gray-600 p-1"
+            onClick={() => setShowImageInput(false)}
+            aria-label="닫기"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="admin-editor">
         <EditorContent editor={editor} />
