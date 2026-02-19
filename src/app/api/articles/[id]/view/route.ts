@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 
 interface RouteParams {
@@ -11,6 +12,16 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
 
   if (isNaN(articleId)) {
     return NextResponse.json({ error: "Invalid article ID" }, { status: 400 });
+  }
+
+  const cookieStore = await cookies();
+  const viewedCookie = cookieStore.get("viewed_articles");
+  const viewedIds = viewedCookie?.value
+    ? viewedCookie.value.split(",").filter(Boolean)
+    : [];
+
+  if (viewedIds.includes(id)) {
+    return NextResponse.json({ success: false, message: "Already viewed" });
   }
 
   const supabase = await createServiceClient();
@@ -39,5 +50,16 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  return NextResponse.json({ viewCount: data.view_count });
+  const newViewedIds = [...viewedIds, id].join(",");
+  const response = NextResponse.json({
+    success: true,
+    viewCount: data.view_count,
+  });
+  response.cookies.set("viewed_articles", newViewedIds, {
+    maxAge: 60 * 60 * 24, // 24 hours
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+  return response;
 }
