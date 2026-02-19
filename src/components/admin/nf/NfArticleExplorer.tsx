@@ -3,13 +3,15 @@
 import { useState, useEffect, useMemo } from "react";
 import type { NfArticle } from "@/lib/types";
 import { useAdmin } from "@/contexts/AdminContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { NF_CATEGORIES, NF_CATEGORY_MAP } from "@/lib/nf-constants";
 import { formatDate } from "@/lib/utils";
 import NfArticlePreview from "./NfArticlePreview";
 
 export default function NfArticleExplorer() {
-  const { importArticle, addArticle } = useAdmin();
+  const { importArticle, addArticle, authors } = useAdmin();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NfArticle[]>([]);
@@ -59,7 +61,7 @@ export default function NfArticleExplorer() {
       content: article.content || article.summary || "",
       excerpt: article.summary || "",
       categorySlug,
-      authorId: "a1",
+      authorId: user?.id ?? authors[0]?.id ?? "",
       thumbnailUrl: article.images?.[0] || "",
       tags: article.category || "",
       status: "published",

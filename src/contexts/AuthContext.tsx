@@ -14,6 +14,7 @@ import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
 interface User {
+  id: string;
   email: string;
   name: string;
   role: string;
@@ -33,6 +34,7 @@ function mapUser(user: SupabaseUser | null): User | null {
   if (!user || !user.email) return null;
   const metadata = user.user_metadata as Record<string, string | undefined> | undefined;
   return {
+    id: user.id,
     email: user.email,
     name: metadata?.name || metadata?.full_name || user.email,
     role: metadata?.role || "admin",
