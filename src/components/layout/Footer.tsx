@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getCategories } from "@/lib/db";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 
 export default async function Footer() {
   const categories = await getCategories();
   return (
-    <footer className="bg-gray-900 text-gray-400">
+    <footer role="contentinfo" className="bg-gray-900 text-gray-400">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -25,36 +26,38 @@ export default async function Footer() {
           </div>
 
           {/* Categories */}
-          <div>
-            <h4 className="text-sm font-bold text-white mb-4">카테고리</h4>
-            <ul className="space-y-2">
-              {categories.slice(0, 4).map((cat) => (
-                <li key={cat.id}>
-                  <Link
-                    href={`/category/${cat.slug}`}
-                    className="text-sm hover:text-white transition-colors"
-                  >
-                    {cat.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-white mb-4">&nbsp;</h4>
-            <ul className="space-y-2">
-              {categories.slice(4).map((cat) => (
-                <li key={cat.id}>
-                  <Link
-                    href={`/category/${cat.slug}`}
-                    className="text-sm hover:text-white transition-colors"
-                  >
-                    {cat.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <nav aria-label="푸터 카테고리 메뉴">
+            <div>
+              <h4 className="text-sm font-bold text-white mb-4">카테고리</h4>
+              <ul className="space-y-2">
+                {categories.slice(0, 4).map((cat) => (
+                  <li key={cat.id}>
+                    <Link
+                      href={`/category/${cat.slug}`}
+                      className="text-sm hover:text-white transition-colors"
+                    >
+                      {cat.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-white mb-4">&nbsp;</h4>
+              <ul className="space-y-2">
+                {categories.slice(4).map((cat) => (
+                  <li key={cat.id}>
+                    <Link
+                      href={`/category/${cat.slug}`}
+                      className="text-sm hover:text-white transition-colors"
+                    >
+                      {cat.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
 
           {/* Info */}
           <div>
@@ -71,7 +74,13 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-10 pt-8 border-t border-gray-800">
+          <div className="mb-8 flex justify-center">
+            <NewsletterSubscribe />
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
             &copy; {new Date().getFullYear()} 광전타임즈. All rights reserved.
           </p>

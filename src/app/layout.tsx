@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
+import { Analytics } from "@vercel/analytics/react";
 
 const notoSansKR = Noto_Sans_KR({
   subsets: ["latin"],
@@ -56,6 +57,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${notoSansKR.className} bg-gray-50 antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );

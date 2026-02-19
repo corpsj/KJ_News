@@ -29,7 +29,7 @@ export default function Header({ categories }: { categories: Category[] }) {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <header role="banner" className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       {/* Top bar */}
       <div className="bg-gray-50 border-b border-gray-100 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
@@ -115,7 +115,7 @@ export default function Header({ categories }: { categories: Category[] }) {
       </div>
 
       {/* Navigation */}
-      <nav className="hidden md:block bg-gray-900">
+      <nav aria-label="주 메뉴" className="hidden md:block bg-gray-900">
         <div className="max-w-7xl mx-auto px-4">
           <ul className="flex items-center gap-1">
             <li>
@@ -148,29 +148,31 @@ export default function Header({ categories }: { categories: Category[] }) {
       )}
 
       {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
-          <nav className="px-4 py-2">
+      <div
+        className={`md:hidden border-t border-gray-100 bg-white overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <nav aria-label="모바일 메뉴" className="px-4 py-2">
+          <Link
+            href="/special"
+            className="block py-3 text-sm font-bold text-gray-900 border-b border-gray-50"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            창간특별호
+          </Link>
+          {categories.map((cat) => (
             <Link
-              href="/special"
-              className="block py-3 text-sm font-bold text-gray-900 border-b border-gray-50"
+              key={cat.id}
+              href={`/category/${cat.slug}`}
+              className="block py-3 text-sm font-medium text-gray-700 border-b border-gray-50 hover:text-gray-900 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              창간특별호
+              {cat.name}
             </Link>
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/category/${cat.slug}`}
-                className="block py-3 text-sm font-medium text-gray-700 border-b border-gray-50 hover:text-gray-900 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
+          ))}
+        </nav>
+      </div>
     </header>
   );
 }
