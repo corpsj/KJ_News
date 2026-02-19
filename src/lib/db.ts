@@ -1,6 +1,10 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import type { Article, Category, Author } from "./types";
 
+function escapeLikeQuery(query: string): string {
+  return query.replace(/[%_\\]/g, (char) => `\\${char}`);
+}
+
 interface DbArticle {
   id: number;
   title: string;
@@ -120,12 +124,13 @@ export async function getMostViewedArticles(limit = 5): Promise<Article[]> {
 
 export async function searchArticles(query: string): Promise<Article[]> {
   const supabase = await createServiceClient();
-  const q = `%${query}%`;
+  const escaped = escapeLikeQuery(query);
+  const q = `%${escaped}%`;
   const { data, error } = await supabase
     .from("articles")
     .select(ARTICLE_SELECT)
     .eq("status", "published")
-    .or(`title.ilike.${q},excerpt.ilike.${q},tags.cs.{${query}}`)
+    .or(`title.ilike.${q},excerpt.ilike.${q},tags.cs.{${escaped}}`)
     .order("published_at", { ascending: false });
 
   if (error || !data) return [];

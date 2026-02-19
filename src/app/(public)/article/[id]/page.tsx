@@ -8,6 +8,7 @@ import {
   getMostViewedArticles,
 } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 import CategoryBadge from "@/components/CategoryBadge";
 import ArticleCard from "@/components/ArticleCard";
 import Sidebar from "@/components/Sidebar";
@@ -115,7 +116,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
           <div
             className="prose prose-lg max-w-none text-gray-800 leading-relaxed [&_p]:mb-5"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
           />
 
           <div className="mt-8 pt-6 border-t border-gray-200">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { categories } from "@/lib/mock-data";
+import type { Category } from "@/lib/types";
 import SearchBar from "@/components/SearchBar";
 
 function getTodayKorean() {
@@ -24,7 +24,7 @@ function getTodayKorean() {
   return `${year}년 ${month}월 ${date}일 ${day}`;
 }
 
-export default function Header() {
+export default function Header({ categories }: { categories: Category[] }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -34,14 +34,6 @@ export default function Header() {
       <div className="bg-gray-50 border-b border-gray-100 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
           <span>{getTodayKorean()}</span>
-          <div className="flex items-center gap-4">
-            <Link href="#" className="hover:text-gray-800 transition-colors">
-              로그인
-            </Link>
-            <Link href="#" className="hover:text-gray-800 transition-colors">
-              회원가입
-            </Link>
-          </div>
         </div>
       </div>
 
@@ -50,6 +42,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Mobile hamburger */}
           <button
+            type="button"
             className="md:hidden p-2 -ml-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="메뉴"
@@ -59,6 +52,7 @@ export default function Header() {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               {mobileMenuOpen ? (
                 <path
@@ -92,6 +86,7 @@ export default function Header() {
 
           {/* Search toggle */}
           <button
+            type="button"
             className="p-2 -mr-2 md:hidden"
             onClick={() => setSearchOpen(!searchOpen)}
             aria-label="검색"
@@ -101,6 +96,7 @@ export default function Header() {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"

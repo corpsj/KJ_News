@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { categories } from "@/lib/mock-data";
+import { getCategories } from "@/lib/db";
 
-export default function Footer() {
+export default async function Footer() {
+  const categories = await getCategories();
   return (
     <footer className="bg-gray-900 text-gray-400">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -81,9 +82,9 @@ export default function Footer() {
             <Link href="/privacy" className="hover:text-white transition-colors">
               개인정보처리방침
             </Link>
-            <Link href="#" className="hover:text-white transition-colors">
+            <a href="mailto:jebo@kjtimes.co.kr" className="hover:text-white transition-colors">
               광고문의
-            </Link>
+            </a>
           </div>
         </div>
       </div>
