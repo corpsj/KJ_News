@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Category } from "@/lib/types";
 import SearchBar from "@/components/SearchBar";
+import { createClient } from "@/lib/supabase/client";
 
 function getTodayKorean() {
   const now = new Date();
@@ -27,13 +28,30 @@ function getTodayKorean() {
 export default function Header({ categories }: { categories: Category[] }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setIsAdmin(!!data.session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
-    <header role="banner" className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       {/* Top bar */}
       <div className="bg-gray-50 border-b border-gray-100 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
           <span>{getTodayKorean()}</span>
+          {isAdmin && (
+            <Link href="/admin" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
+              관리자
+            </Link>
+          )}
         </div>
       </div>
 
@@ -171,6 +189,15 @@ export default function Header({ categories }: { categories: Category[] }) {
               {cat.name}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="block py-3 text-sm font-medium text-gray-500 border-t border-gray-100 mt-2 pt-3"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              관리자 페이지
+            </Link>
+          )}
         </nav>
       </div>
     </header>
