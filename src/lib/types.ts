@@ -55,26 +55,22 @@ export interface NfArticle {
   processed_at?: string;
 }
 
-export interface NfSubscription {
-  id: string;
-  name: string;
-  filter_regions: string[];
-  filter_categories: string[];
-  filter_keywords: string[];
-  schedule_cron: string;
-  schedule_tz?: string;
-  max_articles: number;
+export interface NfConnection {
+  api_key: string;
+  status: 'connected' | 'disconnected' | 'error';
+  client_name: string;
   is_active: boolean;
-  last_delivered_at?: string;
-  created_at: string;
+  collect_categories: string[];
+  collect_schedule: string;
+  last_synced_at?: string;
+  connected_at: string;
   updated_at: string;
 }
 
-export interface NfDelivery {
+export interface NfSyncLog {
   id: string;
-  subscription_id: string;
   article_count: number;
   status: 'success' | 'failed' | 'pending';
   error_message?: string;
-  delivered_at: string;
+  synced_at: string;
 }

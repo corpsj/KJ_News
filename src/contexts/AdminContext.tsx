@@ -224,7 +224,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (error || !row) return null;
 
       const mapped = mapArticle(row as unknown as DbArticle);
-      setArticles((prev) => prev.map((article) => (article.id === id ? mapped : article)));
+      setArticles((prev) => [mapped, ...prev]);
       return mapped;
     },
     [articles, authors, categories, supabase]

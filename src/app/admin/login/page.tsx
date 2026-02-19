@@ -80,7 +80,7 @@ export default function LoginPage() {
       </form>
 
       <p className="text-[11px] text-gray-400 mt-6 text-center">
-        테스트 계정: admin / password
+        광전타임즈 관리자 전용
       </p>
 
       {toastMessage && (

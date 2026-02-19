@@ -8,6 +8,7 @@ import {
   getPublishedArticleIds,
 } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 import CategoryBadge from "@/components/CategoryBadge";
 
 export const revalidate = 3600;
@@ -112,7 +113,7 @@ export default async function SpecialArticlePage({ params }: PageProps) {
 
         <div
           className="prose prose-lg max-w-none text-gray-800 leading-relaxed [&_p]:mb-5"
-          dangerouslySetInnerHTML={{ __html: article.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
         />
 
         {article.tags.length > 0 && (

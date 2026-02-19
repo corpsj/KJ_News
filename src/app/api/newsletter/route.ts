@@ -10,8 +10,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 실제 운영에서는 Supabase DB에 저장하거나 이메일 서비스 연동
-  console.log(`뉴스레터 구독 신청: ${email}`);
+  // TODO: Supabase DB에 저장하거나 이메일 서비스 연동
 
   return NextResponse.json({ message: "구독 신청이 완료되었습니다." });
 }

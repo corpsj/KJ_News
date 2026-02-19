@@ -15,8 +15,8 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch (err) {
-      console.error("Failed to copy link:", err);
+    } catch {
+      /* clipboard API not available */
     }
   };
 
