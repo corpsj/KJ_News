@@ -12,6 +12,10 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import CategoryBadge from "@/components/CategoryBadge";
 import ArticleCard from "@/components/ArticleCard";
 import Sidebar from "@/components/Sidebar";
+import ViewCounter from "@/components/ViewCounter";
+import PrintButton from "@/components/PrintButton";
+import ShareButtons from "@/components/ShareButtons";
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const revalidate = 3600;
 
@@ -32,9 +36,38 @@ export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
   const article = await getArticleById(id);
   if (!article) return {};
+
+  const ogImage = article.thumbnailUrl || DEFAULT_OG_IMAGE;
+
   return {
-    title: `${article.title} - 광전타임즈`,
+    title: article.title,
     description: article.excerpt,
+    openGraph: {
+      type: "article",
+      locale: "ko_KR",
+      siteName: SITE_NAME,
+      title: article.title,
+      description: article.excerpt,
+      url: `${SITE_URL}/article/${id}`,
+      images: [
+        {
+          url: ogImage,
+          width: 800,
+          height: 500,
+          alt: article.title,
+        },
+      ],
+      publishedTime: article.publishedAt,
+      authors: [article.author.name],
+      section: article.category.name,
+      tags: article.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.excerpt,
+      images: [ogImage],
+    },
   };
 }
 
@@ -69,6 +102,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <article className="lg:col-span-2">
+          <ViewCounter articleId={id} />
           <div className="mb-4">
             <CategoryBadge category={article.category} size="md" />
           </div>
@@ -99,6 +133,8 @@ export default async function ArticlePage({ params }: PageProps) {
               <p>{formatDate(article.publishedAt)}</p>
               <p>조회 {article.viewCount.toLocaleString()}</p>
             </div>
+            <PrintButton />
+            <ShareButtons url={`${SITE_URL}/article/${id}`} title={article.title} />
           </div>
 
           {hasImage(article.thumbnailUrl) && (

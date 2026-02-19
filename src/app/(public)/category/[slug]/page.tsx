@@ -4,11 +4,13 @@ import Link from "next/link";
 import {
   getCategoryBySlug,
   getCategorySlugs,
-  getArticlesByCategory,
+  getArticlesByCategoryPaginated,
   getMostViewedArticles,
 } from "@/lib/db";
 import { formatDate, formatDateShort } from "@/lib/utils";
 import CategoryBadge from "@/components/CategoryBadge";
+import Pagination from "@/components/Pagination";
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const revalidate = 60;
 
@@ -18,6 +20,7 @@ function hasImage(url: string | undefined | null): boolean {
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export async function generateStaticParams() {
@@ -30,20 +33,50 @@ export async function generateMetadata({ params }: PageProps) {
   const category = await getCategoryBySlug(slug);
   if (!category) return {};
   return {
-    title: `${category.name} - 광전타임즈`,
-    description: category.description,
+    title: category.name,
+    description:
+      category.description || `${SITE_NAME}의 ${category.name} 뉴스`,
+    openGraph: {
+      type: "website",
+      locale: "ko_KR",
+      siteName: SITE_NAME,
+      title: `${category.name} - ${SITE_NAME}`,
+      description:
+        category.description || `${SITE_NAME}의 ${category.name} 뉴스`,
+      url: `${SITE_URL}/category/${slug}`,
+      images: [
+        {
+          url: DEFAULT_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: SITE_NAME,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${category.name} - ${SITE_NAME}`,
+      description:
+        category.description || `${SITE_NAME}의 ${category.name} 뉴스`,
+      images: [DEFAULT_OG_IMAGE],
+    },
   };
 }
 
-export default async function CategoryPage({ params }: PageProps) {
+export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam || "1", 10));
+  const perPage = 15;
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const [allArticles, mostViewed] = await Promise.all([
-    getArticlesByCategory(slug),
+  const [{ articles: allArticles, total }, mostViewed] = await Promise.all([
+    getArticlesByCategoryPaginated(slug, page, perPage),
     getMostViewedArticles(5),
   ]);
+
+  const totalPages = Math.ceil(total / perPage);
 
   if (allArticles.length === 0) {
     return (
@@ -169,6 +202,8 @@ export default async function CategoryPage({ params }: PageProps) {
               ))}
             </div>
           )}
+
+          <Pagination currentPage={page} totalPages={totalPages} basePath={`/category/${slug}`} />
         </div>
 
         <aside className="lg:col-span-3">

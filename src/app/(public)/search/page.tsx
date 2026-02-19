@@ -1,24 +1,50 @@
-import { searchArticles } from "@/lib/db";
+import { searchArticlesPaginated } from "@/lib/db";
 import ArticleCard from "@/components/ArticleCard";
 import SearchBar from "@/components/SearchBar";
+import Pagination from "@/components/Pagination";
+import { SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: PageProps) {
   const { q } = await searchParams;
+  const title = q ? `"${q}" 검색 결과` : "검색";
+  const description = q
+    ? `${SITE_NAME}에서 "${q}"로 검색한 결과입니다.`
+    : `${SITE_NAME}에서 뉴스를 검색하세요.`;
   return {
-    title: q ? `"${q}" 검색 결과 - 광전타임즈` : "검색 - 광전타임즈",
+    title,
+    description,
+    openGraph: {
+      title: `${title} - ${SITE_NAME}`,
+      description,
+      images: [
+        {
+          url: DEFAULT_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: SITE_NAME,
+        },
+      ],
+    },
   };
 }
 
 export default async function SearchPage({ searchParams }: PageProps) {
-  const { q } = await searchParams;
+  const { q, page: pageParam } = await searchParams;
   const query = q || "";
-  const results = query ? await searchArticles(query) : [];
+  const page = Math.max(1, parseInt(pageParam || "1", 10));
+  const perPage = 12;
+
+  const { articles: results, total } = query
+    ? await searchArticlesPaginated(query, page, perPage)
+    : { articles: [], total: 0 };
+
+  const totalPages = Math.ceil(total / perPage);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -31,7 +57,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       {query && (
         <p className="text-sm text-gray-500 mb-6">
           &ldquo;{query}&rdquo; 검색 결과{" "}
-          <span className="font-bold text-gray-900">{results.length}</span>건
+          <span className="font-bold text-gray-900">{total}</span>건
         </p>
       )}
 
@@ -45,11 +71,14 @@ export default async function SearchPage({ searchParams }: PageProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {results.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {results.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+          <Pagination currentPage={page} totalPages={totalPages} basePath="/search" searchParams={{ q: query }} />
+        </>
       )}
     </div>
   );

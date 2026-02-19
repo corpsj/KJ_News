@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  getPublishedArticles,
+  getPublishedArticlesPaginated,
   getArticlesByCategory,
   getMostViewedArticles,
   getCategories,
@@ -10,6 +10,7 @@ import { formatDate, formatDateShort } from "@/lib/utils";
 import type { Article } from "@/lib/types";
 import CategoryBadge from "@/components/CategoryBadge";
 import BreakingNewsTicker from "@/components/BreakingNewsTicker";
+import Pagination from "@/components/Pagination";
 
 export const revalidate = 60;
 
@@ -46,12 +47,22 @@ function HeadlineRow({ article, showExcerpt = false }: { article: Article; showE
   );
 }
 
-export default async function Home() {
-  const [latestArticles, mostViewed, categories] = await Promise.all([
-    getPublishedArticles(18),
+interface HomeProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam || "1", 10));
+  const perPage = 18;
+
+  const [{ articles: latestArticles, total }, mostViewed, categories] = await Promise.all([
+    getPublishedArticlesPaginated(page, perPage),
     getMostViewedArticles(5),
     getCategories(),
   ]);
+
+  const totalPages = Math.ceil(total / perPage);
 
   /* 1면 장식: 이미지 있는 기사 중 최신 3개만 선별 */
   const withImages = latestArticles.filter((a) => hasImage(a.thumbnailUrl));
@@ -234,6 +245,8 @@ export default async function Home() {
             </div>
           </div>
         </div>
+
+        <Pagination currentPage={page} totalPages={totalPages} basePath="/" />
       </div>
     </>
   );

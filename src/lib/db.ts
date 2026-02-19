@@ -277,3 +277,84 @@ export async function getCategorySlugs(): Promise<string[]> {
   const { data } = await supabase.from("categories").select("slug");
   return (data || []).map((c) => c.slug);
 }
+
+export async function getPublishedArticlesPaginated(
+  page: number,
+  perPage: number
+): Promise<{ articles: Article[]; total: number }> {
+  const supabase = await createServiceClient();
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  const { data, error, count } = await supabase
+    .from("articles")
+    .select(ARTICLE_SELECT, { count: "exact" })
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .range(from, to);
+
+  if (error || !data) return { articles: [], total: 0 };
+  return {
+    articles: (data as unknown as DbArticle[]).map(mapArticle),
+    total: count || 0,
+  };
+}
+
+export async function getArticlesByCategoryPaginated(
+  slug: string,
+  page: number,
+  perPage: number
+): Promise<{ articles: Article[]; total: number }> {
+  const supabase = await createServiceClient();
+
+  const { data: cat } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", slug)
+    .single();
+
+  if (!cat) return { articles: [], total: 0 };
+
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  const { data, error, count } = await supabase
+    .from("articles")
+    .select(ARTICLE_SELECT, { count: "exact" })
+    .eq("category_id", cat.id)
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .range(from, to);
+
+  if (error || !data) return { articles: [], total: 0 };
+  return {
+    articles: (data as unknown as DbArticle[]).map(mapArticle),
+    total: count || 0,
+  };
+}
+
+export async function searchArticlesPaginated(
+  query: string,
+  page: number,
+  perPage: number
+): Promise<{ articles: Article[]; total: number }> {
+  const supabase = await createServiceClient();
+  const escaped = escapeLikeQuery(query);
+  const q = `%${escaped}%`;
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  const { data, error, count } = await supabase
+    .from("articles")
+    .select(ARTICLE_SELECT, { count: "exact" })
+    .eq("status", "published")
+    .or(`title.ilike.${q},excerpt.ilike.${q},tags.cs.{${escaped}}`)
+    .order("published_at", { ascending: false })
+    .range(from, to);
+
+  if (error || !data) return { articles: [], total: 0 };
+  return {
+    articles: (data as unknown as DbArticle[]).map(mapArticle),
+    total: count || 0,
+  };
+}
