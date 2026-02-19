@@ -279,26 +279,47 @@ body {
 }
 
 .admin-editor {
-  min-height: 300px; padding: 16px;
+  min-height: 300px;
   border: 1px solid #e5e7eb; border-top: none;
   border-radius: 0 0 8px 8px;
-  font-size: 15px; line-height: 1.75; color: #1f2937;
-  outline: none; overflow-y: auto;
+  overflow-y: auto;
 }
-.admin-editor:focus {
+.admin-editor .tiptap {
+  min-height: 300px; padding: 16px;
+  font-size: 15px; line-height: 1.75; color: #1f2937;
+  outline: none;
+}
+.admin-editor .tiptap:focus {
   border-color: #111;
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
-.admin-editor:empty::before {
+.admin-editor .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: #9ca3af; pointer-events: none;
+  float: left; height: 0;
 }
-.admin-editor h2 { font-size: 20px; font-weight: 700; margin: 16px 0 8px; }
-.admin-editor h3 { font-size: 17px; font-weight: 600; margin: 12px 0 6px; }
-.admin-editor p { margin: 0 0 8px; }
-.admin-editor ul, .admin-editor ol { margin: 8px 0; padding-left: 24px; }
-.admin-editor li { margin: 2px 0; }
-.admin-editor a { color: #111; text-decoration: underline; }
+.admin-editor .tiptap h2 { font-size: 20px; font-weight: 700; margin: 16px 0 8px; }
+.admin-editor .tiptap h3 { font-size: 17px; font-weight: 600; margin: 12px 0 6px; }
+.admin-editor .tiptap p { margin: 0 0 8px; }
+.admin-editor .tiptap ul, .admin-editor .tiptap ol { margin: 8px 0; padding-left: 24px; }
+.admin-editor .tiptap li { margin: 2px 0; }
+.admin-editor .tiptap a { color: #111; text-decoration: underline; }
+.admin-editor .tiptap blockquote {
+  border-left: 3px solid #d1d5db;
+  padding-left: 16px; margin: 12px 0;
+  color: #6b7280; font-style: italic;
+}
+.admin-editor .tiptap code {
+  background: #f3f4f6; padding: 2px 6px;
+  border-radius: 4px; font-size: 13px;
+}
+.admin-editor .tiptap img {
+  max-width: 100%; height: auto;
+  border-radius: 8px; margin: 12px 0;
+}
+.admin-editor .tiptap hr {
+  border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;
+}
 
 .admin-toolbar {
   display: flex; flex-wrap: wrap; gap: 2px;
@@ -317,6 +338,10 @@ body {
 }
 .admin-toolbar button:hover { background: #e5e7eb; color: #111; }
 .admin-toolbar button.active { background: #111; color: white; }
+.admin-toolbar-sep {
+  width: 1px; align-self: stretch;
+  margin: 4px 4px; background: #e5e7eb;
+}
 
 .admin-tab {
   position: relative; padding: 10px 16px;

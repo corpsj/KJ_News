@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin, type ArticleFormData } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -17,10 +17,16 @@ export default function ArticleForm({ article }: { article?: Article }) {
   const { toast } = useToast();
   const isEdit = !!article;
   const supabase = useMemo(() => createClient(), []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const AUTOSAVE_KEY = `article-form-${article?.id || "new"}`;
 
   const [step, setStep] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [form, setForm] = useState<ArticleFormData>({
     title: article?.title ?? "",
     subtitle: article?.subtitle ?? "",
@@ -31,6 +37,44 @@ export default function ArticleForm({ article }: { article?: Article }) {
     thumbnailUrl: article?.thumbnailUrl ?? "",
     tags: article?.tags.join(", ") ?? "",
   });
+
+  /* ── Auto-restore from localStorage (new articles only) ── */
+  useEffect(() => {
+    if (!isEdit) {
+      const saved = localStorage.getItem(AUTOSAVE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (confirm("이전에 저장된 작업을 복원하시겠습니까?")) {
+            setForm(parsed);
+          } else {
+            localStorage.removeItem(AUTOSAVE_KEY);
+          }
+        } catch {
+          // noop
+        }
+      }
+    }
+  }, [isEdit, AUTOSAVE_KEY]);
+
+  /* ── Auto-save every 10 seconds ── */
+  useEffect(() => {
+    const timer = setInterval(() => {
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(form));
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [form, AUTOSAVE_KEY]);
+
+  /* ── Warn before leaving with unsaved changes ── */
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   useEffect(() => {
     if (!form.categorySlug && categories.length > 0) {
@@ -43,6 +87,22 @@ export default function ArticleForm({ article }: { article?: Article }) {
 
   function update(field: keyof ArticleFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setIsDirty(true);
+  }
+
+  /* ── Step validation on forward navigation ── */
+  function goToStep(target: number) {
+    if (target > step) {
+      if (step === 0 && !form.title.trim()) {
+        toast("제목을 입력해주세요.", "error");
+        return;
+      }
+      if (step === 1 && !form.content.trim()) {
+        toast("본문을 입력해주세요.", "error");
+        return;
+      }
+    }
+    setStep(target);
   }
 
   async function handleSubmit(status: ArticleStatus = "draft") {
@@ -57,31 +117,42 @@ export default function ArticleForm({ article }: { article?: Article }) {
       return;
     }
 
-    if (isEdit && article) {
-      const updated = await updateArticle(article.id, { ...form, status });
-      if (!updated) {
-        toast("기사 수정에 실패했습니다.", "error");
-        return;
+    setIsSubmitting(true);
+    try {
+      if (isEdit && article) {
+        const updated = await updateArticle(article.id, { ...form, status });
+        if (!updated) {
+          toast("기사 수정에 실패했습니다.", "error");
+          return;
+        }
+        toast("기사가 수정되었습니다.", "success");
+      } else {
+        const created = await addArticle({ ...form, status });
+        if (!created) {
+          toast("기사 저장에 실패했습니다.", "error");
+          return;
+        }
+        const msgs: Record<string, string> = {
+          draft: "임시저장되었습니다.",
+          pending_review: "검토 요청되었습니다.",
+          published: "기사가 발행되었습니다.",
+        };
+        toast(msgs[status] || "저장되었습니다.", "success");
       }
-      toast("기사가 수정되었습니다.", "success");
-    } else {
-      const created = await addArticle({ ...form, status });
-      if (!created) {
-        toast("기사 저장에 실패했습니다.", "error");
-        return;
-      }
-      const msgs: Record<string, string> = {
-        draft: "임시저장되었습니다.",
-        pending_review: "검토 요청되었습니다.",
-        published: "기사가 발행되었습니다.",
-      };
-      toast(msgs[status] || "저장되었습니다.", "success");
+      localStorage.removeItem(AUTOSAVE_KEY);
+      setIsDirty(false);
+      router.push("/admin/articles");
+    } finally {
+      setIsSubmitting(false);
     }
-    router.push("/admin/articles");
   }
 
   async function handleImageUpload(file: File | null) {
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast("이미지 파일 크기는 10MB 이하여야 합니다.", "error");
+      return;
+    }
     setIsUploadingImage(true);
 
     const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
@@ -101,6 +172,18 @@ export default function ArticleForm({ article }: { article?: Article }) {
     toast("이미지가 업로드되었습니다.", "success");
   }
 
+  async function handleEditorImageUpload(file: File): Promise<string | null> {
+    const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+    const filePath = `articles/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from("press_image").upload(filePath, file);
+    if (error) {
+      toast("이미지 업로드에 실패했습니다.", "error");
+      return null;
+    }
+    const { data } = supabase.storage.from("press_image").getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Step indicator */}
@@ -108,7 +191,8 @@ export default function ArticleForm({ article }: { article?: Article }) {
         {steps.map((label, i) => (
           <div key={label} className="flex items-center flex-1 last:flex-initial">
             <button
-              onClick={() => setStep(i)}
+              type="button"
+              onClick={() => goToStep(i)}
               className="flex items-center gap-2"
             >
               <span
@@ -139,8 +223,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
       {step === 0 && (
         <div className="admin-card p-6 space-y-5 animate-fade-in">
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">제목 *</label>
+            <label htmlFor="article-title" className="block text-[13px] font-medium text-gray-700 mb-1.5">제목 *</label>
             <input
+              id="article-title"
               className="admin-input"
               placeholder="기사 제목을 입력하세요"
               value={form.title}
@@ -148,8 +233,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
             />
           </div>
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">부제목</label>
+            <label htmlFor="article-subtitle" className="block text-[13px] font-medium text-gray-700 mb-1.5">부제목</label>
             <input
+              id="article-subtitle"
               className="admin-input"
               placeholder="부제목을 입력하세요"
               value={form.subtitle}
@@ -158,8 +244,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">카테고리</label>
+              <label htmlFor="article-category" className="block text-[13px] font-medium text-gray-700 mb-1.5">카테고리</label>
               <select
+                id="article-category"
                 className="admin-input"
                 value={form.categorySlug}
                 onChange={(e) => update("categorySlug", e.target.value)}
@@ -172,8 +259,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
               </select>
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">작성자</label>
+              <label htmlFor="article-author" className="block text-[13px] font-medium text-gray-700 mb-1.5">작성자</label>
               <select
+                id="article-author"
                 className="admin-input"
                 value={form.authorId}
                 onChange={(e) => update("authorId", e.target.value)}
@@ -187,22 +275,60 @@ export default function ArticleForm({ article }: { article?: Article }) {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">썸네일 URL</label>
+            <label htmlFor="article-thumbnail-url" className="block text-[13px] font-medium text-gray-700 mb-1.5">썸네일 URL</label>
             <input
+              id="article-thumbnail-url"
               className="admin-input"
               placeholder="https://example.com/image.jpg (선택사항)"
               value={form.thumbnailUrl}
               onChange={(e) => update("thumbnailUrl", e.target.value)}
             />
-            <label className="block text-[13px] font-medium text-gray-700 mt-3 mb-1.5">이미지 업로드</label>
-            <input
-              className="admin-input"
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleImageUpload(e.target.files?.[0] || null)}
-              disabled={isUploadingImage}
-            />
-            {isUploadingImage && <p className="text-[11px] text-gray-400 mt-1">업로드 중...</p>}
+            <label htmlFor="article-thumbnail-upload" className="block text-[13px] font-medium text-gray-700 mt-3 mb-1.5">이미지 업로드</label>
+            <button
+              type="button"
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                const file = e.dataTransfer.files[0];
+                if (file?.type.startsWith("image/")) handleImageUpload(file);
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              className={`w-full border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                isDragging ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <p className="text-sm text-gray-500">
+                {isUploadingImage ? "업로드 중..." : "이미지를 드래그하거나 클릭하여 업로드"}
+              </p>
+              <input
+                ref={fileInputRef}
+                id="article-thumbnail-upload"
+                className="hidden"
+                type="file"
+                accept="image/*"
+                onChange={(e) => { handleImageUpload(e.target.files?.[0] || null); e.target.value = ""; }}
+                disabled={isUploadingImage}
+              />
+            </button>
+            {form.thumbnailUrl && (
+              <div className="mt-3 relative rounded-lg overflow-hidden border border-gray-200">
+                <img
+                  src={form.thumbnailUrl}
+                  alt="썸네일 미리보기"
+                  className="w-full aspect-[16/9] object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => update("thumbnailUrl", "")}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                  aria-label="썸네일 삭제"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             <p className="text-[11px] text-gray-400 mt-1">비워두면 텍스트 기사로 표시됩니다.</p>
           </div>
         </div>
@@ -212,8 +338,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
       {step === 1 && (
         <div className="space-y-5 animate-fade-in">
           <div className="admin-card p-6">
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">요약</label>
+            <label htmlFor="article-excerpt" className="block text-[13px] font-medium text-gray-700 mb-1.5">요약</label>
             <textarea
+              id="article-excerpt"
               className="admin-input resize-none"
               rows={3}
               placeholder="기사의 핵심 내용을 요약해주세요"
@@ -222,7 +349,7 @@ export default function ArticleForm({ article }: { article?: Article }) {
             />
           </div>
           <div className="admin-card p-6">
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">본문</label>
+            <label htmlFor="article-content" className="block text-[13px] font-medium text-gray-700 mb-1.5">본문</label>
             <RichTextEditor
               value={form.content}
               onChange={(html) => update("content", html)}
@@ -245,8 +372,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
       {step === 2 && (
         <div className="space-y-5 animate-fade-in">
           <div className="admin-card p-6">
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">태그</label>
+            <label htmlFor="article-tags" className="block text-[13px] font-medium text-gray-700 mb-1.5">태그</label>
             <input
+              id="article-tags"
               className="admin-input"
               placeholder="쉼표로 구분 (예: 정치, 국회, 법안)"
               value={form.tags}
@@ -298,8 +426,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
       {/* Navigation buttons */}
       <div className="flex items-center justify-between mt-6">
         <button
+          type="button"
           className="admin-btn admin-btn-ghost"
-          onClick={() => setStep((s) => Math.max(0, s - 1))}
+          onClick={() => goToStep(step - 1)}
           disabled={step === 0}
           style={{ opacity: step === 0 ? 0.4 : 1 }}
         >
@@ -307,25 +436,26 @@ export default function ArticleForm({ article }: { article?: Article }) {
         </button>
         {step < steps.length - 1 ? (
           <button
+            type="button"
             className="admin-btn admin-btn-primary"
-            onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
+            onClick={() => goToStep(step + 1)}
           >
             다음
           </button>
         ) : (
           <div className="flex flex-col sm:flex-row items-center gap-2">
-            <button className="admin-btn admin-btn-ghost flex-1 sm:flex-initial" onClick={() => setShowPreview(true)}>
+            <button type="button" className="admin-btn admin-btn-ghost flex-1 sm:flex-initial" onClick={() => setShowPreview(true)} disabled={isSubmitting}>
               미리보기
             </button>
             <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:ml-auto">
-              <button className="admin-btn admin-btn-ghost" onClick={() => handleSubmit("draft")}>
-                임시저장
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => handleSubmit("draft")} disabled={isSubmitting}>
+                {isSubmitting ? "처리 중..." : "임시저장"}
               </button>
-              <button className="admin-btn admin-btn-ghost" onClick={() => handleSubmit("pending_review")}>
-                검토 요청
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => handleSubmit("pending_review")} disabled={isSubmitting}>
+                {isSubmitting ? "처리 중..." : "검토 요청"}
               </button>
-              <button className="admin-btn admin-btn-primary" onClick={() => handleSubmit("published")}>
-                바로 발행
+              <button type="button" className="admin-btn admin-btn-primary" onClick={() => handleSubmit("published")} disabled={isSubmitting}>
+                {isSubmitting ? "처리 중..." : "바로 발행"}
               </button>
             </div>
           </div>
