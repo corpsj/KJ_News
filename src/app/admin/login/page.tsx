@@ -24,7 +24,7 @@ export default function LoginPage() {
     const ok = await login(email, password);
 
     if (ok) {
-      router.push("/admin");
+      router.push("/");
     } else {
       setError(true);
       setIsLoading(false);
