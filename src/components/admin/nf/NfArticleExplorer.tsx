@@ -197,8 +197,8 @@ export default function NfArticleExplorer() {
               onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
             />
           </div>
-          <input type="date" className="admin-input sm:w-40" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          <input type="date" className="admin-input sm:w-40" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          <input type="date" className="admin-input sm:w-44" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          <input type="date" className="admin-input sm:w-44" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
           <button type="button" className="admin-btn admin-btn-primary" onClick={doSearch}>
             검색
           </button>

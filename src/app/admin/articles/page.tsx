@@ -88,7 +88,7 @@ export default function ArticlesPage() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <select
-          className="admin-input sm:w-40"
+          className="admin-input sm:w-44"
           value={catFilter}
           onChange={(e) => setCatFilter(e.target.value)}
         >
@@ -98,7 +98,7 @@ export default function ArticlesPage() {
           ))}
         </select>
         <select
-          className="admin-input sm:w-36"
+          className="admin-input sm:w-40"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
