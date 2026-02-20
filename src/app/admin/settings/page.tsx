@@ -69,20 +69,15 @@ export default function SettingsPage() {
     setTesting(true);
     setTestResult(null);
     try {
-      const url = settings.nf_api_url.replace(/\/+$/, "");
-      const res = await fetch(`${url}/api/v1/categories`, {
-        headers: { Authorization: `Bearer ${settings.nf_api_key}` },
+      const res = await fetch("/api/admin/settings/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: settings.nf_api_url, key: settings.nf_api_key }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        const count = Array.isArray(data.categories) ? data.categories.length : 0;
-        setTestResult({ ok: true, message: `연결 성공 — 카테고리 ${count}개 확인` });
-      } else {
-        const text = await res.text().catch(() => "");
-        setTestResult({ ok: false, message: `연결 실패 (${res.status}): ${text.slice(0, 100)}` });
-      }
+      const data = await res.json();
+      setTestResult({ ok: data.ok ?? false, message: data.message ?? "알 수 없는 오류" });
     } catch (err) {
-      setTestResult({ ok: false, message: `연결 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}` });
+      setTestResult({ ok: false, message: `요청 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}` });
     } finally {
       setTesting(false);
     }
