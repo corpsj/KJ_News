@@ -13,13 +13,23 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
 export default function NfDeliveryHistory() {
   const [logs, setLogs] = useState<NfSyncLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function fetchLogs() {
+    setLoading(true);
+    setError(null);
     fetch("/api/nf/deliveries")
-      .then((r) => r.json())
-      .then((data) => setLogs(data))
+      .then((r) => {
+        if (!r.ok) throw new Error("데이터를 불러오지 못했습니다");
+        return r.json();
+      })
+      .then((data) => setLogs(Array.isArray(data.deliveries) ? data.deliveries : []))
+      .catch(() => setError("수집 이력을 불러오지 못했습니다"))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchLogs(); }, []);
 
   const sorted = useMemo(
     () => [...logs].sort((a, b) => new Date(b.synced_at).getTime() - new Date(a.synced_at).getTime()),
@@ -122,13 +132,25 @@ export default function NfDeliveryHistory() {
         </>
       )}
 
-      {!loading && sorted.length === 0 && (
+      {!loading && error && (
         <div className="nf-empty-state">
-          <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+          <svg className="w-12 h-12 text-gray-300 mb-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <p className="text-[14px] text-gray-400">{error}</p>
+          <button type="button" onClick={fetchLogs} className="admin-btn admin-btn-ghost text-[12px] mt-3">
+            다시 시도
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && sorted.length === 0 && (
+        <div className="nf-empty-state">
+          <svg className="w-12 h-12 text-gray-300 mb-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
           </svg>
           <p className="text-[14px] text-gray-400">아직 수집 이력이 없습니다</p>
-          <p className="text-[12px] text-gray-300 mt-1">자동 수집을 활성화하면 이력이 여기에 표시됩니다</p>
+          <p className="text-[12px] text-gray-300 mt-1">자동 수집을 활성화하면 이력이 표시됩니다</p>
         </div>
       )}
     </div>

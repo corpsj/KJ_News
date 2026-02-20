@@ -16,18 +16,28 @@ export default function NfArticleExplorer() {
 
   const [articles, setArticles] = useState<NfArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [keyword, setKeyword] = useState("");
   const [importedIds, setImportedIds] = useState<Set<string>>(new Set());
   const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
   const [previewArticle, setPreviewArticle] = useState<NfArticle | null>(null);
 
-  useEffect(() => {
+  function fetchArticles() {
+    setLoading(true);
+    setError(null);
     fetch("/api/nf/articles")
-      .then((r) => r.json())
-      .then((data) => setArticles(data))
+      .then((r) => {
+        if (!r.ok) throw new Error("데이터를 불러오지 못했습니다");
+        return r.json();
+      })
+      .then((data) => setArticles(Array.isArray(data.articles) ? data.articles : []))
+      .catch(() => setError("데이터를 불러오지 못했습니다"))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchArticles(); }, []);
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
@@ -123,7 +133,23 @@ export default function NfArticleExplorer() {
             </div>
           ))}
 
-        {!loading &&
+        {!loading && error && (
+          <div className="nf-empty-state">
+            <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <p className="text-[14px] text-gray-400">{error}</p>
+            <button
+              type="button"
+              onClick={fetchArticles}
+              className="admin-btn admin-btn-ghost text-[12px] mt-3"
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
+
+        {!loading && !error &&
           filtered.map((article) => {
             const processed = isProcessed(article.id);
             const wasPublished = publishedIds.has(article.id);
@@ -181,7 +207,17 @@ export default function NfArticleExplorer() {
             );
           })}
 
-        {!loading && filtered.length === 0 && (
+        {!loading && !error && filtered.length === 0 && articles.length === 0 && (
+          <div className="nf-empty-state">
+            <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.54a4.5 4.5 0 00-6.364-6.364L4.5 8.25" />
+            </svg>
+            <p className="text-[14px] text-gray-400">뉴스팩토리 연동 대기 중</p>
+            <p className="text-[12px] text-gray-300 mt-1">연동이 활성화되면 AI가 수집한 기사가 여기에 표시됩니다</p>
+          </div>
+        )}
+
+        {!loading && !error && filtered.length === 0 && articles.length > 0 && (
           <div className="nf-empty-state">
             <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
