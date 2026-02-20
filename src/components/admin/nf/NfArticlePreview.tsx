@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import type { NfArticle } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { sanitizeHtml } from "@/lib/sanitize";
+import { plainTextToHtml, NF_CATEGORY_LABELS } from "@/lib/nf-constants";
 
 interface NfArticlePreviewProps {
   article: NfArticle;
@@ -31,7 +31,7 @@ export default function NfArticlePreview({ article, isImported, isPublished, onI
 
   return (
     <>
-      <div className="admin-overlay-backdrop animate-fade-backdrop" onClick={onClose} />
+      <button type="button" className="admin-overlay-backdrop animate-fade-backdrop" onClick={onClose} aria-label="닫기" />
 
       <div className="fixed inset-0 z-[70] md:flex md:items-center md:justify-center md:p-6">
         <div className="
@@ -52,21 +52,21 @@ export default function NfArticlePreview({ article, isImported, isPublished, onI
                 onClick={onClose}
                 className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center transition-colors"
               >
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-white" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
 
               <div className="absolute bottom-3 left-4 flex items-center gap-1.5">
                 <span className="nf-ai-badge">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                   뉴스팩토리
                 </span>
                 {article.category && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-white/20 backdrop-blur-sm text-white">
-                    {article.category}
+                    {NF_CATEGORY_LABELS[article.category] || article.category}
                   </span>
                 )}
               </div>
@@ -78,19 +78,19 @@ export default function NfArticlePreview({ article, isImported, isPublished, onI
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-1.5">
                   <span className="nf-ai-badge">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <svg className="w-3 h-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                     </svg>
                     뉴스팩토리
                   </span>
-                  {article.category && <span className="admin-badge">{article.category}</span>}
+                  {article.category && <span className="admin-badge">{NF_CATEGORY_LABELS[article.category] || article.category}</span>}
                 </div>
                 <button
                   type="button"
                   onClick={onClose}
                   className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-gray-400" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -127,7 +127,7 @@ export default function NfArticlePreview({ article, isImported, isPublished, onI
             {article.content && (
               <div
                 className="mt-5 text-[14px] md:text-[15px] leading-[1.8] text-gray-700 [&_p]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-1"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
+                dangerouslySetInnerHTML={{ __html: plainTextToHtml(article.content) }}
               />
             )}
 
@@ -138,7 +138,7 @@ export default function NfArticlePreview({ article, isImported, isPublished, onI
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[12px] text-gray-400 hover:text-gray-600 mt-4 transition-colors"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <svg className="w-3 h-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                 </svg>
                 원문 보기

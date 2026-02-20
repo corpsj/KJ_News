@@ -45,34 +45,34 @@ export interface Article {
 export interface NfArticle {
   id: string;
   title: string;
-  summary?: string;
-  content?: string;
-  category?: string;
-  source?: string;
-  source_url?: string;
-  images?: string[];
-  published_at?: string;
-  processed_at?: string;
+  summary: string | null;
+  content: string;
+  category: string;
+  source: string;
+  source_url: string;
+  images: string[];
+  published_at: string;
+  processed_at: string;
 }
 
-export interface NfConnection {
-  api_key: string;
-  status: 'connected' | 'disconnected' | 'error';
-  client_name: string;
-  is_active: boolean;
-  collect_categories: string[];
-  collect_schedule: string;
-  last_synced_at?: string;
-  connected_at: string;
-  updated_at: string;
+export interface NfRegion {
+  code: string;
+  name: string;
 }
 
-export interface NfSyncLog {
-  id: string;
-  article_count: number;
-  status: 'success' | 'failed' | 'pending';
-  error_message?: string;
-  synced_at: string;
+export interface NfCategory {
+  code: string;
+  name: string;
+}
+
+export interface NfImportRecord {
+  id: number;
+  nf_article_id: string;
+  local_article_id: number;
+  nf_title: string;
+  imported_at: string;
+  imported_by: string;
+  import_type: 'imported' | 'published';
 }
 
 // Contact Message types

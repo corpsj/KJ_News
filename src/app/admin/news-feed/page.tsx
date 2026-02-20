@@ -2,35 +2,31 @@
 
 import { useState, useRef, useEffect } from "react";
 import NfArticleExplorer from "@/components/admin/nf/NfArticleExplorer";
-import NfSubscriptionManager from "@/components/admin/nf/NfSubscriptionManager";
-import NfDeliveryHistory from "@/components/admin/nf/NfDeliveryHistory";
+import NfImportHistory from "@/components/admin/nf/NfDeliveryHistory";
 
 const tabs = [
   { key: "explore", label: "기사 탐색" },
-  { key: "subscriptions", label: "연동 설정" },
-  { key: "deliveries", label: "수집 이력" },
+  { key: "imports", label: "가져오기 이력" },
 ] as const;
 
 type TabKey = (typeof tabs)[number]["key"];
 
 export default function NewsFeedPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("explore");
-  const [stats, setStats] = useState<{ articles: number; connected: boolean; syncs: number } | null>(null);
+  const [stats, setStats] = useState<{ available: number; imported: number } | null>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/nf/articles").then((r) => r.ok ? r.json() : { articles: [] }),
-      fetch("/api/nf/connection").then((r) => r.ok ? r.json() : { status: "disconnected" }),
-      fetch("/api/nf/deliveries").then((r) => r.ok ? r.json() : { deliveries: [] }),
-    ]).then(([articles, connection, syncLogs]) => {
+      fetch("/api/nf/articles?limit=1").then((r) => r.ok ? r.json() : { total: 0 }),
+      fetch("/api/nf/imports?limit=1").then((r) => r.ok ? r.json() : { total: 0 }),
+    ]).then(([articlesData, importsData]) => {
       setStats({
-        articles: Array.isArray(articles.articles) ? articles.articles.length : 0,
-        connected: connection.status === "connected",
-        syncs: Array.isArray(syncLogs.deliveries) ? syncLogs.deliveries.length : 0,
+        available: articlesData.total ?? 0,
+        imported: importsData.total ?? 0,
       });
     }).catch(() => {
-      setStats({ articles: 0, connected: false, syncs: 0 });
+      setStats({ available: 0, imported: 0 });
     });
   }, []);
 
@@ -76,27 +72,20 @@ export default function NewsFeedPage() {
           <span className="nf-ai-badge-outline">NF ENGINE v2</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mt-5">
+        <div className="grid grid-cols-2 gap-3 mt-5">
           <div className="nf-stat-card">
-            <svg className="w-5 h-5 text-gray-400 mb-2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-5 h-5 text-gray-400 mb-2" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
             </svg>
-            <p className="text-2xl font-bold text-gray-900 animate-count-up">{stats?.articles ?? "—"}</p>
-            <p className="text-[12px] text-gray-400 mt-0.5">수집된 기사</p>
+            <p className="text-2xl font-bold text-gray-900 animate-count-up">{stats?.available ?? "—"}</p>
+            <p className="text-[12px] text-gray-400 mt-0.5">수집 가능 기사</p>
           </div>
           <div className="nf-stat-card">
-            <svg className="w-5 h-5 text-gray-400 mb-2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.54a4.5 4.5 0 00-6.364-6.364L4.5 8.25" />
+            <svg className="w-5 h-5 text-gray-400 mb-2" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            <p className="text-2xl font-bold text-gray-900 animate-count-up">{stats == null ? "—" : stats.connected ? "ON" : "OFF"}</p>
-            <p className="text-[12px] text-gray-400 mt-0.5">연결 상태</p>
-          </div>
-          <div className="nf-stat-card">
-            <svg className="w-5 h-5 text-gray-400 mb-2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183" />
-            </svg>
-            <p className="text-2xl font-bold text-gray-900 animate-count-up">{stats?.syncs ?? "—"}</p>
-            <p className="text-[12px] text-gray-400 mt-0.5">수집 이력</p>
+            <p className="text-2xl font-bold text-gray-900 animate-count-up">{stats?.imported ?? "—"}</p>
+            <p className="text-[12px] text-gray-400 mt-0.5">가져온 기사</p>
           </div>
         </div>
       </div>
@@ -121,8 +110,7 @@ export default function NewsFeedPage() {
         key={activeTab}
       >
         {activeTab === "explore" && <NfArticleExplorer />}
-        {activeTab === "subscriptions" && <NfSubscriptionManager />}
-        {activeTab === "deliveries" && <NfDeliveryHistory />}
+        {activeTab === "imports" && <NfImportHistory />}
       </div>
     </div>
   );
