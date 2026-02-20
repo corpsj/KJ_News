@@ -14,5 +14,21 @@ export async function GET() {
     );
   }
 
-  return NextResponse.json({ deliveries: [], total: 0 });
+  const { data: logs, count, error } = await supabase
+    .from("nf_sync_logs")
+    .select("*", { count: "exact" })
+    .order("synced_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Failed to load sync logs" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({
+    deliveries: logs ?? [],
+    total: count ?? 0,
+  });
 }

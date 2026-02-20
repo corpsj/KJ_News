@@ -1,5 +1,3 @@
-// NF (News Factory) constants — Category mapping for article import
-
 export const NF_CATEGORIES = ["행정", "복지", "문화", "경제", "안전", "정치", "사회", "스포츠", "오피니언"];
 
 export const NF_CATEGORY_MAP: Record<string, string> = {
@@ -13,4 +11,14 @@ export const NF_CATEGORY_MAP: Record<string, string> = {
   사회: "society",
   스포츠: "sports",
   오피니언: "opinion",
+};
+
+export const NF_REVERSE_CATEGORY_MAP: Record<string, string> = {
+  economy: "경제",
+  politics: "정치",
+  society: "사회",
+  sports: "스포츠",
+  culture: "문화",
+  opinion: "오피니언",
+  editorial: "사회",
 };
