@@ -48,9 +48,14 @@ export default function Header({ categories }: { categories: Category[] }) {
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
           <span>{getTodayKorean()}</span>
           {isAdmin ? (
-            <Link href="/admin" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
-              관리자
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/admin/mail" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                메일
+              </Link>
+              <Link href="/admin" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                관리자
+              </Link>
+            </div>
           ) : (
             <Link href="/admin/login" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
               로그인
@@ -194,13 +199,22 @@ export default function Header({ categories }: { categories: Category[] }) {
             </Link>
           ))}
           {isAdmin ? (
-            <Link
-              href="/admin"
-              className="block py-3 text-sm font-medium text-gray-500 border-t border-gray-100 mt-2 pt-3"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              관리자 페이지
-            </Link>
+            <>
+              <Link
+                href="/admin/mail"
+                className="block py-3 text-sm font-medium text-gray-500 border-t border-gray-100 mt-2 pt-3"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                메일
+              </Link>
+              <Link
+                href="/admin"
+                className="block py-3 text-sm font-medium text-gray-500"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                관리자 페이지
+              </Link>
+            </>
           ) : (
             <Link
               href="/admin/login"

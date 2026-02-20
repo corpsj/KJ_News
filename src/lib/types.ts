@@ -74,3 +74,24 @@ export interface NfSyncLog {
   error_message?: string;
   synced_at: string;
 }
+
+// Contact Message types
+export type MessageStatus = 'unread' | 'read' | 'archived';
+
+export const MESSAGE_STATUS_LABELS: Record<MessageStatus, string> = {
+  unread: '읽지않음',
+  read: '읽음',
+  archived: '보관됨',
+};
+
+export interface ContactMessage {
+  id: string;
+  senderName: string;
+  senderEmail: string;
+  subject: string;
+  body: string;
+  status: MessageStatus;
+  repliedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
