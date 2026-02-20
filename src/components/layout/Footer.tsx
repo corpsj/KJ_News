@@ -63,8 +63,8 @@ export default async function Footer() {
             <h4 className="text-sm font-bold text-white mb-4">회사 정보</h4>
             <ul className="space-y-2 text-sm">
               <li>등록번호: 전남, 아00607</li>
-              <li>대표: 선종인</li>
-              <li>발행·편집인: 장혁훈</li>
+              <li>대표·발행인: 선종인</li>
+              <li>편집인: 장혁훈</li>
               <li>전화·제보: 010-9428-5361</li>
               <li>팩스: 0504-255-5361</li>
               <li>이메일: jebo@kjtimes.co.kr</li>

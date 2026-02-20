@@ -129,9 +129,9 @@ export default function NfSubscriptionManager() {
             <button
               type="button"
               className="admin-btn admin-btn-ghost text-[12px]"
-              disabled
+              onClick={fetchConnection}
             >
-              준비 중
+              새로고침
             </button>
           </div>
 

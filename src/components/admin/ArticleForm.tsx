@@ -126,14 +126,14 @@ export default function ArticleForm({ article }: { article?: Article }) {
       if (isEdit && article) {
         const updated = await updateArticle(article.id, { ...form, status });
         if (!updated) {
-          toast("기사 수정에 실패했습니다.", "error");
+          toast("기사 수정에 실패했습니다. 브라우저 콘솔에서 상세 오류를 확인하세요.", "error");
           return;
         }
         toast("기사가 수정되었습니다.", "success");
       } else {
         const created = await addArticle({ ...form, status });
         if (!created) {
-          toast("기사 저장에 실패했습니다.", "error");
+          toast("기사 저장에 실패했습니다. 브라우저 콘솔에서 상세 오류를 확인하세요.", "error");
           return;
         }
         const msgs: Record<string, string> = {

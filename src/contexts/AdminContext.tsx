@@ -179,7 +179,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .select("*, categories(*), authors(*)")
         .single();
 
-      if (error || !row) return null;
+      if (error) {
+        console.error("[addArticle]", error.message, error.details);
+        return null;
+      }
+      if (!row) return null;
 
       const mapped = mapArticle(row as unknown as DbArticle);
       setArticles((prev) => [mapped, ...prev]);
@@ -221,7 +225,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .select("*, categories(*), authors(*)")
         .single();
 
-      if (error || !row) return null;
+      if (error) {
+        console.error("[updateArticle]", error.message, error.details);
+        return null;
+      }
+      if (!row) return null;
 
       const mapped = mapArticle(row as unknown as DbArticle);
       setArticles((prev) => prev.map((article) => (article.id === id ? mapped : article)));
@@ -248,7 +256,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .select("*, categories(*), authors(*)")
         .single();
 
-      if (error || !row) return;
+      if (error) {
+        console.error("[updateArticleStatus]", error.message, error.details);
+        return;
+      }
+      if (!row) return;
 
       const mapped = mapArticle(row as unknown as DbArticle);
       setArticles((prev) => prev.map((article) => (article.id === id ? mapped : article)));
@@ -259,7 +271,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const deleteArticle = useCallback(
     async (id: string) => {
       const { error } = await supabase.from("articles").delete().eq("id", Number(id));
-      if (error) return;
+      if (error) {
+        console.error("[deleteArticle]", error.message, error.details);
+        return;
+      }
       setArticles((prev) => prev.filter((a) => a.id !== id));
     },
     [supabase]
@@ -292,7 +307,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .select("*, categories(*), authors(*)")
         .single();
 
-      if (error || !row) return null;
+      if (error) {
+        console.error("[importArticle]", error.message, error.details);
+        return null;
+      }
+      if (!row) return null;
 
       const mapped = mapArticle(row as unknown as DbArticle);
       setArticles((prev) => [mapped, ...prev]);

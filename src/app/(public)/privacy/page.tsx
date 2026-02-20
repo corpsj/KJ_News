@@ -78,8 +78,8 @@ export default function PrivacyPage() {
             <li>언론사명: 광전타임즈</li>
             <li>주소: 전남 함평군 함평읍 영수길 148 2층</li>
             <li>등록번호: 전남 아00607</li>
-            <li>대표: 선종인</li>
-            <li>발행·편집인: 장혁훈</li>
+            <li>대표·발행인: 선종인</li>
+            <li>편집인: 장혁훈</li>
             <li>사업자등록번호: 173-91-02454</li>
           </ul>
         </section>

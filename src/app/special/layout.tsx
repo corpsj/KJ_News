@@ -56,7 +56,7 @@ export default function SpecialLayout({
             </div>
             <div className="text-sm space-y-1 md:text-right">
               <p>등록번호: 전남, 아00607</p>
-              <p>대표: 선종인 · 발행·편집인: 장혁훈</p>
+              <p>대표·발행인: 선종인 · 편집인: 장혁훈</p>
               <p>전화·제보: 010-9428-5361</p>
               <p>이메일: jebo@kjtimes.co.kr</p>
             </div>
