@@ -28,12 +28,12 @@ export default async function Footer() {
           <nav aria-label="푸터 카테고리 메뉴">
             <div>
               <h4 className="text-sm font-bold text-white mb-4">카테고리</h4>
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {categories.slice(0, 4).map((cat) => (
                   <li key={cat.id}>
                     <Link
                       href={`/category/${cat.slug}`}
-                      className="text-sm hover:text-white transition-colors"
+                      className="inline-flex items-center min-h-[44px] text-sm hover:text-white transition-colors"
                     >
                       {cat.name}
                     </Link>
@@ -42,13 +42,13 @@ export default async function Footer() {
               </ul>
             </div>
             <div>
-              <div className="h-5 mb-4" aria-hidden="true" />
-              <ul className="space-y-2">
+              <div className="h-5 mb-4 hidden md:block" aria-hidden="true" />
+              <ul className="space-y-1">
                 {categories.slice(4).map((cat) => (
                   <li key={cat.id}>
                     <Link
                       href={`/category/${cat.slug}`}
-                      className="text-sm hover:text-white transition-colors"
+                      className="inline-flex items-center min-h-[44px] text-sm hover:text-white transition-colors"
                     >
                       {cat.name}
                     </Link>
@@ -77,14 +77,14 @@ export default async function Footer() {
           <p className="text-xs">
             &copy; {new Date().getFullYear()} 광전타임즈. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 text-xs">
-            <Link href="/terms" className="hover:text-white transition-colors">
+          <div className="flex items-center gap-2 md:gap-6 text-xs">
+            <Link href="/terms" className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
               이용약관
             </Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
               개인정보처리방침
             </Link>
-            <a href="mailto:jebo@kjtimes.co.kr" className="hover:text-white transition-colors">
+            <a href="mailto:jebo@kjtimes.co.kr" className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
               광고문의
             </a>
           </div>

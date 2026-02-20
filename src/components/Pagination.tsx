@@ -49,7 +49,7 @@ export default function Pagination({
       {currentPage > 1 && (
         <Link
           href={buildUrl(basePath, currentPage - 1, searchParams)}
-          className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center justify-center min-w-[44px] min-h-[44px] text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="이전 페이지"
         >
           ←
@@ -58,14 +58,14 @@ export default function Pagination({
 
       {pages.map((page, i) =>
         page === "..." ? (
-          <span key={`ellipsis-after-${pages[i - 1]}`} className="px-3 py-2 text-sm text-gray-400">
+          <span key={`ellipsis-after-${pages[i - 1]}`} className="flex items-center justify-center min-w-[44px] min-h-[44px] text-sm text-gray-400">
             …
           </span>
         ) : (
           <Link
             key={page}
             href={buildUrl(basePath, page, searchParams)}
-            className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+            className={`flex items-center justify-center min-w-[44px] min-h-[44px] text-sm rounded-lg transition-colors ${
               page === currentPage
                 ? "bg-gray-900 text-white font-semibold"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
@@ -80,7 +80,7 @@ export default function Pagination({
       {currentPage < totalPages && (
         <Link
           href={buildUrl(basePath, currentPage + 1, searchParams)}
-          className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center justify-center min-w-[44px] min-h-[44px] text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="다음 페이지"
         >
           →

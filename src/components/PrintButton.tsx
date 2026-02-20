@@ -2,7 +2,7 @@
 
 export default function PrintButton() {
   return (
-    <div className="print-button-container">
+    <div className="print-button-container hidden md:block">
       <button
         type="button"
         onClick={() => window.print()}

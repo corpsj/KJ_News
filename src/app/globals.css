@@ -25,6 +25,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
   word-break: keep-all;
   overflow-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Body scroll lock for mobile menu */
+body.menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  touch-action: none;
 }
 
 .animate-ticker {
@@ -622,6 +632,47 @@ textarea.admin-input {
 }
 .animate-mail-spin {
   animation: mail-spin 1s linear infinite;
+}
+
+/* ── Mobile article content ── */
+@media (max-width: 768px) {
+  .prose {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+  .prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  .prose iframe {
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+  .prose pre {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 640px) {
+  .prose {
+    font-size: 15.5px;
+    line-height: 1.85;
+  }
+  .prose h2 {
+    font-size: 1.25rem;
+  }
+  .prose h3 {
+    font-size: 1.1rem;
+  }
 }
 
 /* ============ Print Styles ============ */

@@ -47,16 +47,16 @@ export default function ArticleCard({ article }: { article: Article }) {
           />
         </div>
       </Link>
-      <div className="p-4">
+      <div className="p-4 md:p-4">
         <div className="mb-2">
           <CategoryBadge category={article.category} />
         </div>
         <Link href={`/article/${article.id}`} className="block">
-          <h3 className="text-lg font-bold text-gray-900 leading-snug mb-2 group-hover:text-gray-500 transition-colors line-clamp-2">
+          <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug mb-2 group-hover:text-gray-500 transition-colors line-clamp-2">
             {article.title}
           </h3>
         </Link>
-        <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+        <p className="text-[13px] md:text-sm text-gray-500 line-clamp-2 mb-3">
           {article.excerpt}
         </p>
         <div className="flex items-center justify-between text-xs text-gray-400">

@@ -21,11 +21,11 @@ export default function SearchBar({ defaultValue = "" }: { defaultValue?: string
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="기사 검색..."
-        className="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+        className="w-full pl-4 pr-12 py-3 md:py-2.5 border border-gray-300 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
       />
       <button
         type="submit"
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 transition-colors"
+        className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 text-gray-400 hover:text-gray-700 transition-colors"
         aria-label="검색"
       >
         <svg

@@ -44,10 +44,10 @@ export default async function SpecialArticlePage({ params }: PageProps) {
   const related = await getSpecialRelatedArticles(article, 4);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-5 md:py-8">
       <Link
         href="/special"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-6"
+        className="inline-flex items-center gap-1 min-h-[44px] text-sm text-gray-500 hover:text-gray-900 transition-colors mb-4 md:mb-6"
       >
         <svg
           className="w-4 h-4"
@@ -70,37 +70,39 @@ export default async function SpecialArticlePage({ params }: PageProps) {
           <CategoryBadge category={article.category} size="md" />
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-3">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-3">
           {article.title}
         </h1>
 
-        <p className="text-lg text-gray-600 mb-6">{article.subtitle}</p>
+        <p className="text-base md:text-lg text-gray-600 mb-5 md:mb-6">{article.subtitle}</p>
 
-        <div className="flex items-center gap-4 pb-6 mb-6 border-b border-gray-200">
-          {hasImage(article.author.avatarUrl) ? (
-            <div className="relative w-10 h-10 rounded-full overflow-hidden">
-              <Image
-                src={article.author.avatarUrl}
-                alt={article.author.name}
-                fill
-                className="object-cover"
-                sizes="40px"
-              />
+        <div className="pb-5 md:pb-6 mb-5 md:mb-6 border-b border-gray-200">
+          <div className="flex items-center gap-3 md:gap-4">
+            {hasImage(article.author.avatarUrl) ? (
+              <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                <Image
+                  src={article.author.avatarUrl}
+                  alt={article.author.name}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-semibold">{article.author.name.charAt(0)}</span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">
+                {article.author.name}
+              </p>
+              <p className="text-xs text-gray-500">{article.author.role}</p>
             </div>
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-sm font-semibold">{article.author.name.charAt(0)}</span>
+            <div className="text-right text-xs md:text-sm text-gray-400 flex-shrink-0">
+              <p>{formatDate(article.publishedAt)}</p>
+              <p>조회 {article.viewCount.toLocaleString()}</p>
             </div>
-          )}
-          <div>
-            <p className="text-sm font-semibold text-gray-900">
-              {article.author.name}
-            </p>
-            <p className="text-xs text-gray-500">{article.author.role}</p>
-          </div>
-          <div className="ml-auto text-right text-sm text-gray-400">
-            <p>{formatDate(article.publishedAt)}</p>
-            <p>조회 {article.viewCount.toLocaleString()}</p>
           </div>
         </div>
 
@@ -118,7 +120,7 @@ export default async function SpecialArticlePage({ params }: PageProps) {
         )}
 
         <div
-          className="prose prose-lg max-w-none text-gray-800 leading-relaxed [&_p]:mb-5"
+          className="prose prose-lg max-w-none text-gray-800 leading-relaxed [&_p]:mb-4 md:[&_p]:mb-5 [&_img]:rounded-lg [&_img]:max-w-full [&_img]:h-auto"
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
         />
 

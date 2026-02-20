@@ -113,23 +113,23 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const restArticles = allArticles.filter((a) => a.id !== heroArticle.id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-gray-800 transition-colors">
+    <div className="max-w-7xl mx-auto px-4 py-5 md:py-8">
+      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4 md:mb-6">
+        <Link href="/" className="flex-shrink-0 hover:text-gray-800 transition-colors">
           홈
         </Link>
-        <span>/</span>
+        <span className="flex-shrink-0">/</span>
         <span className="text-gray-900 font-medium">{category.name}</span>
       </nav>
 
-      <div className="pb-4 mb-6 border-b-2 border-gray-900">
-        <h1 className="text-2xl font-extrabold text-gray-900">
+      <div className="pb-3 md:pb-4 mb-5 md:mb-6 border-b-2 border-gray-900">
+        <h1 className="text-xl md:text-2xl font-extrabold text-gray-900">
           {category.name}
         </h1>
         <p className="text-sm text-gray-500 mt-1">{category.description}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         <div className="lg:col-span-9">
           <Link href={`/article/${heroArticle.id}`} className="group block">
             {hasImage(heroArticle.thumbnailUrl) ? (
@@ -185,29 +185,29 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                 <Link
                   key={article.id}
                   href={`/article/${article.id}`}
-                  className="group flex gap-5 py-5 border-b border-gray-100 last:border-b-0"
+                  className="group flex gap-3 md:gap-5 py-4 md:py-5 border-b border-gray-100 last:border-b-0"
                 >
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
+                    <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
                       {article.title}
                     </h3>
-                    <p className="text-[13px] text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                    <p className="text-[13px] text-gray-500 mt-1.5 md:mt-2 line-clamp-2 leading-relaxed">
                       {article.excerpt}
                     </p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-3 mt-1.5 md:mt-2 text-xs text-gray-400">
                       <span>{article.author.name}</span>
                       <span>·</span>
                       <span>{formatDate(article.publishedAt)}</span>
                     </div>
                   </div>
                   {hasImage(article.thumbnailUrl) && (
-                    <div className="flex-shrink-0 relative w-28 h-20 md:w-36 md:h-24 rounded-lg overflow-hidden">
+                    <div className="flex-shrink-0 relative w-24 h-18 md:w-36 md:h-24 rounded-lg overflow-hidden">
                       <Image
                         src={article.thumbnailUrl}
                         alt={article.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="144px"
+                        sizes="(max-width: 768px) 96px, 144px"
                       />
                     </div>
                   )}
@@ -221,7 +221,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
         <aside className="lg:col-span-3">
           <div className="lg:sticky lg:top-36 space-y-6">
-            <div className="bg-white rounded-lg border border-gray-100 p-5">
+            <div className="bg-white rounded-lg border border-gray-100 p-4 md:p-5">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-2 border-b-2 border-gray-900">
                 많이 본 뉴스
               </h3>
@@ -230,9 +230,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                   <Link
                     key={article.id}
                     href={`/article/${article.id}`}
-                    className="group flex gap-3 py-3 border-b border-gray-100 last:border-b-0"
+                    className="group flex gap-3 py-3 border-b border-gray-100 last:border-b-0 min-h-[44px] items-start"
                   >
-                    <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-gray-900 text-white text-[11px] font-bold">
+                    <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-gray-900 text-white text-[11px] font-bold mt-0.5">
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">

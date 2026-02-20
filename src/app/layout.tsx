@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   description:
     "광전타임즈 - 정치, 경제, 사회, 문화, 국제, IT/과학, 스포츠 등 빠르고 정확한 뉴스를 전합니다.",
   metadataBase: new URL(SITE_URL),
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+  },
   openGraph: {
     type: "website",
     locale: "ko_KR",

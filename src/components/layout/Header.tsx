@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Category } from "@/lib/types";
 import SearchBar from "@/components/SearchBar";
 import { createClient } from "@/lib/supabase/client";
@@ -30,6 +30,30 @@ export default function Header({ categories }: { categories: Category[] }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const toggleMenu = useCallback(() => {
+    setMobileMenuOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        document.body.classList.add("menu-open");
+        setSearchOpen(false);
+      } else {
+        document.body.classList.remove("menu-open");
+      }
+      return next;
+    });
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+    document.body.classList.remove("menu-open");
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove("menu-open");
+    };
+  }, []);
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getSession().then(({ data }) => {
@@ -43,7 +67,6 @@ export default function Header({ categories }: { categories: Category[] }) {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      {/* Top bar */}
       <div className="bg-gray-50 border-b border-gray-100 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between text-xs text-gray-500">
           <span>{getTodayKorean()}</span>
@@ -64,15 +87,14 @@ export default function Header({ categories }: { categories: Category[] }) {
         </div>
       </div>
 
-      {/* Main header */}
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Mobile hamburger */}
+        <div className="flex items-center justify-between h-14 md:h-20">
           <button
             type="button"
-            className="md:hidden p-2 -ml-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden flex items-center justify-center w-11 h-11 -ml-2 rounded-lg active:bg-gray-100 transition-colors"
+            onClick={toggleMenu}
             aria-label="메뉴"
+            aria-expanded={mobileMenuOpen}
           >
             <svg
               className="w-6 h-6"
@@ -99,22 +121,20 @@ export default function Header({ categories }: { categories: Category[] }) {
             </svg>
           </button>
 
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center" onClick={closeMenu}>
             <Image
               src="/brand/KJ_sloganLogo.png"
               alt="광전타임즈"
               width={180}
               height={50}
-              className="h-10 md:h-14 w-auto"
+              className="h-9 md:h-14 w-auto"
               priority
             />
           </Link>
 
-          {/* Search toggle */}
           <button
             type="button"
-            className="p-2 -mr-2 md:hidden"
+            className="md:hidden flex items-center justify-center w-11 h-11 -mr-2 rounded-lg active:bg-gray-100 transition-colors"
             onClick={() => setSearchOpen(!searchOpen)}
             aria-label="검색"
           >
@@ -134,14 +154,12 @@ export default function Header({ categories }: { categories: Category[] }) {
             </svg>
           </button>
 
-          {/* Desktop search */}
           <div className="hidden md:block w-64">
             <SearchBar />
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
       <nav aria-label="주 메뉴" className="hidden md:block bg-gray-900">
         <div className="max-w-7xl mx-auto px-4">
           <ul className="flex items-center gap-1">
@@ -167,63 +185,81 @@ export default function Header({ categories }: { categories: Category[] }) {
         </div>
       </nav>
 
-      {/* Mobile search */}
       {searchOpen && (
         <div className="md:hidden border-t border-gray-100 p-3 bg-white">
           <SearchBar />
         </div>
       )}
 
-      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 top-[57px] bg-black/40 z-40 animate-fade-backdrop"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
+      )}
+
       <div
-        className={`md:hidden border-t border-gray-100 bg-white overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className="md:hidden fixed inset-0 top-[57px] z-50 pointer-events-none"
       >
-        <nav aria-label="모바일 메뉴" className="px-4 py-2">
-          <Link
-            href="/special"
-            className="block py-3 text-sm font-bold text-gray-900 border-b border-gray-50"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            창간특별호
-          </Link>
-          {categories.map((cat) => (
+        <nav
+          aria-label="모바일 메뉴"
+          className={`pointer-events-auto bg-white w-[280px] max-w-[80vw] h-full overflow-y-auto shadow-xl transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+            <span className="text-xs text-gray-500">{getTodayKorean()}</span>
+          </div>
+
+          <div className="py-2">
             <Link
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              className="block py-3 text-sm font-medium text-gray-700 border-b border-gray-50 hover:text-gray-900 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/special"
+              className="flex items-center px-5 min-h-[48px] text-[15px] font-bold text-gray-900 active:bg-gray-50 transition-colors"
+              onClick={closeMenu}
             >
-              {cat.name}
+              창간특별호
             </Link>
-          ))}
-          {isAdmin ? (
-            <>
+            {categories.map((cat) => (
               <Link
-                href="/admin/mail"
-                className="block py-3 text-sm font-medium text-gray-500 border-t border-gray-100 mt-2 pt-3"
-                onClick={() => setMobileMenuOpen(false)}
+                key={cat.id}
+                href={`/category/${cat.slug}`}
+                className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-700 active:bg-gray-50 transition-colors"
+                onClick={closeMenu}
               >
-                메일
+                {cat.name}
               </Link>
+            ))}
+          </div>
+
+          <div className="border-t border-gray-100 py-2">
+            {isAdmin ? (
+              <>
+                <Link
+                  href="/admin/mail"
+                  className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-500 active:bg-gray-50"
+                  onClick={closeMenu}
+                >
+                  메일
+                </Link>
+                <Link
+                  href="/admin"
+                  className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-500 active:bg-gray-50"
+                  onClick={closeMenu}
+                >
+                  관리자 페이지
+                </Link>
+              </>
+            ) : (
               <Link
-                href="/admin"
-                className="block py-3 text-sm font-medium text-gray-500"
-                onClick={() => setMobileMenuOpen(false)}
+                href="/admin/login"
+                className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-500 active:bg-gray-50"
+                onClick={closeMenu}
               >
-                관리자 페이지
+                로그인
               </Link>
-            </>
-          ) : (
-            <Link
-              href="/admin/login"
-              className="block py-3 text-sm font-medium text-gray-500 border-t border-gray-100 mt-2 pt-3"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              로그인
-            </Link>
-          )}
+            )}
+          </div>
         </nav>
       </div>
     </header>

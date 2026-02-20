@@ -25,9 +25,9 @@ function HeadlineRow({
   return (
     <Link
       href={`/special/${article.id}`}
-      className="group flex gap-3 py-3.5 border-b border-gray-100 last:border-b-0"
+      className="group flex gap-3 py-3 md:py-3.5 border-b border-gray-100 last:border-b-0 min-h-[48px] items-start"
     >
-      <div className="flex-shrink-0 w-1 rounded-full mt-1.5 self-start h-4 bg-gray-300" />
+      <div className="flex-shrink-0 w-1 rounded-full mt-2 self-start h-4 bg-gray-300" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
@@ -37,7 +37,7 @@ function HeadlineRow({
             {formatDate(article.publishedAt)}
           </span>
         </div>
-        <h3 className="text-[15px] font-bold text-gray-900 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
+        <h3 className="text-[14px] md:text-[15px] font-bold text-gray-900 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
           {article.title}
         </h3>
         {showExcerpt && (
@@ -73,9 +73,8 @@ export default async function SpecialEditionPage() {
     <>
       {/* ═══════ 1면: 히어로 + 서브 이미지 + 주요 텍스트 헤드라인 ═══════ */}
       <section className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* ── 좌: 메인 히어로 이미지 기사 ── */}
+        <div className="max-w-7xl mx-auto px-4 py-5 md:py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
             {heroArticle && (
               <div className="lg:col-span-5">
                 <Link
@@ -83,22 +82,22 @@ export default async function SpecialEditionPage() {
                   className="group block"
                 >
                   {hasImage(heroArticle.thumbnailUrl) && (
-                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden mb-3">
+                    <div className="relative aspect-[16/9] md:aspect-[4/3] rounded-lg overflow-hidden mb-3">
                       <Image
                         src={heroArticle.thumbnailUrl}
                         alt={heroArticle.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         priority
-                        sizes="(max-width: 1024px) 100vw, 42vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 42vw"
                       />
                     </div>
                   )}
                   <CategoryBadge category={heroArticle.category} size="md" />
-                  <h2 className="text-2xl md:text-[28px] font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors">
+                  <h2 className="text-xl md:text-2xl lg:text-[28px] font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors">
                     {heroArticle.title}
                   </h2>
-                  <p className="text-[14px] text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                  <p className="text-[13px] md:text-[14px] text-gray-500 mt-2 line-clamp-2 leading-relaxed">
                     {heroArticle.excerpt}
                   </p>
                   <span className="text-xs text-gray-400 mt-2 block">
@@ -109,7 +108,6 @@ export default async function SpecialEditionPage() {
               </div>
             )}
 
-            {/* ── 중앙: 주요 텍스트 헤드라인 목록 ── */}
             <div className="lg:col-span-4 lg:border-l lg:border-r lg:border-gray-100 lg:px-5">
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
                 주요 뉴스
@@ -121,8 +119,7 @@ export default async function SpecialEditionPage() {
               </div>
             </div>
 
-            {/* ── 우: 서브 이미지 기사 2개 ── */}
-            <div className="lg:col-span-3 flex flex-col gap-5">
+            <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-5">
               {subImageArticles.map((article) => (
                 <Link
                   key={article.id}
@@ -136,12 +133,12 @@ export default async function SpecialEditionPage() {
                         alt={article.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 1024px) 50vw, 25vw"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw"
                       />
                     </div>
                   )}
                   <CategoryBadge category={article.category} />
-                  <h3 className="text-[15px] font-bold text-gray-900 mt-1.5 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
+                  <h3 className="text-[14px] md:text-[15px] font-bold text-gray-900 mt-1.5 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
                     {article.title}
                   </h3>
                   <span className="text-[11px] text-gray-400 mt-1 block">
@@ -155,11 +152,10 @@ export default async function SpecialEditionPage() {
       </section>
 
       {/* ═══════ 하단: 카테고리별 텍스트 헤드라인 + 사이드바 ═══════ */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* ── 좌: 카테고리별 텍스트 기사 목록 (2단) ── */}
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
           <div className="lg:col-span-9">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 md:gap-y-10">
               {displayCategories.map((category) => {
                 const catArticles = allArticles.filter(
                   (a) => a.category.slug === category.slug
@@ -182,9 +178,8 @@ export default async function SpecialEditionPage() {
               })}
             </div>
 
-            {/* ── 더 많은 기사 ── */}
             {textArticles.length > 7 && (
-              <section className="mt-10">
+              <section className="mt-8 md:mt-10">
                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
                   더 많은 기사
                 </h2>

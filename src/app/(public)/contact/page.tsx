@@ -68,9 +68,9 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">제보/문의</h1>
-      <p className="text-gray-600 mb-8">
+    <div className="max-w-2xl mx-auto px-4 py-8 md:py-12">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">제보/문의</h1>
+      <p className="text-sm md:text-base text-gray-600 mb-6 md:mb-8">
         광전타임즈에 제보하거나 문의사항이 있으신 경우 아래 양식을 작성해주세요.
       </p>
 
@@ -89,7 +89,7 @@ export default function ContactPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             placeholder="이름을 입력하세요"
           />
         </div>
@@ -104,7 +104,7 @@ export default function ContactPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             placeholder="이메일을 입력하세요"
           />
         </div>
@@ -118,7 +118,7 @@ export default function ContactPage() {
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             placeholder="제목을 입력하세요 (선택사항)"
           />
         </div>
@@ -133,7 +133,7 @@ export default function ContactPage() {
             onChange={(e) => setBody(e.target.value)}
             required
             rows={6}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+            className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
             placeholder="내용을 입력하세요"
           />
         </div>
@@ -141,7 +141,7 @@ export default function ContactPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gray-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-gray-900 text-white px-6 py-3 md:py-2.5 rounded-lg font-medium text-base md:text-sm hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "전송 중..." : "제보하기"}
         </button>

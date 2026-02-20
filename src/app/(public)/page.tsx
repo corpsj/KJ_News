@@ -22,10 +22,10 @@ function HeadlineRow({ article, showExcerpt = false }: { article: Article; showE
   return (
     <Link
       href={`/article/${article.id}`}
-      className="group flex gap-3 py-3.5 border-b border-gray-100 last:border-b-0"
+      className="group flex gap-3 py-3 md:py-3.5 border-b border-gray-100 last:border-b-0 min-h-[48px] items-start"
     >
       <div
-        className="flex-shrink-0 w-1 rounded-full mt-1.5 self-start h-4 bg-gray-300"
+        className="flex-shrink-0 w-1 rounded-full mt-2 self-start h-4 bg-gray-300"
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
@@ -36,7 +36,7 @@ function HeadlineRow({ article, showExcerpt = false }: { article: Article; showE
           </span>
           <span className="text-[11px] text-gray-400">{formatDate(article.publishedAt)}</span>
         </div>
-        <h3 className="text-[15px] font-bold text-gray-900 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
+        <h3 className="text-[14px] md:text-[15px] font-bold text-gray-900 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
           {article.title}
         </h3>
         {showExcerpt && (
@@ -98,32 +98,30 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       ) : (
         <>
-      {/* ═══════ 1면: 히어로 + 서브 이미지 + 주요 텍스트 헤드라인 ═══════ */}
       <section className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="max-w-7xl mx-auto px-4 py-5 md:py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
 
-            {/* ── 좌: 메인 히어로 이미지 기사 ── */}
             {heroArticle && (
               <div className="lg:col-span-5">
                 <Link href={`/article/${heroArticle.id}`} className="group block">
                   {hasImage(heroArticle.thumbnailUrl) && (
-                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden mb-3">
+                    <div className="relative aspect-[16/9] md:aspect-[4/3] rounded-lg overflow-hidden mb-3">
                       <Image
                         src={heroArticle.thumbnailUrl}
                         alt={heroArticle.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         priority
-                        sizes="(max-width: 1024px) 100vw, 42vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 42vw"
                       />
                     </div>
                   )}
                   <CategoryBadge category={heroArticle.category} size="md" />
-                  <h2 className="text-2xl md:text-[28px] font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors">
+                  <h2 className="text-xl md:text-2xl lg:text-[28px] font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors">
                     {heroArticle.title}
                   </h2>
-                  <p className="text-[14px] text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                  <p className="text-[13px] md:text-[14px] text-gray-500 mt-2 line-clamp-2 leading-relaxed">
                     {heroArticle.excerpt}
                   </p>
                   <span className="text-xs text-gray-400 mt-2 block">
@@ -133,7 +131,6 @@ export default async function Home({ searchParams }: HomeProps) {
               </div>
             )}
 
-            {/* ── 중앙: 주요 텍스트 헤드라인 목록 ── */}
             <div className="lg:col-span-4 lg:border-l lg:border-r lg:border-gray-100 lg:px-5">
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
                 주요 뉴스
@@ -145,8 +142,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </div>
             </div>
 
-            {/* ── 우: 서브 이미지 기사 2개 ── */}
-            <div className="lg:col-span-3 flex flex-col gap-5">
+            <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-5">
               {subImageArticles.map((article) => (
                 <Link
                   key={article.id}
@@ -160,12 +156,12 @@ export default async function Home({ searchParams }: HomeProps) {
                         alt={article.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 1024px) 50vw, 25vw"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw"
                       />
                     </div>
                   )}
                   <CategoryBadge category={article.category} />
-                  <h3 className="text-[15px] font-bold text-gray-900 mt-1.5 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
+                  <h3 className="text-[14px] md:text-[15px] font-bold text-gray-900 mt-1.5 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
                     {article.title}
                   </h3>
                   <span className="text-[11px] text-gray-400 mt-1 block">
@@ -178,13 +174,11 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      {/* ═══════ 하단: 카테고리별 텍스트 헤드라인 + 사이드바 ═══════ */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
 
-          {/* ── 좌: 카테고리별 텍스트 기사 목록 (2단) ── */}
           <div className="lg:col-span-9">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 md:gap-y-10">
               {categoryArticles.map(({ category, articles: catArticles }) => {
                 if (catArticles.length === 0) return null;
                 return (
@@ -195,7 +189,7 @@ export default async function Home({ searchParams }: HomeProps) {
                       </h2>
                       <Link
                         href={`/category/${category.slug}`}
-                        className="text-[11px] text-gray-400 hover:text-gray-700 transition-colors"
+                        className="inline-flex items-center min-h-[44px] text-[11px] text-gray-400 hover:text-gray-700 transition-colors"
                       >
                         더보기 →
                       </Link>
@@ -210,9 +204,8 @@ export default async function Home({ searchParams }: HomeProps) {
               })}
             </div>
 
-            {/* ── 더 많은 최신 기사 (전체 텍스트 목록) ── */}
             {textArticles.length > 7 && (
-              <section className="mt-10">
+              <section className="mt-8 md:mt-10">
                  <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
                   최신 기사
                 </h2>
@@ -225,10 +218,9 @@ export default async function Home({ searchParams }: HomeProps) {
             )}
           </div>
 
-          {/* ── 우: 사이드바 (많이 본 뉴스) ── */}
           <div className="lg:col-span-3">
             <div className="lg:sticky lg:top-36 space-y-6">
-              <div className="bg-white rounded-lg border border-gray-100 p-5">
+              <div className="bg-white rounded-lg border border-gray-100 p-4 md:p-5">
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-2 border-b-2 border-gray-900">
                   많이 본 뉴스
                 </h3>
@@ -238,9 +230,9 @@ export default async function Home({ searchParams }: HomeProps) {
                       <Link
                         key={article.id}
                         href={`/article/${article.id}`}
-                        className="group flex gap-3 py-3 border-b border-gray-100 last:border-b-0"
+                        className="group flex gap-3 py-3 border-b border-gray-100 last:border-b-0 min-h-[44px] items-start"
                       >
-                        <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-gray-900 text-white text-[11px] font-bold">
+                        <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-gray-900 text-white text-[11px] font-bold mt-0.5">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">

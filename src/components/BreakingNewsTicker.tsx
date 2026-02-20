@@ -13,10 +13,10 @@ export default function BreakingNewsTicker({
   return (
     <div className="bg-gray-900 text-white overflow-hidden">
       <div className="max-w-7xl mx-auto flex items-center">
-        <span className="flex-shrink-0 bg-red-600 px-4 py-2 text-sm font-bold tracking-wide">
+        <span className="flex-shrink-0 bg-red-600 px-3 md:px-4 py-2 text-xs md:text-sm font-bold tracking-wide">
           속보
         </span>
-        <div className="overflow-hidden flex-1 py-2 px-4">
+        <div className="overflow-hidden flex-1 py-2 px-3 md:px-4">
           <div className="animate-ticker flex whitespace-nowrap gap-16">
             {[...articles, ...articles].map((article, i) => (
               <Link
