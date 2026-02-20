@@ -6,12 +6,13 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main() {
+  if (!process.env.DATABASE_URL) {
+    console.error("❌ Missing DATABASE_URL environment variable");
+    process.exit(1);
+  }
+
   const client = new pg.Client({
-    host: "aws-1-ap-southeast-2.pooler.supabase.com",
-    port: 5432,
-    database: "postgres",
-    user: "postgres.erntllkkeczystqsjija",
-    password: "etMBDcYN9spvf4q6",
+    connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 10000,
   });

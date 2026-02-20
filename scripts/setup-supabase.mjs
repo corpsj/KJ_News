@@ -10,9 +10,13 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://erntllkkeczystqsjija.supabase.co";
-const SERVICE_ROLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybnRsbGtrZWN6eXN0cXNqaWphIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkyNzU5NywiZXhwIjoyMDg2NTAzNTk3fQ.RMq5jFWGPwQbRpEGGa8YnuG9EKeyjXH6KUX_zZ9cJBc";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error("❌ Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -267,7 +271,7 @@ async function createAdminUser() {
 
   const { data, error } = await supabase.auth.admin.createUser({
     email: "admin@kjtimes.co.kr",
-    password: "kjtimes2026!",
+    password: process.env.ADMIN_PASSWORD || "changeme",
     email_confirm: true,
     user_metadata: {
       name: "관리자",
@@ -333,7 +337,7 @@ async function main() {
   console.log(`  Articles: ${artCount}`);
 
   console.log("\n✅ Setup complete!");
-  console.log("  Admin login: admin@kjtimes.co.kr / kjtimes2026!");
+  console.log("  Admin login: admin@kjtimes.co.kr / [set via ADMIN_PASSWORD env var]");
 }
 
 main().catch(console.error);
