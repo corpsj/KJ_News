@@ -13,14 +13,29 @@ function maskApiKey(key: string): string {
 export default function NfSubscriptionManager() {
   const [conn, setConn] = useState<NfConnection | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-
-  useEffect(() => {
+  function fetchConnection() {
+    setLoading(true);
+    setError(null);
     fetch("/api/nf/connection")
-      .then((r) => r.json())
-      .then((data) => setConn(data))
+      .then((r) => {
+        if (!r.ok) throw new Error("fetch failed");
+        return r.json();
+      })
+      .then((data) => {
+        if (data && data.status) {
+          setConn(data);
+        } else {
+          setConn(null);
+        }
+      })
+      .catch(() => setError("연동 설정을 불러오지 못했습니다"))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchConnection(); }, []);
 
   function toggleActive() {
     if (!conn) return;
@@ -65,14 +80,28 @@ export default function NfSubscriptionManager() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="nf-empty-state">
+        <svg className="w-10 h-10 text-gray-300 mb-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+        <p className="text-[13px] text-gray-400 mb-1">{error}</p>
+        <button type="button" onClick={fetchConnection} className="admin-btn admin-btn-ghost text-[12px] mt-2">
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
   if (!conn) {
     return (
       <div className="nf-empty-state">
-        <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+        <svg className="w-10 h-10 text-gray-300 mb-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.54a4.5 4.5 0 00-6.364-6.364L4.5 8.25" />
         </svg>
-        <p className="text-[13px] text-gray-400 mb-1">연동 정보 없음</p>
-        <p className="text-[12px] text-gray-300">뉴스팩토리 연동 설정을 불러올 수 없습니다</p>
+        <p className="text-[13px] text-gray-400 mb-1">뉴스팩토리 연동이 설정되지 않았습니다</p>
+        <p className="text-[12px] text-gray-300">관리자에게 연동 설정을 요청하세요</p>
       </div>
     );
   }

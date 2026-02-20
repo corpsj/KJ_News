@@ -124,3 +124,97 @@
 - No breaking changes; all imports resolved correctly
 
 **Commit**: `fix: use logged-in user ID for NF article publish` (6607cde)
+
+## [2026-02-19] Task 5: NF API auth
+- Auth pattern: createClient() → getUser() → 401 if !user
+- Import: import { createClient } from "@/lib/supabase/server"
+- Applied to: articles GET, connection GET+PUT, deliveries GET, subscriptions GET
+- NfSubscriptionManager: test button disabled with "준비 중" label, removed fake handleTestConnection
+- Task 3 ran in parallel and simplified routes to return empty data before auth was applied
+- Commit picked up extra staged files from Task 3 (newsletter, ShareButtons, Footer cleanup)
+
+## [2026-02-19] Task 3: Mock data removal
+
+- Deleted src/lib/nf-mock-data.ts (308 lines of mock data)
+- NF API routes now return empty arrays / disconnected state:
+  - articles: `{ articles: [], total: 0 }`
+  - connection: `{ status: "disconnected", apiKey: "", lastSync: null, autoSync: false, syncInterval: 60 }`
+  - connection PUT: `{ error: "Not configured" }` (503)
+  - deliveries: `{ deliveries: [], total: 0 }`
+  - subscriptions: `{ status: "disconnected", subscriptions: [] }`
+  - subscriptions/[id]: unchanged (already returns 410 Gone)
+- picsum.photos removed from next.config.ts remotePatterns
+- scripts/setup-supabase.mjs: 18 picsum URLs replaced with "" (authors + articles)
+- sk_live_ fake API key removed with the mock data file
+- First build attempt failed due to stale Turbopack cache — cleaning .next/ fixed it
+- Verification: grep -r for nf-mock-data, picsum.photos, sk_live_ all returned 0 results
+- Build: passed (51 pages), Tests: 4 passed (smoke + sanitize)
+
+**Commit**: `chore: remove all mock data and placeholder URLs` (36e9748)
+
+## [2026-02-19] Task 7: Newsletter + Kakao removal
+- Footer.tsx: NewsletterSubscribe import and JSX removed (lines 4, 77-81)
+- NewsletterSubscribe.tsx: deleted entirely (only used in Footer.tsx)
+- src/app/api/newsletter/route.ts: deleted (newsletter dir removed, api/ still has articles/email/nf)
+- Kakao share: wrapped with `{process.env.NEXT_PUBLIC_KAKAO_APP_ID && (...)}` conditional render in ShareButtons.tsx
+- handleKakaoShare function kept (no dead code issue since it's scoped within the component)
+- Changes were committed as part of 1aa00c3 (parallel task overlap with Task 5)
+- Verification: grep NewsletterSubscribe → 0 results, build passes, tests pass (4/4)
+
+## [2026-02-19] Task 8: View counter rate limiting
+- Cookie: viewed_articles=id1,id2,id3 (comma-separated)
+- maxAge: 86400 (24 hours), httpOnly: true, sameSite: lax
+- Returns { success: false, message: "Already viewed" } for repeat views
+- Empty cookie handled with .filter(Boolean) to avoid [""] from "".split(",")
+
+## [2026-02-19] Task 11: JSON-LD Structured Data
+- Added NewsArticle schema to article/[id]/page.tsx
+- Uses SITE_NAME, SITE_URL from @/lib/constants
+- JSON.stringify is safe for JSON-LD (not user HTML)
+- Schema includes: headline, description, image, datePublished, dateModified, author, publisher, mainEntityOfPage
+- Placed script tag right after ViewCounter component in article element
+## [2026-02-19] Task 10: Security headers
+- CSP added: default-src 'self', script-src includes Vercel Analytics domains
+- HSTS: max-age=31536000; includeSubDomains; preload
+- Permissions-Policy: camera, microphone, geolocation, interest-cohort all disabled
+- Supabase domain: erntllkkeczystqsjija.supabase.co (in img-src and connect-src)
+- Stale .next/lock required rm -rf .next for clean build
+
+## [2026-02-19] Task 12: Accessibility improvements
+
+**Completed**: Add `type="button"` to all buttons missing it, and add `aria-hidden="true"` to decorative SVGs
+
+**Actions taken**:
+1. Found 10 buttons without `type` attribute in admin pages and components:
+   - src/components/admin/AdminHeader.tsx:23 (menu toggle)
+   - src/components/admin/ArticlePreview.tsx:57 (close button)
+   - src/app/admin/news-feed/page.tsx:104 (tab switching)
+   - src/app/admin/AdminLayoutClient.tsx:53 (mobile menu)
+   - src/components/admin/AdminSidebar.tsx:38 (logout)
+   - src/app/admin/articles/page.tsx:109, 112, 163, 165, 203 (bulk delete, clear selection, preview, delete)
+
+2. Added `type="button"` to all 10 buttons (action buttons, not form submit)
+
+3. Added `aria-hidden="true"` to 11 decorative SVG icons:
+   - AdminHeader.tsx:24 (menu icon)
+   - news-feed/page.tsx:66, 79, 86, 93 (AI badge + 3 stat card icons)
+   - AdminLayoutClient.tsx:59 (mobile menu icon)
+   - AdminSidebar.tsx:14, 19, 24, 29, 105 (nav icons + logout icon + external link icon)
+   - ArticlePreview.tsx:62 (close button icon)
+
+4. Verified: `npm run build` passed (51 pages generated)
+
+**Key findings**:
+- All buttons in admin UI are action buttons (type="button"), not form submit buttons
+- Decorative SVGs should have aria-hidden="true" to prevent screen readers from announcing them
+- SVGs with actual content (like error icons with <title>) should keep the title element
+- LSP diagnostics now clean for accessibility issues in modified files
+
+**Commit**: `fix(a11y): add button types and SVG accessibility` (a033f38)
+
+## [2026-02-20] Tasks 13+14: Config cleanup + env example
+- next.config.ts: verified picsum removed, CSP present, Supabase domain correct
+- .env.example created with all required keys (Supabase, Zoho SMTP, Site URL)
+- .gitignore: updated to allow .env.example while ignoring .env.local
+- Build passes successfully
+- Commit: chore: add .env.example and update .gitignore to allow it
