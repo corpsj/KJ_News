@@ -634,44 +634,125 @@ textarea.admin-input {
   animation: mail-spin 1s linear infinite;
 }
 
-/* ── Mobile article content ── */
+/* ── Article body: classic Korean news portal typography ── */
+.article-body {
+  font-size: 17px;
+  line-height: 1.9;
+  color: #222;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.article-body p {
+  margin-bottom: 1.5em;
+}
+
+.article-body img {
+  display: block;
+  margin: 1.5em auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.article-body h2 {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin: 2em 0 0.8em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid #eee;
+}
+
+.article-body h3 {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin: 1.5em 0 0.6em;
+}
+
+.article-body blockquote {
+  border-left: 3px solid #333;
+  padding: 0.5em 1em;
+  margin: 1.5em 0;
+  color: #555;
+  background: #f9f9f9;
+}
+
+.article-body a {
+  color: #1a0dab;
+  text-decoration: underline;
+}
+
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+}
+
+.article-body th,
+.article-body td {
+  border: 1px solid #ddd;
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.article-body th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.article-body ul,
+.article-body ol {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.article-body li {
+  margin-bottom: 0.4em;
+}
+
+.article-body iframe {
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin: 1.5em 0;
+}
+
+.article-body pre {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.article-body hr {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 2em 0;
+}
+
 @media (max-width: 768px) {
-  .prose {
+  .article-body {
     font-size: 16px;
-    line-height: 1.8;
+    line-height: 1.85;
   }
-  .prose img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
+  .article-body img {
+    border-radius: 0;
   }
-  .prose iframe {
-    max-width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-  }
-  .prose table {
+  .article-body table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
   }
-  .prose pre {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 @media (max-width: 640px) {
-  .prose {
+  .article-body {
     font-size: 15.5px;
     line-height: 1.85;
   }
-  .prose h2 {
-    font-size: 1.25rem;
+  .article-body h2 {
+    font-size: 1.2em;
   }
-  .prose h3 {
-    font-size: 1.1rem;
+  .article-body h3 {
+    font-size: 1.1em;
   }
 }
 

@@ -57,6 +57,7 @@ function mapArticle(row: DbArticle): Article {
     status: row.status as Article["status"],
     source: row.source || undefined,
     sourceUrl: row.source_url || undefined,
+    updatedAt: row.updated_at || undefined,
   };
 }
 

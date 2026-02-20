@@ -1,28 +1,41 @@
 "use client";
 
 export default function PrintButton() {
+  const changeFontSize = (delta: number) => {
+    const el = document.querySelector("[data-article-body]") as HTMLElement | null;
+    if (!el) return;
+    const current = parseFloat(getComputedStyle(el).fontSize);
+    const next = Math.max(14, Math.min(24, current + delta));
+    el.style.fontSize = `${next}px`;
+  };
+
   return (
-    <div className="print-button-container hidden md:block">
+    <div className="print-button-container flex items-center gap-0 text-[13px] text-gray-500" data-print-hide>
       <button
         type="button"
         onClick={() => window.print()}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+        className="hover:text-gray-900"
         aria-label="기사 인쇄"
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          aria-hidden="true"
-        >
-          <polyline points="6 9 6 2 18 2 18 9" />
-          <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
-          <rect x="6" y="14" width="12" height="8" />
-        </svg>
         인쇄
+      </button>
+      <span className="mx-2 text-gray-300">|</span>
+      <span className="mr-1.5">글자크기</span>
+      <button
+        type="button"
+        onClick={() => changeFontSize(2)}
+        className="inline-flex items-center justify-center w-[22px] h-[22px] border border-gray-300 text-xs text-gray-500 hover:text-gray-900 hover:border-gray-500"
+        aria-label="글자 크게"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        onClick={() => changeFontSize(-2)}
+        className="inline-flex items-center justify-center w-[22px] h-[22px] border border-gray-300 text-xs text-gray-500 hover:text-gray-900 hover:border-gray-500 ml-0.5"
+        aria-label="글자 작게"
+      >
+        &minus;
       </button>
     </div>
   );

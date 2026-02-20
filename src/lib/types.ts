@@ -39,6 +39,7 @@ export interface Article {
   status: ArticleStatus;
   source?: string;
   sourceUrl?: string;
+  updatedAt?: string;
 }
 
 // News Factory types
