@@ -156,7 +156,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     async (data: ArticleFormData): Promise<Article | null> => {
       const category = categories.find((c) => c.slug === data.categorySlug) ?? categories[0];
       const author = authors.find((a) => a.id === data.authorId) ?? authors[0];
-      if (!category || !author) return null;
+      if (!category || !author) {
+        console.error("[addArticle] 카테고리 또는 작성자 없음", { category: !!category, author: !!author, categories: categories.length, authors: authors.length });
+        return null;
+      }
 
       const status = data.status || "draft";
       const { data: row, error } = await supabase
@@ -284,7 +287,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     async (data: ImportArticleData): Promise<Article | null> => {
       const category = categories.find((c) => c.slug === data.categorySlug) ?? categories[0];
       const author = authors[0];
-      if (!category || !author) return null;
+      if (!category || !author) {
+        console.error("[importArticle] 카테고리 또는 작성자 없음", { category: !!category, author: !!author, categories: categories.length, authors: authors.length });
+        return null;
+      }
 
       const { data: row, error } = await supabase
         .from("articles")
