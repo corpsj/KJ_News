@@ -5,7 +5,8 @@ import type { NfConnection } from "@/lib/types";
 import { NF_CATEGORIES } from "@/lib/nf-constants";
 import { formatDate } from "@/lib/utils";
 
-function maskApiKey(key: string): string {
+function maskApiKey(key: string | undefined | null): string {
+  if (!key) return "—";
   if (key.length <= 16) return key;
   return `${key.slice(0, 8)}${"*".repeat(8)}...${key.slice(-4)}`;
 }
