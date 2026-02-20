@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+const PER_PAGE = 20;
+
 function getImapConfig() {
   return {
     host: "imap.zoho.com",
@@ -28,7 +30,11 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(parseInt(searchParams.get("limit") || "30", 10), 100);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.min(
+    parseInt(searchParams.get("limit") || String(PER_PAGE), 10),
+    100
+  );
 
   const client = new ImapFlow(getImapConfig());
 
@@ -38,14 +44,28 @@ export async function GET(request: NextRequest) {
 
     try {
       const mailbox = client.mailbox;
-      const total = mailbox && typeof mailbox === "object" && "exists" in mailbox ? mailbox.exists : 0;
+      const total =
+        mailbox && typeof mailbox === "object" && "exists" in mailbox
+          ? mailbox.exists
+          : 0;
 
       if (total === 0) {
-        return NextResponse.json({ emails: [], total: 0 });
+        return NextResponse.json({
+          emails: [],
+          total: 0,
+          page: 1,
+          totalPages: 0,
+        });
       }
 
-      const startSeq = Math.max(1, total - limit + 1);
-      const range = `${startSeq}:${total}`;
+      const totalPages = Math.ceil(total / limit);
+      const safePage = Math.min(page, totalPages);
+
+      // Newest emails have the highest sequence numbers.
+      // Page 1 → last `limit` emails (newest), page 2 → next batch, etc.
+      const endSeq = total - (safePage - 1) * limit;
+      const startSeq = Math.max(1, endSeq - limit + 1);
+      const range = `${startSeq}:${endSeq}`;
 
       const emails: {
         uid: number;
@@ -76,7 +96,12 @@ export async function GET(request: NextRequest) {
 
       emails.reverse();
 
-      return NextResponse.json({ emails, total });
+      return NextResponse.json({
+        emails,
+        total,
+        page: safePage,
+        totalPages,
+      });
     } finally {
       lock.release();
     }
@@ -84,7 +109,7 @@ export async function GET(request: NextRequest) {
     console.error("IMAP fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch emails" },
-      { status: 500 },
+      { status: 500 }
     );
   } finally {
     await client.logout().catch(() => {});
