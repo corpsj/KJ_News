@@ -144,15 +144,21 @@ export default async function ArticlePage({ params }: PageProps) {
           <p className="text-lg text-gray-600 mb-6">{article.subtitle}</p>
 
           <div className="flex items-center gap-4 pb-6 mb-6 border-b border-gray-200">
-            <div className="relative w-10 h-10 rounded-full overflow-hidden">
-              <Image
-                src={article.author.avatarUrl}
-                alt={article.author.name}
-                fill
-                className="object-cover"
-                sizes="40px"
-              />
-            </div>
+            {hasImage(article.author.avatarUrl) ? (
+              <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                <Image
+                  src={article.author.avatarUrl}
+                  alt={article.author.name}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-semibold">{article.author.name.charAt(0)}</span>
+              </div>
+            )}
             <div>
               <p className="text-sm font-semibold text-gray-900">
                 {article.author.name}
