@@ -25,7 +25,7 @@ export default function NfSubscriptionManager() {
         return r.json();
       })
       .then((data) => {
-        if (data && data.status) {
+        if (data && data.status && data.status !== "disconnected") {
           setConn(data);
         } else {
           setConn(null);
