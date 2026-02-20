@@ -595,6 +595,15 @@ body {
   animation: nf-lightbox-mobile-in 0.3s ease-out both;
 }
 
+/* ============ Mail ============ */
+@keyframes mail-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-mail-spin {
+  animation: mail-spin 1s linear infinite;
+}
+
 /* ============ Print Styles ============ */
 @media print {
   /* 인쇄 불필요 요소 숨김 */
