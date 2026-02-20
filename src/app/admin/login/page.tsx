@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -35,6 +36,19 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-[400px] animate-fade-in">
+      <div className="mb-6">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1 text-[13px] text-gray-400 hover:text-gray-700 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          돌아가기
+        </button>
+      </div>
+
       <div className="flex justify-center mb-10">
         <Image
           src="/brand/KJ_sloganLogo.png"
@@ -114,9 +128,13 @@ export default function LoginPage() {
         </form>
       </div>
 
-      <p className="text-[11px] text-gray-400 mt-8 text-center">
-        © 2026 광전타임즈. All rights reserved.
-      </p>
+      <div className="flex items-center justify-center gap-3 mt-8 text-[12px] text-gray-400">
+        <Link href="/" className="hover:text-gray-700 transition-colors">
+          홈으로
+        </Link>
+        <span>·</span>
+        <span>© 2026 광전타임즈</span>
+      </div>
 
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-[100] flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium shadow-md border bg-white text-gray-900 border-gray-200 animate-fade-in">
