@@ -8,6 +8,8 @@ export default function BreakingNewsTicker({
 }: {
   articles: Article[];
 }) {
+  if (articles.length === 0) return null;
+
   return (
     <div className="bg-gray-900 text-white overflow-hidden">
       <div className="max-w-7xl mx-auto flex items-center">

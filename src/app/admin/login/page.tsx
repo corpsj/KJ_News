@@ -50,9 +50,10 @@ export default function LoginPage() {
              className="admin-input"
              type="text"
              placeholder="아이디를 입력하세요"
-             value={username}
-             onChange={(e) => setUsername(e.target.value)}
-           />
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+            />
          </div>
          <div>
            <label htmlFor="password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
@@ -63,9 +64,10 @@ export default function LoginPage() {
              className="admin-input"
              type="password"
              placeholder="비밀번호 입력"
-             value={password}
-             onChange={(e) => setPassword(e.target.value)}
-           />
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
          </div>
 
          {error && (

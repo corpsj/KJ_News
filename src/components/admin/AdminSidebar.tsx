@@ -81,9 +81,9 @@ export default function AdminSidebar({ onMobileClose }: { onMobileClose?: () => 
                     key={item.href}
                     href={item.href}
                     onClick={onMobileClose}
-                    className={`flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] transition-colors ${
+                    className={`flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] transition-colors relative ${
                       active
-                        ? "bg-gray-100 text-gray-900 font-semibold"
+                        ? "bg-gray-100 text-gray-900 font-semibold before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:bg-gray-900 before:rounded-full"
                         : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                     }`}
                   >

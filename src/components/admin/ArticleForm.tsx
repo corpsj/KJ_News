@@ -57,7 +57,10 @@ export default function ArticleForm({ article }: { article?: Article }) {
     if (!saved) return;
     try {
       setForm(JSON.parse(saved));
-    } catch { /* noop */ }
+    } catch (err) {
+      console.warn("[ArticleForm] Failed to parse saved draft:", err);
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
     setHasSavedDraft(false);
   }
 
@@ -244,7 +247,7 @@ export default function ArticleForm({ article }: { article?: Article }) {
           />
           {form.thumbnailUrl ? (
             <div className="flex items-center gap-2 mt-2">
-              <img src={form.thumbnailUrl} alt="" className="w-16 h-10 object-cover rounded border border-gray-200" />
+              <img src={form.thumbnailUrl} alt="기사 썸네일 미리보기" className="w-16 h-10 object-cover rounded border border-gray-200" />
               <span className="text-[11px] text-gray-400">썸네일로 사용될 이미지</span>
             </div>
           ) : (

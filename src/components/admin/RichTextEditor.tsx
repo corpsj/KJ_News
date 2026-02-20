@@ -17,7 +17,7 @@ interface RichTextEditorProps {
 }
 
 type ToolbarItem =
-  | { kind: "button"; key: string; label: React.ReactNode; onClick: () => void; isActive: boolean }
+  | { kind: "button"; key: string; ariaLabel: string; label: React.ReactNode; onClick: () => void; isActive: boolean }
   | { kind: "separator"; key: string };
 
 const ico = (d: string) => (
@@ -57,6 +57,8 @@ export default function RichTextEditor({
   const isInternalChange = useRef(false);
   const [showImageInput, setShowImageInput] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -87,6 +89,7 @@ export default function RichTextEditor({
   function handleImageInsert() {
     setShowImageInput((prev) => !prev);
     setImageUrl("");
+    setShowLinkInput(false);
   }
 
   function insertImageByUrl() {
@@ -114,38 +117,53 @@ export default function RichTextEditor({
   function handleLinkInsert() {
     if (!editor) return;
     const prev = editor.getAttributes("link").href ?? "";
-    const url = prompt("URL을 입력하세요:", prev);
-    if (url === null) return;
+    setLinkUrl(prev);
+    setShowLinkInput((v) => !v);
+    setShowImageInput(false);
+  }
+
+  function insertLink() {
+    if (!editor) return;
+    const url = linkUrl.trim();
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
     } else {
       editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
     }
+    setShowLinkInput(false);
+    setLinkUrl("");
+  }
+
+  function removeLink() {
+    if (!editor) return;
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setShowLinkInput(false);
+    setLinkUrl("");
   }
 
   function buildToolbar(): ToolbarItem[] {
     if (!editor) return [];
     return [
-      { kind: "button", key: "bold", label: <IcoBold />, onClick: () => editor.chain().focus().toggleBold().run(), isActive: editor.isActive("bold") },
-      { kind: "button", key: "italic", label: <IcoItalic />, onClick: () => editor.chain().focus().toggleItalic().run(), isActive: editor.isActive("italic") },
-      { kind: "button", key: "underline", label: <IcoUnderline />, onClick: () => editor.chain().focus().toggleUnderline().run(), isActive: editor.isActive("underline") },
-      { kind: "button", key: "strike", label: <IcoStrike />, onClick: () => editor.chain().focus().toggleStrike().run(), isActive: editor.isActive("strike") },
+      { kind: "button", key: "bold", ariaLabel: "굵게", label: <IcoBold />, onClick: () => editor.chain().focus().toggleBold().run(), isActive: editor.isActive("bold") },
+      { kind: "button", key: "italic", ariaLabel: "기울임", label: <IcoItalic />, onClick: () => editor.chain().focus().toggleItalic().run(), isActive: editor.isActive("italic") },
+      { kind: "button", key: "underline", ariaLabel: "밑줄", label: <IcoUnderline />, onClick: () => editor.chain().focus().toggleUnderline().run(), isActive: editor.isActive("underline") },
+      { kind: "button", key: "strike", ariaLabel: "취소선", label: <IcoStrike />, onClick: () => editor.chain().focus().toggleStrike().run(), isActive: editor.isActive("strike") },
       { kind: "separator", key: "sep-format" },
-      { kind: "button", key: "h2", label: <IcoH2 />, onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: editor.isActive("heading", { level: 2 }) },
-      { kind: "button", key: "h3", label: <IcoH3 />, onClick: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: editor.isActive("heading", { level: 3 }) },
+      { kind: "button", key: "h2", ariaLabel: "제목 2", label: <IcoH2 />, onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: editor.isActive("heading", { level: 2 }) },
+      { kind: "button", key: "h3", ariaLabel: "제목 3", label: <IcoH3 />, onClick: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: editor.isActive("heading", { level: 3 }) },
       { kind: "separator", key: "sep-heading" },
-      { kind: "button", key: "blockquote", label: <IcoQuote />, onClick: () => editor.chain().focus().toggleBlockquote().run(), isActive: editor.isActive("blockquote") },
-      { kind: "button", key: "code", label: <IcoCode />, onClick: () => editor.chain().focus().toggleCode().run(), isActive: editor.isActive("code") },
+      { kind: "button", key: "blockquote", ariaLabel: "인용", label: <IcoQuote />, onClick: () => editor.chain().focus().toggleBlockquote().run(), isActive: editor.isActive("blockquote") },
+      { kind: "button", key: "code", ariaLabel: "코드", label: <IcoCode />, onClick: () => editor.chain().focus().toggleCode().run(), isActive: editor.isActive("code") },
       { kind: "separator", key: "sep-block" },
-      { kind: "button", key: "bullet", label: <IcoBullet />, onClick: () => editor.chain().focus().toggleBulletList().run(), isActive: editor.isActive("bulletList") },
-      { kind: "button", key: "ordered", label: <IcoOrdered />, onClick: () => editor.chain().focus().toggleOrderedList().run(), isActive: editor.isActive("orderedList") },
+      { kind: "button", key: "bullet", ariaLabel: "글머리 기호 목록", label: <IcoBullet />, onClick: () => editor.chain().focus().toggleBulletList().run(), isActive: editor.isActive("bulletList") },
+      { kind: "button", key: "ordered", ariaLabel: "번호 목록", label: <IcoOrdered />, onClick: () => editor.chain().focus().toggleOrderedList().run(), isActive: editor.isActive("orderedList") },
       { kind: "separator", key: "sep-list" },
-      { kind: "button", key: "hr", label: <IcoHr />, onClick: () => editor.chain().focus().setHorizontalRule().run(), isActive: false },
-      { kind: "button", key: "link", label: <IcoLink />, onClick: handleLinkInsert, isActive: editor.isActive("link") },
-      { kind: "button", key: "image", label: <IcoImage />, onClick: handleImageInsert, isActive: false },
+      { kind: "button", key: "hr", ariaLabel: "가로선 삽입", label: <IcoHr />, onClick: () => editor.chain().focus().setHorizontalRule().run(), isActive: false },
+      { kind: "button", key: "link", ariaLabel: "링크", label: <IcoLink />, onClick: handleLinkInsert, isActive: editor.isActive("link") },
+      { kind: "button", key: "image", ariaLabel: "이미지", label: <IcoImage />, onClick: handleImageInsert, isActive: false },
       { kind: "separator", key: "sep-insert" },
-      { kind: "button", key: "undo", label: <IcoUndo />, onClick: () => editor.chain().focus().undo().run(), isActive: false },
-      { kind: "button", key: "redo", label: <IcoRedo />, onClick: () => editor.chain().focus().redo().run(), isActive: false },
+      { kind: "button", key: "undo", ariaLabel: "실행 취소", label: <IcoUndo />, onClick: () => editor.chain().focus().undo().run(), isActive: false },
+      { kind: "button", key: "redo", ariaLabel: "다시 실행", label: <IcoRedo />, onClick: () => editor.chain().focus().redo().run(), isActive: false },
     ];
   }
 
@@ -164,6 +182,8 @@ export default function RichTextEditor({
               className={item.isActive ? "active" : ""}
               onMouseDown={(e) => e.preventDefault()}
               onClick={item.onClick}
+              aria-label={item.ariaLabel}
+              title={item.ariaLabel}
             >
               {item.label}
             </button>
@@ -202,6 +222,44 @@ export default function RichTextEditor({
             type="button"
             className="text-gray-400 hover:text-gray-600 p-1"
             onClick={() => setShowImageInput(false)}
+            aria-label="닫기"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {showLinkInput && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
+          <input
+            ref={(el) => el?.focus()}
+            type="text"
+            className="flex-1 text-sm px-2.5 py-1.5 border border-gray-300 rounded bg-white focus:outline-none focus:border-gray-900"
+            placeholder="URL을 입력하세요 (예: https://...)"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") insertLink(); }}
+          />
+          <button
+            type="button"
+            className="text-xs font-medium px-3 py-1.5 bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
+            onClick={insertLink}
+          >
+            적용
+          </button>
+          {editor?.isActive("link") && (
+            <button
+              type="button"
+              className="text-xs px-3 py-1.5 border border-gray-300 rounded text-gray-600 hover:bg-gray-100 transition-colors"
+              onClick={removeLink}
+            >
+              링크 제거
+            </button>
+          )}
+          <button
+            type="button"
+            className="text-gray-400 hover:text-gray-600 p-1"
+            onClick={() => setShowLinkInput(false)}
             aria-label="닫기"
           >
             ✕

@@ -7,6 +7,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { ARTICLE_STATUS_LABELS, type ArticleStatus, type Article } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import ArticlePreview from "@/components/admin/ArticlePreview";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
 
 export default function ArticlesPage() {
   const { articles, categories, deleteArticle } = useAdmin();
@@ -17,6 +18,7 @@ export default function ArticlesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: "single" | "bulk"; id?: string; title?: string } | null>(null);
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
@@ -44,22 +46,26 @@ export default function ArticlesPage() {
     }
   }
 
-  async function handleBulkDelete() {
-    if (!confirm(`${selected.size}개의 기사를 삭제하시겠습니까?`)) return;
-    await Promise.all(Array.from(selected).map((id) => deleteArticle(id)));
-    toast(`${selected.size}개 기사가 삭제되었습니다.`, "success");
-    setSelected(new Set());
+  function handleBulkDelete() {
+    setDeleteTarget({ type: "bulk" });
   }
 
-  async function handleDelete(id: string, title: string) {
-    if (!confirm(`"${title}" 기사를 삭제하시겠습니까?`)) return;
-    await deleteArticle(id);
-    toast("기사가 삭제되었습니다.", "success");
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    if (deleteTarget.type === "bulk") {
+      await Promise.all(Array.from(selected).map((id) => deleteArticle(id)));
+      toast(`${selected.size}개 기사가 삭제되었습니다.`, "success");
+      setSelected(new Set());
+    } else if (deleteTarget.type === "single" && deleteTarget.id) {
+      await deleteArticle(deleteTarget.id);
+      toast("기사가 삭제되었습니다.", "success");
+      setSelected((prev) => { const next = new Set(prev); next.delete(deleteTarget.id!); return next; });
+    }
+    setDeleteTarget(null);
+  }
+
+  function handleDelete(id: string, title: string) {
+    setDeleteTarget({ type: "single", id, title });
   }
 
   return (
@@ -67,7 +73,7 @@ export default function ArticlesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">기사 관리</h1>
         <Link href="/admin/articles/new" className="admin-btn admin-btn-primary">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           새 기사 작성
@@ -169,8 +175,16 @@ export default function ArticlesPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-gray-400 text-[13px]">
-                    기사가 없습니다.
+                  <td colSpan={8} className="py-16 text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-50 border border-gray-100 mb-3">
+                      <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] text-gray-500 font-medium mb-1">기사가 없습니다</p>
+                    <p className="text-[12px] text-gray-400">
+                      {search || catFilter || statusFilter ? "검색 조건을 변경해보세요." : "첫 번째 기사를 작성해보세요."}
+                    </p>
                   </td>
                 </tr>
               )}
@@ -207,7 +221,17 @@ export default function ArticlesPage() {
             </div>
           ))}
           {filtered.length === 0 && (
-            <div className="py-12 text-center text-gray-400 text-[13px]">기사가 없습니다.</div>
+            <div className="py-16 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-50 border border-gray-100 mb-3">
+                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+              </div>
+              <p className="text-[13px] text-gray-500 font-medium mb-1">기사가 없습니다</p>
+              <p className="text-[12px] text-gray-400">
+                {search || catFilter || statusFilter ? "검색 조건을 변경해보세요." : "첫 번째 기사를 작성해보세요."}
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -218,6 +242,21 @@ export default function ArticlesPage() {
         <ArticlePreview
           article={previewArticle}
           onClose={() => setPreviewArticle(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={deleteTarget.type === "bulk" ? "기사 일괄 삭제" : "기사 삭제"}
+          message={
+            deleteTarget.type === "bulk"
+              ? `선택한 ${selected.size}개의 기사를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+              : `"${deleteTarget.title}" 기사를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+          }
+          confirmLabel="삭제"
+          cancelLabel="취소"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
         />
       )}
     </div>

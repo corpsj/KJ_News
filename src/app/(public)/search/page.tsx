@@ -63,8 +63,13 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
       {query && results.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-gray-400 text-lg mb-2">
-            검색 결과가 없습니다.
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-50 border border-gray-100 mb-4">
+            <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 text-lg font-medium mb-2">
+            검색 결과가 없습니다
           </p>
           <p className="text-gray-400 text-sm">
             다른 키워드로 검색해 보세요.

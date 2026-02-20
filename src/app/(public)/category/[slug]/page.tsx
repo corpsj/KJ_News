@@ -82,14 +82,27 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-gray-800 transition-colors">
-            홈
-          </Link>
+          <Link href="/" className="hover:text-gray-800 transition-colors">홈</Link>
           <span>/</span>
           <span className="text-gray-900 font-medium">{category.name}</span>
         </nav>
-        <div className="text-center py-20 text-gray-400">
-          <p className="text-lg">이 카테고리에 등록된 기사가 없습니다.</p>
+        <div className="pb-4 mb-6 border-b-2 border-gray-900">
+          <h1 className="text-2xl font-extrabold text-gray-900">{category.name}</h1>
+          {category.description && (
+            <p className="text-sm text-gray-500 mt-1">{category.description}</p>
+          )}
+        </div>
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-50 border border-gray-100 mb-4">
+            <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+            </svg>
+          </div>
+          <p className="text-lg font-medium text-gray-500 mb-2">이 카테고리에 등록된 기사가 없습니다</p>
+          <p className="text-sm text-gray-400 mb-6">곧 새로운 기사가 등록될 예정입니다.</p>
+          <Link href="/" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            ← 홈으로 돌아가기
+          </Link>
         </div>
       </div>
     );

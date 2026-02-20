@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 const breadcrumbMap: Record<string, { label: string; href?: string }[]> = {
   "/admin": [{ label: "대시보드" }],
@@ -12,6 +13,7 @@ const breadcrumbMap: Record<string, { label: string; href?: string }[]> = {
 
 export default function AdminHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const isEditPage = /^\/admin\/articles\/.+\/edit$/.test(pathname);
   const crumbs = isEditPage
     ? [{ label: "기사 관리", href: "/admin/articles" }, { label: "기사 수정" }]
@@ -41,8 +43,10 @@ export default function AdminHeader({ onMenuToggle }: { onMenuToggle?: () => voi
       </div>
 
       <div className="ml-auto flex items-center gap-1">
-        <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center">
-          <span className="text-white text-[10px] font-bold">A</span>
+        <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center" title={user?.email ?? ""}>
+          <span className="text-white text-[10px] font-bold">
+            {user?.email?.[0]?.toUpperCase() ?? "A"}
+          </span>
         </div>
       </div>
     </header>

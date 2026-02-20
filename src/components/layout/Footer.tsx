@@ -42,7 +42,7 @@ export default async function Footer() {
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white mb-4">&nbsp;</h4>
+              <div className="h-5 mb-4" aria-hidden="true" />
               <ul className="space-y-2">
                 {categories.slice(4).map((cat) => (
                   <li key={cat.id}>

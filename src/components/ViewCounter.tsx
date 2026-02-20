@@ -13,7 +13,9 @@ export default function ViewCounter({ articleId }: ViewCounterProps) {
     if (called.current) return;
     called.current = true;
 
-    fetch(`/api/articles/${articleId}/view`, { method: "POST" }).catch(() => {});
+    fetch(`/api/articles/${articleId}/view`, { method: "POST" }).catch((err) => {
+      console.warn("[ViewCounter] Failed to record view:", err);
+    });
   }, [articleId]);
 
   return null;

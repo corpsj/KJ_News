@@ -86,6 +86,18 @@ export default async function Home({ searchParams }: HomeProps) {
     <>
       <BreakingNewsTicker articles={latestArticles.slice(0, 5)} />
 
+      {latestArticles.length === 0 ? (
+        <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 border border-gray-100 mb-5">
+            <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">아직 등록된 기사가 없습니다</h2>
+          <p className="text-[15px] text-gray-400">새로운 소식이 곧 업데이트됩니다.</p>
+        </div>
+      ) : (
+        <>
       {/* ═══════ 1면: 히어로 + 서브 이미지 + 주요 텍스트 헤드라인 ═══════ */}
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -221,25 +233,29 @@ export default async function Home({ searchParams }: HomeProps) {
                   많이 본 뉴스
                 </h3>
                 <div>
-                  {mostViewed.map((article, i) => (
-                    <Link
-                      key={article.id}
-                      href={`/article/${article.id}`}
-                      className="group flex gap-3 py-3 border-b border-gray-100 last:border-b-0"
-                    >
-                      <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-gray-900 text-white text-[11px] font-bold">
-                        {i + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-[13px] font-semibold text-gray-800 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
-                          {article.title}
-                        </h4>
-                        <span className="text-[11px] text-gray-400 mt-0.5 block">
-                          {formatDateShort(article.publishedAt)}
+                  {mostViewed.length > 0 ? (
+                    mostViewed.map((article, i) => (
+                      <Link
+                        key={article.id}
+                        href={`/article/${article.id}`}
+                        className="group flex gap-3 py-3 border-b border-gray-100 last:border-b-0"
+                      >
+                        <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-gray-900 text-white text-[11px] font-bold">
+                          {i + 1}
                         </span>
-                      </div>
-                    </Link>
-                  ))}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-[13px] font-semibold text-gray-800 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
+                            {article.title}
+                          </h4>
+                          <span className="text-[11px] text-gray-400 mt-0.5 block">
+                            {formatDateShort(article.publishedAt)}
+                          </span>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-[13px] text-gray-400 py-4 text-center">아직 뉴스가 없습니다.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -248,6 +264,8 @@ export default async function Home({ searchParams }: HomeProps) {
 
         <Pagination currentPage={page} totalPages={totalPages} basePath="/" />
       </div>
+        </>
+      )}
     </>
   );
 }

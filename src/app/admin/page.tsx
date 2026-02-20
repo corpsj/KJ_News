@@ -58,14 +58,29 @@ export default function AdminDashboard() {
       </div>
 
       <div className="admin-card p-4 flex flex-wrap gap-2">
-        {(Object.keys(ARTICLE_STATUS_LABELS) as ArticleStatus[]).map((status) => (
-          <span key={status} className={`admin-badge-${status}`}>
-            {ARTICLE_STATUS_LABELS[status]} {statusCounts[status] || 0}
-          </span>
-        ))}
-      </div>
+         {(Object.keys(ARTICLE_STATUS_LABELS) as ArticleStatus[]).map((status) => (
+           <span key={status} className={`admin-badge-${status}`}>
+             {ARTICLE_STATUS_LABELS[status]} {statusCounts[status] || 0}
+           </span>
+         ))}
+       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+       {articles.length === 0 && (
+         <div className="admin-card p-8 text-center">
+           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-50 border border-gray-100 mb-4">
+             <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+             </svg>
+           </div>
+           <h2 className="text-[15px] font-semibold text-gray-900 mb-1">첫 번째 기사를 작성해보세요</h2>
+           <p className="text-[13px] text-gray-400 mb-5">기사를 등록하면 대시보드에서 통계와 현황을 확인할 수 있습니다.</p>
+           <Link href="/admin/articles/new" className="admin-btn admin-btn-primary">
+             새 기사 작성
+           </Link>
+         </div>
+       )}
+
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="admin-card p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[14px] font-semibold text-gray-900">최근 기사</h2>
@@ -73,60 +88,81 @@ export default function AdminDashboard() {
               전체보기 →
             </Link>
           </div>
-          <div className="space-y-0">
-            {recentArticles.map((a) => (
-              <div key={a.id} className="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-b-0">
-                <div className="flex-1 min-w-0">
-                  <Link href={`/admin/articles/${a.id}/edit`} className="text-[13px] font-medium text-gray-800 hover:text-gray-900 truncate block">
-                    {a.title}
-                  </Link>
-                  <span className="text-[11px] text-gray-400">{formatDate(a.publishedAt)}</span>
-                </div>
-                <span className="admin-badge flex-shrink-0">{a.category.name}</span>
-              </div>
-            ))}
-          </div>
+           <div className="space-y-0">
+             {recentArticles.length > 0 ? (
+               recentArticles.map((a) => (
+                 <div key={a.id} className="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-b-0">
+                   <div className="flex-1 min-w-0">
+                     <Link href={`/admin/articles/${a.id}/edit`} className="text-[13px] font-medium text-gray-800 hover:text-gray-900 truncate block">
+                       {a.title}
+                     </Link>
+                     <span className="text-[11px] text-gray-400">{formatDate(a.publishedAt)}</span>
+                   </div>
+                   <span className="admin-badge flex-shrink-0">{a.category.name}</span>
+                 </div>
+               ))
+             ) : (
+               <div className="py-8 text-center">
+                 <p className="text-[13px] text-gray-400">아직 등록된 기사가 없습니다.</p>
+                 <Link href="/admin/articles/new" className="text-[12px] text-gray-500 hover:text-gray-900 mt-2 inline-block transition-colors">
+                   기사 작성하기 →
+                 </Link>
+               </div>
+             )}
+           </div>
         </div>
 
-        <div className="admin-card p-5">
-          <h2 className="text-[14px] font-semibold text-gray-900 mb-4">카테고리 분포</h2>
-          <div className="space-y-3">
-            {categoryDist.map((c) => (
-              <div key={c.name} className="flex items-center gap-3">
-                <span className="text-[12px] text-gray-500 w-16 flex-shrink-0">{c.name}</span>
-                <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-gray-400 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${(c.count / maxCount) * 100}%` }}
-                  />
-                </div>
-                <span className="text-[12px] text-gray-500 w-6 text-right">{c.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+         <div className="admin-card p-5">
+           <h2 className="text-[14px] font-semibold text-gray-900 mb-4">카테고리 분포</h2>
+           {articles.length > 0 ? (
+             <div className="space-y-3">
+               {categoryDist.map((c) => (
+                 <div key={c.name} className="flex items-center gap-3">
+                   <span className="text-[12px] text-gray-500 w-16 flex-shrink-0">{c.name}</span>
+                   <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                     <div
+                       className="bg-gray-400 h-full rounded-full transition-all duration-500"
+                       style={{ width: `${(c.count / maxCount) * 100}%` }}
+                     />
+                   </div>
+                   <span className="text-[12px] text-gray-500 w-6 text-right">{c.count}</span>
+                 </div>
+               ))}
+             </div>
+           ) : (
+             <div className="py-6 text-center">
+               <p className="text-[13px] text-gray-400">기사를 등록하면 카테고리별 분포가 표시됩니다.</p>
+             </div>
+           )}
+         </div>
       </div>
 
-      <div className="admin-card p-5">
-        <h2 className="text-[14px] font-semibold text-gray-900 mb-4">조회수 TOP 5</h2>
-        <div className="space-y-0">
-          {topViewed.map((a, i) => (
-            <div key={a.id} className="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-b-0">
-              <span className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-500 flex-shrink-0">
-                {i + 1}
-              </span>
-              <div className="flex-1 min-w-0">
-                <Link href={`/admin/articles/${a.id}/edit`} className="text-[13px] font-medium text-gray-800 hover:text-gray-900 truncate block">
-                  {a.title}
-                </Link>
-              </div>
-              <span className="text-[12px] text-gray-400 flex-shrink-0">
-                {a.viewCount.toLocaleString()}회
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+       <div className="admin-card p-5">
+         <h2 className="text-[14px] font-semibold text-gray-900 mb-4">조회수 TOP 5</h2>
+         <div className="space-y-0">
+           {topViewed.length > 0 ? (
+             topViewed.map((a, i) => (
+               <div key={a.id} className="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-b-0">
+                 <span className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-500 flex-shrink-0">
+                   {i + 1}
+                 </span>
+                 <div className="flex-1 min-w-0">
+                   <Link href={`/admin/articles/${a.id}/edit`} className="text-[13px] font-medium text-gray-800 hover:text-gray-900 truncate block">
+                     {a.title}
+                   </Link>
+                 </div>
+                 <span className="text-[12px] text-gray-400 flex-shrink-0">
+                   {a.viewCount.toLocaleString()}회
+                 </span>
+               </div>
+             ))
+           ) : (
+             <div className="py-8 text-center">
+               <p className="text-[13px] text-gray-400">기사가 등록되면 조회수 순위가 표시됩니다.</p>
+             </div>
+           )}
+         </div>
+       </div>
     </div>
   );
 }

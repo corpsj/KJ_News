@@ -58,6 +58,7 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
           type="button"
           onClick={onClose}
           className="sticky top-0 float-right m-3 w-10 h-10 rounded-lg bg-white/80 backdrop-blur border border-gray-200 flex items-center justify-center z-10 hover:bg-gray-100 transition-colors"
+          aria-label="미리보기 닫기"
         >
           <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
