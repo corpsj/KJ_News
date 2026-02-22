@@ -5,18 +5,19 @@ import type { NfArticle, NfRegion, NfCategory } from "@/lib/types";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
 import { NF_TO_KJ_CATEGORY, NF_CATEGORY_LABELS, DEFAULT_NF_CATEGORY_SLUG, plainTextToHtml } from "@/lib/nf-constants";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
 
 export default function NfArticleExplorer() {
-  const { importArticle, addArticle, authors } = useAdmin();
+  const { importArticle, addArticle, deleteArticle, authors } = useAdmin();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NfArticle[]>([]);
   const [regions, setRegions] = useState<NfRegion[]>([]);
   const [categories, setCategories] = useState<NfCategory[]>([]);
-  const [importedMap, setImportedMap] = useState<Map<string, string>>(new Map());
+  const [importedMap, setImportedMap] = useState<Map<string, { importType: string; localId: number }>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
@@ -33,6 +34,7 @@ export default function NfArticleExplorer() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const selectedArticle = articles.find(a => a.id === selectedId) ?? null;
 
@@ -67,9 +69,9 @@ export default function NfArticleExplorer() {
         const impRes = await fetch(`/api/nf/imports?nf_ids=${ids}`);
         if (impRes.ok) {
           const impData = await impRes.json();
-          const map = new Map<string, string>();
+          const map = new Map<string, { importType: string; localId: number }>();
           for (const imp of impData.imports || []) {
-            map.set(imp.nf_article_id, imp.import_type);
+            map.set(imp.nf_article_id, { importType: imp.import_type, localId: imp.local_article_id });
           }
           setImportedMap(map);
         }
@@ -143,7 +145,7 @@ export default function NfArticleExplorer() {
           import_type: "imported",
         }),
       });
-      setImportedMap((prev) => new Map(prev).set(article.id, "imported"));
+      setImportedMap((prev) => new Map(prev).set(article.id, { importType: "imported", localId: Number(result.id) }));
       toast("기사를 가져왔습니다. (검토중)", "success");
     } else {
       toast("기사 가져오기에 실패했습니다.", "error");
@@ -175,7 +177,7 @@ export default function NfArticleExplorer() {
           import_type: "published",
         }),
       });
-      setImportedMap((prev) => new Map(prev).set(article.id, "published"));
+      setImportedMap((prev) => new Map(prev).set(article.id, { importType: "published", localId: Number(result.id) }));
       toast("기사가 바로 발행되었습니다.", "success");
     } else {
       toast("기사 발행에 실패했습니다.", "error");
@@ -193,22 +195,18 @@ export default function NfArticleExplorer() {
   }
 
   function handleSelectAllPage() {
-    const unprocessedIds = articles
-      .filter(a => !importedMap.has(a.id))
-      .map(a => a.id);
-    
-    const allSelected = unprocessedIds.length > 0 && unprocessedIds.every(id => selectedIds.has(id));
-    
+    const allIds = articles.map(a => a.id);
+    const allSelected = allIds.length > 0 && allIds.every(id => selectedIds.has(id));
     if (allSelected) {
       setSelectedIds(prev => {
         const next = new Set(prev);
-        for (const id of unprocessedIds) next.delete(id);
+        for (const id of allIds) next.delete(id);
         return next;
       });
     } else {
       setSelectedIds(prev => {
         const next = new Set(prev);
-        for (const id of unprocessedIds) next.add(id);
+        for (const id of allIds) next.add(id);
         return next;
       });
     }
@@ -216,14 +214,12 @@ export default function NfArticleExplorer() {
 
 
   function handleSelectDateGroup(groupArticles: NfArticle[]) {
-    const unprocessedIds = groupArticles
-      .filter(a => !importedMap.has(a.id))
-      .map(a => a.id);
-    if (unprocessedIds.length === 0) return;
-    const allSelected = unprocessedIds.every(id => selectedIds.has(id));
+    const groupIds = groupArticles.map(a => a.id);
+    if (groupIds.length === 0) return;
+    const allSelected = groupIds.every(id => selectedIds.has(id));
     setSelectedIds(prev => {
       const next = new Set(prev);
-      for (const id of unprocessedIds) {
+      for (const id of groupIds) {
         if (allSelected) next.delete(id);
         else next.add(id);
       }
@@ -271,6 +267,53 @@ export default function NfArticleExplorer() {
     setBatchProcessing(false);
     setSelectedIds(new Set());
     toast(`${successCount}건의 기사를 바로 발행했습니다.`, "success");
+  }
+
+
+  async function handleBatchDelete() {
+    const ids = [...selectedIds].filter(id => importedMap.has(id));
+    if (ids.length === 0) {
+      toast("삭제할 발행/가져온 기사가 없습니다.", "error");
+      return;
+    }
+
+    setBatchProcessing(true);
+    setBatchProgress({ current: 0, total: ids.length });
+
+    try {
+      const res = await fetch("/api/nf/imports", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nf_article_ids: ids }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "삭제 실패");
+      }
+
+      // Remove from local AdminContext state
+      for (const id of ids) {
+        const info = importedMap.get(id);
+        if (info?.localId) {
+          await deleteArticle(String(info.localId));
+        }
+      }
+
+      // Clear from importedMap
+      setImportedMap(prev => {
+        const next = new Map(prev);
+        for (const id of ids) next.delete(id);
+        return next;
+      });
+
+      setSelectedIds(new Set());
+      toast(`${ids.length}건의 기사를 삭제했습니다.`, "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.", "error");
+    } finally {
+      setBatchProcessing(false);
+    }
   }
 
   function renderPageButtons() {
@@ -416,6 +459,10 @@ export default function NfArticleExplorer() {
                   className="admin-btn admin-btn-primary text-[12px] py-1.5 px-3">
                   일괄 발행
                 </button>
+                <button onClick={() => setShowDeleteConfirm(true)}
+                  className="admin-btn text-[12px] py-1.5 px-3 text-red-500 border border-red-200 hover:bg-red-50">
+                  선택 삭제
+                </button>
               </>
             )}
           </div>
@@ -429,8 +476,7 @@ export default function NfArticleExplorer() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={articles.filter(a => !importedMap.has(a.id)).length > 0 && 
-                         articles.filter(a => !importedMap.has(a.id)).every(a => selectedIds.has(a.id))}
+                checked={articles.length > 0 && articles.every(a => selectedIds.has(a.id))}
                 onChange={handleSelectAllPage}
                 className="nf-checkbox"
                 style={{ margin: 0 }}
@@ -480,7 +526,7 @@ export default function NfArticleExplorer() {
                       className="nf-checkbox"
                       style={{ margin: 0 }}
                       checked={(() => {
-                        const ids = group.articles.filter(a => !importedMap.has(a.id)).map(a => a.id);
+                        const ids = group.articles.map(a => a.id);
                         return ids.length > 0 && ids.every(id => selectedIds.has(id));
                       })()}
                       onChange={() => handleSelectDateGroup(group.articles)}
@@ -490,20 +536,18 @@ export default function NfArticleExplorer() {
                   <span className="nf-date-count">{group.articles.length}건</span>
                 </div>
                 {group.articles.map((article) => {
-                  const importType = importedMap.get(article.id);
-                  const processed = !!importType;
+                  const importInfo = importedMap.get(article.id);
+                  const processed = !!importInfo;
                   const isSelected = article.id === selectedId;
                   return (
                     <div key={article.id} className="nf-list-item-wrapper">
-                      {!importedMap.has(article.id) && (
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(article.id)}
-                          onChange={() => {}}
-                          onClick={(e) => handleToggleSelect(e, article.id)}
-                          className="nf-checkbox"
-                        />
-                      )}
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(article.id)}
+                        onChange={() => {}}
+                        onClick={(e) => handleToggleSelect(e, article.id)}
+                        className="nf-checkbox"
+                      />
                       <div
                         onClick={() => { setSelectedId(article.id); setShowMobileDetail(true); }}
                         className={`nf-list-item ${isSelected ? "selected" : ""} ${processed ? "processed" : ""}`}
@@ -521,7 +565,7 @@ export default function NfArticleExplorer() {
                           )}
                           {processed && (
                             <span className="text-[10px] text-gray-400 ml-auto">
-                              {importType === "published" ? "발행됨" : "가져옴"}
+                              {importInfo?.importType === "published" ? "발행됨" : "가져옴"}
                             </span>
                           )}
                         </div>
@@ -592,7 +636,7 @@ export default function NfArticleExplorer() {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {importedMap.has(selectedArticle.id) ? (
                     <span className="text-[12px] text-gray-400">
-                      {importedMap.get(selectedArticle.id) === "published" ? "✓ 발행됨" : "✓ 가져옴"}
+                      {importedMap.get(selectedArticle.id)?.importType === "published" ? "✓ 발행됨" : "✓ 가져옴"}
                     </span>
                   ) : (
                     <>
@@ -690,6 +734,16 @@ export default function NfArticleExplorer() {
           )}
         </div>
       </div>
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          title="기사 삭제"
+          message={`선택한 기사 중 발행/가져온 ${[...selectedIds].filter(id => importedMap.has(id)).length}건을 삭제합니다. 로컬 기사와 가져오기 기록이 모두 삭제됩니다.`}
+          confirmLabel="삭제"
+          cancelLabel="취소"
+          onConfirm={() => { setShowDeleteConfirm(false); handleBatchDelete(); }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }

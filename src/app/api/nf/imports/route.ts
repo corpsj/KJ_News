@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const ids = nfIds.split(",").filter(Boolean);
     const { data, error } = await supabase
       .from("nf_imports")
-      .select("nf_article_id, import_type")
+      .select("nf_article_id, import_type, local_article_id")
       .in("nf_article_id", ids);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -75,4 +75,51 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(data, { status: 201 });
+}
+
+export async function DELETE(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { nf_article_ids } = body as { nf_article_ids: string[] };
+  if (!Array.isArray(nf_article_ids) || nf_article_ids.length === 0) {
+    return NextResponse.json({ error: "nf_article_ids required" }, { status: 400 });
+  }
+
+  // Fetch local_article_ids for deletion
+  const { data: imports, error: fetchError } = await supabase
+    .from("nf_imports")
+    .select("nf_article_id, local_article_id")
+    .in("nf_article_id", nf_article_ids);
+
+  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+
+  const localIds = (imports ?? []).map(i => i.local_article_id).filter(Boolean);
+
+  // Delete local articles
+  if (localIds.length > 0) {
+    const { error: delArticlesErr } = await supabase
+      .from("articles")
+      .delete()
+      .in("id", localIds);
+    if (delArticlesErr) return NextResponse.json({ error: delArticlesErr.message }, { status: 500 });
+  }
+
+  // Delete import records
+  const { error: delImportsErr } = await supabase
+    .from("nf_imports")
+    .delete()
+    .in("nf_article_id", nf_article_ids);
+
+  if (delImportsErr) return NextResponse.json({ error: delImportsErr.message }, { status: 500 });
+
+  return NextResponse.json({ deleted: nf_article_ids.length });
 }
