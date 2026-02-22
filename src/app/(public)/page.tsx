@@ -6,7 +6,7 @@ import {
   getMostViewedArticles,
   getCategories,
 } from "@/lib/db";
-import { formatDate, formatDateShort } from "@/lib/utils";
+import { formatDate, formatDateShort, hasImage } from "@/lib/utils";
 import type { Article } from "@/lib/types";
 import CategoryBadge from "@/components/CategoryBadge";
 import BreakingNewsTicker from "@/components/BreakingNewsTicker";
@@ -14,9 +14,6 @@ import Pagination from "@/components/Pagination";
 
 export const revalidate = 60;
 
-function hasImage(url: string | undefined | null): boolean {
-  return !!url && url.trim().length > 0;
-}
 
 function HeadlineRow({ article, showExcerpt = false }: { article: Article; showExcerpt?: boolean }) {
   return (

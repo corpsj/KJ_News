@@ -1,12 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Article } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, hasImage } from "@/lib/utils";
 import CategoryBadge from "./CategoryBadge";
 
-function hasImage(url: string | undefined | null): boolean {
-  return !!url && url.trim().length > 0;
-}
 
 export default function ArticleCard({ article }: { article: Article }) {
   const showImage = hasImage(article.thumbnailUrl);

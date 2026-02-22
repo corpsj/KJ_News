@@ -6,7 +6,7 @@ import {
   getPublishedArticleIds,
   getMostViewedArticles,
 } from "@/lib/db";
-import { formatDate } from "@/lib/utils";
+import { formatDate, hasImage } from "@/lib/utils";
 import { sanitizeHtml } from "@/lib/sanitize";
 import CategoryBadge from "@/components/CategoryBadge";
 import ArticleCard from "@/components/ArticleCard";
@@ -17,9 +17,6 @@ import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const revalidate = 3600;
 
-function hasImage(url: string | undefined | null): boolean {
-  return !!url && url.trim().length > 0;
-}
 
 interface PageProps {
   params: Promise<{ id: string }>;

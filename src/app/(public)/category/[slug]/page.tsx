@@ -7,16 +7,13 @@ import {
   getArticlesByCategoryPaginated,
   getMostViewedArticles,
 } from "@/lib/db";
-import { formatDate, formatDateShort } from "@/lib/utils";
+import { formatDate, formatDateShort, hasImage } from "@/lib/utils";
 import CategoryBadge from "@/components/CategoryBadge";
 import Pagination from "@/components/Pagination";
 import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const revalidate = 60;
 
-function hasImage(url: string | undefined | null): boolean {
-  return !!url && url.trim().length > 0;
-}
 
 interface PageProps {
   params: Promise<{ slug: string }>;

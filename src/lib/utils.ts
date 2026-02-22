@@ -16,3 +16,8 @@ export function formatDateShort(dateStr: string): string {
   const day = String(d.getDate()).padStart(2, "0");
   return `${month}.${day}`;
 }
+
+
+export function hasImage(url: string | undefined | null): boolean {
+  return !!url && url.trim().length > 0;
+}
