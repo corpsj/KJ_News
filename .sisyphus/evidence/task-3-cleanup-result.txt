@@ -1,0 +1,12 @@
+Cleanup API result:
+Endpoint: POST /api/admin/cleanup
+Header: x-confirm-cleanup: DELETE_ALL_DATA
+Timestamp: 2026-02-20T01:54:00Z
+
+Response:
+{"success":true,"deleted":{"articles":18,"authors":5}}
+
+Summary:
+- Articles deleted: 18
+- Authors deleted: 5
+- Categories: preserved (not deleted by cleanup API)

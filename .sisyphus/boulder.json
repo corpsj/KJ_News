@@ -1,9 +1,7 @@
 {
-  "active_plan": "/Users/zoopark-studio/Documents/dev/KJ_News/.sisyphus/plans/production-deploy.md",
-  "started_at": "2026-02-19T14:02:15.088Z",
-  "session_ids": [
-    "ses_38c1857a8ffep8X0cCHag0opBb"
-  ],
-  "plan_name": "production-deploy",
+  "active_plan": "/Users/zoopark-studio/Documents/dev/KJ_News/.sisyphus/plans/production-final.md",
+  "started_at": "2026-02-20T01:48:45.120Z",
+  "session_ids": ["ses_38c1857a8ffep8X0cCHag0opBb"],
+  "plan_name": "production-final",
   "agent": "atlas"
 }

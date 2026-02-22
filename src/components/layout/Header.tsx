@@ -72,9 +72,6 @@ export default function Header({ categories }: { categories: Category[] }) {
           <span>{getTodayKorean()}</span>
           {isAdmin ? (
             <div className="flex items-center gap-3">
-              <Link href="/admin/mail" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                메일
-              </Link>
               <Link href="/admin" className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 관리자
               </Link>
@@ -235,13 +232,6 @@ export default function Header({ categories }: { categories: Category[] }) {
           <div className="border-t border-gray-100 py-2">
             {isAdmin ? (
               <>
-                <Link
-                  href="/admin/mail"
-                  className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-500 active:bg-gray-50"
-                  onClick={closeMenu}
-                >
-                  메일
-                </Link>
                 <Link
                   href="/admin"
                   className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-500 active:bg-gray-50"
