@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import type { Article, Category, Author } from "./types";
+import type { Article, Category } from "./types";
 
 function escapeLikeQuery(query: string): string {
   return query.replace(/[%_\\]/g, (char) => `\\${char}`);
@@ -123,20 +123,6 @@ export async function getMostViewedArticles(limit = 5): Promise<Article[]> {
   return (data as unknown as DbArticle[]).map(mapArticle);
 }
 
-export async function searchArticles(query: string): Promise<Article[]> {
-  const supabase = await createServiceClient();
-  const escaped = escapeLikeQuery(query);
-  const q = `%${escaped}%`;
-  const { data, error } = await supabase
-    .from("articles")
-    .select(ARTICLE_SELECT)
-    .eq("status", "published")
-    .or(`title.ilike.${q},excerpt.ilike.${q},tags.cs.{${escaped}}`)
-    .order("published_at", { ascending: false });
-
-  if (error || !data) return [];
-  return (data as unknown as DbArticle[]).map(mapArticle);
-}
 
 export async function getRelatedArticles(article: Article, limit = 4): Promise<Article[]> {
   const supabase = await createServiceClient();
@@ -221,18 +207,6 @@ export async function getCategories(): Promise<Category[]> {
   }));
 }
 
-export async function getAuthors(): Promise<Author[]> {
-  const supabase = await createServiceClient();
-  const { data, error } = await supabase.from("authors").select("*").order("id");
-
-  if (error || !data) return [];
-  return data.map((a) => ({
-    id: String(a.id),
-    name: a.name,
-    role: a.role,
-    avatarUrl: a.avatar_url || "",
-  }));
-}
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   const supabase = await createServiceClient();
@@ -252,16 +226,6 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   };
 }
 
-export async function getAllArticles(): Promise<Article[]> {
-  const supabase = await createServiceClient();
-  const { data, error } = await supabase
-    .from("articles")
-    .select(ARTICLE_SELECT)
-    .order("published_at", { ascending: false });
-
-  if (error || !data) return [];
-  return (data as unknown as DbArticle[]).map(mapArticle);
-}
 
 export async function getPublishedArticleIds(): Promise<string[]> {
   const supabase = await createServiceClient();
