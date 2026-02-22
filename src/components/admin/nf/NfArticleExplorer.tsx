@@ -214,6 +214,23 @@ export default function NfArticleExplorer() {
     }
   }
 
+
+  function handleSelectDateGroup(groupArticles: NfArticle[]) {
+    const unprocessedIds = groupArticles
+      .filter(a => !importedMap.has(a.id))
+      .map(a => a.id);
+    if (unprocessedIds.length === 0) return;
+    const allSelected = unprocessedIds.every(id => selectedIds.has(id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      for (const id of unprocessedIds) {
+        if (allSelected) next.delete(id);
+        else next.add(id);
+      }
+      return next;
+    });
+  }
+
   async function handleBatchImport() {
     const ids = [...selectedIds].filter(id => !importedMap.has(id));
     if (ids.length === 0) return;
@@ -457,7 +474,19 @@ export default function NfArticleExplorer() {
             groupedArticles.map((group) => (
               <div key={group.date}>
                 <div className="nf-date-header">
-                  <span>{group.label}</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="nf-checkbox"
+                      style={{ margin: 0 }}
+                      checked={(() => {
+                        const ids = group.articles.filter(a => !importedMap.has(a.id)).map(a => a.id);
+                        return ids.length > 0 && ids.every(id => selectedIds.has(id));
+                      })()}
+                      onChange={() => handleSelectDateGroup(group.articles)}
+                    />
+                    <span>{group.label}</span>
+                  </label>
                   <span className="nf-date-count">{group.articles.length}건</span>
                 </div>
                 {group.articles.map((article) => {
