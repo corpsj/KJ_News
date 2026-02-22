@@ -35,6 +35,7 @@ export default function NfArticleExplorer() {
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [datePreset, setDatePreset] = useState<string>("");
 
   const selectedArticle = articles.find(a => a.id === selectedId) ?? null;
 
@@ -120,6 +121,32 @@ export default function NfArticleExplorer() {
   }, [articles]);
 
   function doSearch() {
+    setPage(0);
+  }
+
+  function applyDatePreset(preset: string) {
+    if (datePreset === preset) {
+      setDatePreset("");
+      setDateFrom("");
+      setDateTo("");
+    } else {
+      const today = new Date();
+      const to = today.toISOString().slice(0, 10);
+      let from = to;
+      if (preset === "3days") {
+        const d = new Date(today); d.setDate(d.getDate() - 3);
+        from = d.toISOString().slice(0, 10);
+      } else if (preset === "week") {
+        const d = new Date(today); d.setDate(d.getDate() - 7);
+        from = d.toISOString().slice(0, 10);
+      } else if (preset === "month") {
+        const d = new Date(today); d.setMonth(d.getMonth() - 1);
+        from = d.toISOString().slice(0, 10);
+      }
+      setDatePreset(preset);
+      setDateFrom(from);
+      setDateTo(to);
+    }
     setPage(0);
   }
 
@@ -382,7 +409,7 @@ export default function NfArticleExplorer() {
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row gap-3">
           <select
-            className="admin-input sm:w-48"
+            className="admin-input sm:w-40"
             value={regionFilter}
             onChange={(e) => { setRegionFilter(e.target.value); setPage(0); }}
           >
@@ -411,22 +438,39 @@ export default function NfArticleExplorer() {
             ))}
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row gap-3 items-center">
+          <div className="relative flex-1 min-w-0">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
             <input
-              className="admin-input pl-9"
+              className="admin-input pl-9 w-full"
               placeholder="키워드 검색..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
             />
           </div>
-          <input type="date" className="admin-input sm:w-44" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          <input type="date" className="admin-input sm:w-44" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-          <button type="button" className="admin-btn admin-btn-primary" onClick={doSearch}>
+          <div className="flex gap-1.5 flex-shrink-0">
+            {[
+              { key: "today", label: "오늘" },
+              { key: "3days", label: "3일" },
+              { key: "week", label: "일주일" },
+              { key: "month", label: "한달" },
+            ].map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => applyDatePreset(p.key)}
+                className={`nf-filter-chip flex-shrink-0 text-[12px] !py-1 !px-2.5 !min-h-[32px] ${datePreset === p.key ? "active" : ""}`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <input type="date" className="admin-input sm:w-36 flex-shrink-0" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDatePreset(""); }} />
+          <input type="date" className="admin-input sm:w-36 flex-shrink-0" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setDatePreset(""); }} />
+          <button type="button" className="admin-btn admin-btn-primary flex-shrink-0" onClick={doSearch}>
             검색
           </button>
         </div>
