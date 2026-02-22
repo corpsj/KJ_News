@@ -9,7 +9,6 @@ const breadcrumbMap: Record<string, { label: string; href?: string }[]> = {
   "/admin/articles": [{ label: "기사 관리" }],
   "/admin/articles/new": [{ label: "기사 관리", href: "/admin/articles" }, { label: "새 기사 작성" }],
   "/admin/news-feed": [{ label: "뉴스 피드" }],
-  "/admin/mail": [{ label: "메일" }],
 };
 
 export default function AdminHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
