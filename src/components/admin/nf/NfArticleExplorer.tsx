@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { NfArticle, NfRegion, NfCategory } from "@/lib/types";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -30,9 +30,14 @@ export default function NfArticleExplorer() {
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(0);
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchProcessing, setBatchProcessing] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
+
   const selectedArticle = articles.find(a => a.id === selectedId) ?? null;
 
   useEffect(() => {
+    setSelectedIds(new Set());
     setSelectedId(null);
     setShowMobileDetail(false);
   }, [regionFilter, categoryFilter, keyword, dateFrom, dateTo, page]);
@@ -89,6 +94,28 @@ export default function NfArticleExplorer() {
   }, []);
 
   useEffect(() => { fetchArticlesData(); }, [fetchArticlesData]);
+
+  const groupedArticles = useMemo(() => {
+    const groups: { date: string; label: string; articles: NfArticle[] }[] = [];
+    const map = new Map<string, NfArticle[]>();
+    
+    for (const article of articles) {
+      const dateKey = article.published_at?.slice(0, 10) || "unknown";
+      if (!map.has(dateKey)) map.set(dateKey, []);
+      map.get(dateKey)!.push(article);
+    }
+    
+    for (const [dateKey, arts] of map) {
+      const d = new Date(dateKey + "T00:00:00");
+      const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+      const label = dateKey === "unknown" 
+        ? "날짜 없음" 
+        : `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${weekday})`;
+      groups.push({ date: dateKey, label, articles: arts });
+    }
+    
+    return groups;
+  }, [articles]);
 
   function doSearch() {
     setPage(0);
@@ -153,6 +180,80 @@ export default function NfArticleExplorer() {
     } else {
       toast("기사 발행에 실패했습니다.", "error");
     }
+  }
+
+  function handleToggleSelect(e: React.MouseEvent, articleId: string) {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(articleId)) next.delete(articleId);
+      else next.add(articleId);
+      return next;
+    });
+  }
+
+  function handleSelectAllPage() {
+    const unprocessedIds = articles
+      .filter(a => !importedMap.has(a.id))
+      .map(a => a.id);
+    
+    const allSelected = unprocessedIds.length > 0 && unprocessedIds.every(id => selectedIds.has(id));
+    
+    if (allSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        for (const id of unprocessedIds) next.delete(id);
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        for (const id of unprocessedIds) next.add(id);
+        return next;
+      });
+    }
+  }
+
+  async function handleBatchImport() {
+    const ids = [...selectedIds].filter(id => !importedMap.has(id));
+    if (ids.length === 0) return;
+    
+    setBatchProcessing(true);
+    setBatchProgress({ current: 0, total: ids.length });
+    let successCount = 0;
+    
+    for (const id of ids) {
+      const article = articles.find(a => a.id === id);
+      if (!article) continue;
+      await handleImport(null, article);
+      successCount++;
+      setBatchProgress(prev => ({ ...prev, current: prev.current + 1 }));
+    }
+    
+    setBatchProcessing(false);
+    setSelectedIds(new Set());
+    toast(`${successCount}건의 기사를 가져왔습니다.`, "success");
+  }
+
+  async function handleBatchPublish() {
+    const ids = [...selectedIds].filter(id => !importedMap.has(id));
+    if (ids.length === 0) return;
+    
+    setBatchProcessing(true);
+    setBatchProgress({ current: 0, total: ids.length });
+    let successCount = 0;
+    
+    for (const id of ids) {
+      const article = articles.find(a => a.id === id);
+      if (!article) continue;
+      await handlePublish(null, article);
+      successCount++;
+      setBatchProgress(prev => ({ ...prev, current: prev.current + 1 }));
+    }
+    
+    setBatchProcessing(false);
+    setSelectedIds(new Set());
+    toast(`${successCount}건의 기사를 바로 발행했습니다.`, "success");
   }
 
   function renderPageButtons() {
@@ -271,10 +372,57 @@ export default function NfArticleExplorer() {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="nf-batch-toolbar">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-medium text-gray-900">
+              {selectedIds.size}건 선택됨
+            </span>
+            <button onClick={() => setSelectedIds(new Set())}
+              className="text-[12px] text-gray-400 hover:text-gray-600">
+              선택 해제
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {batchProcessing ? (
+              <div className="flex items-center gap-2 text-[12px] text-gray-500">
+                <span className="nf-spinner" />
+                <span>{batchProgress.current}/{batchProgress.total} 처리 중...</span>
+              </div>
+            ) : (
+              <>
+                <button onClick={handleBatchImport}
+                  className="admin-btn admin-btn-ghost text-[12px] py-1.5 px-3">
+                  일괄 가져오기
+                </button>
+                <button onClick={handleBatchPublish}
+                  className="admin-btn admin-btn-primary text-[12px] py-1.5 px-3">
+                  일괄 발행
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="nf-split-container">
 
         <div className="nf-list-panel">
+          <div className="nf-list-header">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={articles.filter(a => !importedMap.has(a.id)).length > 0 && 
+                         articles.filter(a => !importedMap.has(a.id)).every(a => selectedIds.has(a.id))}
+                onChange={handleSelectAllPage}
+                className="nf-checkbox"
+                style={{ margin: 0 }}
+              />
+              <span className="text-[11px] text-gray-500">이 페이지 전체 선택</span>
+            </label>
+            <span className="text-[11px] text-gray-400">{total}건</span>
+          </div>
+
           {loading &&
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="p-3 border-b border-gray-100">
@@ -306,36 +454,65 @@ export default function NfArticleExplorer() {
           )}
 
           {!loading && !error &&
-            articles.map((article) => {
-              const importType = importedMap.get(article.id);
-              const processed = !!importType;
-              const isSelected = article.id === selectedId;
-              return (
-                <div
-                  key={article.id}
-                  onClick={() => { setSelectedId(article.id); setShowMobileDetail(true); }}
-                  className={`nf-list-item ${isSelected ? "selected" : ""} ${processed ? "processed" : ""}`}
-                >
-                  <h4 className="text-[13px] font-medium text-gray-900 leading-snug line-clamp-2">
-                    {article.title}
-                  </h4>
-                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    {article.category && (
-                      <span className="admin-badge text-[10px]">{NF_CATEGORY_LABELS[article.category] || article.category}</span>
-                    )}
-                    {article.source && <span className="nf-source-badge text-[10px]">{article.source}</span>}
-                    {article.published_at && (
-                      <span className="text-[10px] text-gray-400">{formatDate(article.published_at)}</span>
-                    )}
-                    {processed && (
-                      <span className="text-[10px] text-gray-400 ml-auto">
-                        {importType === "published" ? "발행됨" : "가져옴"}
-                      </span>
-                    )}
-                  </div>
+            groupedArticles.map((group) => (
+              <div key={group.date}>
+                <div className="nf-date-header">
+                  <span>{group.label}</span>
+                  <span className="nf-date-count">{group.articles.length}건</span>
                 </div>
-              );
-            })}
+                {group.articles.map((article) => {
+                  const importType = importedMap.get(article.id);
+                  const processed = !!importType;
+                  const isSelected = article.id === selectedId;
+                  return (
+                    <div key={article.id} className="nf-list-item-wrapper">
+                      {!importedMap.has(article.id) && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(article.id)}
+                          onChange={() => {}}
+                          onClick={(e) => handleToggleSelect(e, article.id)}
+                          className="nf-checkbox"
+                        />
+                      )}
+                      <div
+                        onClick={() => { setSelectedId(article.id); setShowMobileDetail(true); }}
+                        className={`nf-list-item ${isSelected ? "selected" : ""} ${processed ? "processed" : ""}`}
+                      >
+                        <h4 className="text-[13px] font-medium text-gray-900 leading-snug line-clamp-2">
+                          {article.title}
+                        </h4>
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          {article.category && (
+                            <span className="admin-badge text-[10px]">{NF_CATEGORY_LABELS[article.category] || article.category}</span>
+                          )}
+                          {article.source && <span className="nf-source-badge text-[10px]">{article.source}</span>}
+                          {article.published_at && (
+                            <span className="text-[10px] text-gray-400">{formatDate(article.published_at)}</span>
+                          )}
+                          {processed && (
+                            <span className="text-[10px] text-gray-400 ml-auto">
+                              {importType === "published" ? "발행됨" : "가져옴"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {!importedMap.has(article.id) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePublish(e, article); }}
+                          className="nf-quick-publish"
+                          title="바로 발행"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
 
           {!loading && total > 0 && (
             <div className="nf-list-pagination">
@@ -371,6 +548,37 @@ export default function NfArticleExplorer() {
                 </svg>
                 목록으로
               </button>
+
+              <div className="nf-detail-topbar">
+                <div className="nf-detail-topbar-info">
+                  <h3 className="text-[14px] font-semibold text-gray-900 line-clamp-1">
+                    {selectedArticle.title}
+                  </h3>
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                    {selectedArticle.source && <span>{selectedArticle.source}</span>}
+                    <span>·</span>
+                    {selectedArticle.published_at && <span>{formatDate(selectedArticle.published_at)}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {importedMap.has(selectedArticle.id) ? (
+                    <span className="text-[12px] text-gray-400">
+                      {importedMap.get(selectedArticle.id) === "published" ? "✓ 발행됨" : "✓ 가져옴"}
+                    </span>
+                  ) : (
+                    <>
+                      <button onClick={(e) => handleImport(e, selectedArticle)}
+                        className="admin-btn admin-btn-ghost text-[12px] py-1.5 px-3">
+                        가져오기
+                      </button>
+                      <button onClick={(e) => handlePublish(e, selectedArticle)}
+                        className="admin-btn admin-btn-primary text-[12px] py-1.5 px-3">
+                        바로 발행
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
 
 
               {selectedArticle.images?.[0] && (
@@ -447,32 +655,6 @@ export default function NfArticleExplorer() {
                     </svg>
                     원문 보기
                   </a>
-                )}
-              </div>
-
-
-              <div className="nf-detail-actions">
-                {importedMap.has(selectedArticle.id) ? (
-                  <div className="text-center text-[13px] text-gray-400 py-1">
-                    {importedMap.get(selectedArticle.id) === "published" ? "발행 완료" : "가져오기 완료"}
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={(e) => handleImport(e, selectedArticle)}
-                      className="admin-btn admin-btn-ghost flex-1 py-2.5 text-[13px] font-medium"
-                    >
-                      가져오기
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => handlePublish(e, selectedArticle)}
-                      className="admin-btn admin-btn-primary flex-1 py-2.5 text-[13px] font-medium"
-                    >
-                      바로 발행
-                    </button>
-                  </div>
                 )}
               </div>
             </>
