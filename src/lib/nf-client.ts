@@ -109,7 +109,7 @@ export async function fetchArticles(
   if (params.keyword) sp.set("keyword", params.keyword);
   if (params.from) sp.set("from", params.from);
   if (params.to) sp.set("to", params.to);
-  if (params.status) sp.set("status", params.status);
+  sp.set("status", params.status || "all");
   sp.set("limit", String(params.limit ?? 20));
   sp.set("offset", String(params.offset ?? 0));
 

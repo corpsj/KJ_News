@@ -6,9 +6,8 @@ import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
 import { NF_TO_KJ_CATEGORY, NF_CATEGORY_LABELS, DEFAULT_NF_CATEGORY_SLUG, plainTextToHtml } from "@/lib/nf-constants";
 import { formatDate } from "@/lib/utils";
-import NfArticlePreview from "./NfArticlePreview";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 export default function NfArticleExplorer() {
   const { importArticle, addArticle, authors } = useAdmin();
@@ -21,7 +20,8 @@ export default function NfArticleExplorer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
-  const [previewArticle, setPreviewArticle] = useState<NfArticle | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
 
   const [regionFilter, setRegionFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -29,6 +29,13 @@ export default function NfArticleExplorer() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(0);
+
+  const selectedArticle = articles.find(a => a.id === selectedId) ?? null;
+
+  useEffect(() => {
+    setSelectedId(null);
+    setShowMobileDetail(false);
+  }, [regionFilter, categoryFilter, keyword, dateFrom, dateTo, page]);
 
   const fetchArticlesData = useCallback(async () => {
     setLoading(true);
@@ -148,10 +155,69 @@ export default function NfArticleExplorer() {
     }
   }
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  function renderPageButtons() {
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const buttons: React.ReactNode[] = [];
+    const current = page;
+
+    const addBtn = (p: number) => {
+      buttons.push(
+        <button
+          key={p}
+          type="button"
+          className={`nf-page-btn ${p === current ? "active" : ""}`}
+          onClick={() => setPage(p)}
+        >
+          {p + 1}
+        </button>
+      );
+    };
+    const addEllipsis = (key: string) => {
+      buttons.push(<span key={key} className="text-[11px] text-gray-400 px-1">&hellip;</span>);
+    };
+
+    buttons.push(
+      <button
+        key="prev"
+        type="button"
+        className="nf-page-btn"
+        onClick={() => setPage(p => Math.max(0, p - 1))}
+        disabled={page === 0}
+      >
+        &lsaquo;
+      </button>
+    );
+
+    if (totalPages <= 7) {
+      for (let i = 0; i < totalPages; i++) addBtn(i);
+    } else {
+      addBtn(0);
+      if (current > 2) addEllipsis("el");
+      for (let i = Math.max(1, current - 1); i <= Math.min(totalPages - 2, current + 1); i++) {
+        addBtn(i);
+      }
+      if (current < totalPages - 3) addEllipsis("er");
+      addBtn(totalPages - 1);
+    }
+
+    buttons.push(
+      <button
+        key="next"
+        type="button"
+        className="nf-page-btn"
+        onClick={() => setPage(p => Math.min(Math.ceil(total / PAGE_SIZE) - 1, p + 1))}
+        disabled={page >= totalPages - 1}
+      >
+        &rsaquo;
+      </button>
+    );
+
+    return buttons;
+  }
 
   return (
     <div className="space-y-4">
+
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row gap-3">
           <select
@@ -205,140 +271,214 @@ export default function NfArticleExplorer() {
         </div>
       </div>
 
-      <div className="space-y-2">
-        {loading &&
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="nf-skeleton-card">
-              <div className="flex items-start gap-3">
-                <div className="flex-1">
-                  <div className="nf-skeleton h-5 w-3/4 mb-3" />
-                  <div className="nf-skeleton h-3 w-1/2 mb-2" />
-                  <div className="nf-skeleton h-3 w-1/3" />
-                </div>
-                <div className="nf-skeleton h-8 w-20 flex-shrink-0" />
+
+      <div className="nf-split-container">
+
+        <div className="nf-list-panel">
+          {loading &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="p-3 border-b border-gray-100">
+                <div className="nf-skeleton h-4 w-3/4 mb-2" />
+                <div className="nf-skeleton h-3 w-1/2" />
               </div>
+            ))}
+
+          {!loading && error && (
+            <div className="nf-empty-state">
+              <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <p className="text-[13px] text-gray-400">{error}</p>
+              <button type="button" onClick={fetchArticlesData} className="admin-btn admin-btn-ghost text-[11px] mt-2">
+                다시 시도
+              </button>
             </div>
-          ))}
+          )}
 
-        {!loading && error && (
-          <div className="nf-empty-state">
-            <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-            <p className="text-[14px] text-gray-400">{error}</p>
-            <button type="button" onClick={fetchArticlesData} className="admin-btn admin-btn-ghost text-[12px] mt-3">
-              다시 시도
-            </button>
-          </div>
-        )}
+          {!loading && !error && articles.length === 0 && (
+            <div className="nf-empty-state">
+              <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+              <p className="text-[13px] text-gray-400">검색 결과가 없습니다</p>
+              <p className="text-[11px] text-gray-300 mt-1">다른 조건으로 검색해 보세요</p>
+            </div>
+          )}
 
-        {!loading && !error &&
-          articles.map((article) => {
-            const importType = importedMap.get(article.id);
-            const processed = !!importType;
-            return (
-              <div
-                key={article.id}
-                onClick={() => setPreviewArticle(article)}
-                className={`nf-article-card ${processed ? "processed" : ""}`}
-              >
-                <div className="flex items-start gap-3">
-                  {article.images?.[0] && (
-                    <img
-                      src={article.images[0]}
-                      alt={article.title}
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0 hidden sm:block"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[14px] font-medium text-gray-900 leading-snug line-clamp-2">{article.title}</h3>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {article.category && (
-                        <span className="admin-badge">{NF_CATEGORY_LABELS[article.category] || article.category}</span>
-                      )}
-                      {article.source && <span className="nf-source-badge">{article.source}</span>}
-                      {article.published_at && (
-                        <span className="text-[11px] text-gray-400">{formatDate(article.published_at)}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {processed ? (
-                      <span className="text-[11px] text-gray-400 px-2">
+          {!loading && !error &&
+            articles.map((article) => {
+              const importType = importedMap.get(article.id);
+              const processed = !!importType;
+              const isSelected = article.id === selectedId;
+              return (
+                <div
+                  key={article.id}
+                  onClick={() => { setSelectedId(article.id); setShowMobileDetail(true); }}
+                  className={`nf-list-item ${isSelected ? "selected" : ""} ${processed ? "processed" : ""}`}
+                >
+                  <h4 className="text-[13px] font-medium text-gray-900 leading-snug line-clamp-2">
+                    {article.title}
+                  </h4>
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    {article.category && (
+                      <span className="admin-badge text-[10px]">{NF_CATEGORY_LABELS[article.category] || article.category}</span>
+                    )}
+                    {article.source && <span className="nf-source-badge text-[10px]">{article.source}</span>}
+                    {article.published_at && (
+                      <span className="text-[10px] text-gray-400">{formatDate(article.published_at)}</span>
+                    )}
+                    {processed && (
+                      <span className="text-[10px] text-gray-400 ml-auto">
                         {importType === "published" ? "발행됨" : "가져옴"}
                       </span>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={(e) => handleImport(e, article)}
-                          className="admin-btn admin-btn-ghost text-[11px] py-1 px-2.5"
-                        >
-                          가져오기
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => handlePublish(e, article)}
-                          className="admin-btn admin-btn-primary text-[11px] py-1 px-2.5"
-                        >
-                          바로 발행
-                        </button>
-                      </>
                     )}
                   </div>
                 </div>
+              );
+            })}
+
+          {!loading && total > 0 && (
+            <div className="nf-list-pagination">
+              <span className="text-[11px] text-gray-400">
+                {total}건 중 {page * PAGE_SIZE + 1}&ndash;{Math.min((page + 1) * PAGE_SIZE, total)}
+              </span>
+              <div className="flex items-center gap-1">
+                {renderPageButtons()}
               </div>
-            );
-          })}
-
-        {!loading && !error && articles.length === 0 && (
-          <div className="nf-empty-state">
-            <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-            </svg>
-            <p className="text-[14px] text-gray-400">검색 결과가 없습니다</p>
-            <p className="text-[12px] text-gray-300 mt-1">다른 조건으로 검색해 보세요</p>
-          </div>
-        )}
-      </div>
-
-      {!loading && total > 0 && (
-        <div className="flex items-center justify-between">
-          <p className="text-[12px] text-gray-400">
-            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)}건 / 전체 <span className="font-medium text-gray-500">{total}</span>건
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              className="admin-btn admin-btn-ghost text-xs px-3 py-1.5"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-            >
-              이전
-            </button>
-            <span className="text-[12px] text-gray-500 px-2">{page + 1} / {totalPages}</span>
-            <button
-              type="button"
-              className="admin-btn admin-btn-ghost text-xs px-3 py-1.5"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={(page + 1) * PAGE_SIZE >= total}
-            >
-              다음
-            </button>
-          </div>
+            </div>
+          )}
         </div>
-      )}
 
-      {previewArticle && (
-        <NfArticlePreview
-          article={previewArticle}
-          isImported={importedMap.has(previewArticle.id)}
-          isPublished={importedMap.get(previewArticle.id) === "published"}
-          onImport={() => handleImport(null, previewArticle)}
-          onPublish={() => handlePublish(null, previewArticle)}
-          onClose={() => setPreviewArticle(null)}
-        />
-      )}
+
+        <div className={`nf-detail-panel ${showMobileDetail ? "mobile-open" : ""}`}>
+          {!selectedArticle ? (
+            <div className="nf-detail-empty">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+              <p>기사를 선택하세요</p>
+            </div>
+          ) : (
+            <>
+
+              <button
+                type="button"
+                className="nf-mobile-back"
+                onClick={() => setShowMobileDetail(false)}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                목록으로
+              </button>
+
+
+              {selectedArticle.images?.[0] && (
+                <div className="relative">
+                  <img
+                    src={selectedArticle.images[0]}
+                    alt={selectedArticle.title}
+                    className="w-full aspect-[2/1] object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-4 flex items-center gap-1.5">
+                    <span className="nf-ai-badge">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                      </svg>
+                      뉴스팩토리
+                    </span>
+                    {selectedArticle.category && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-white/20 backdrop-blur-sm text-white">
+                        {NF_CATEGORY_LABELS[selectedArticle.category] || selectedArticle.category}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+
+              <div className="nf-detail-content">
+                <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-2">
+                  {!selectedArticle.images?.[0] && (
+                    <>
+                      <span className="nf-ai-badge">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                        </svg>
+                        뉴스팩토리
+                      </span>
+                      {selectedArticle.category && (
+                        <span className="admin-badge">{NF_CATEGORY_LABELS[selectedArticle.category] || selectedArticle.category}</span>
+                      )}
+                    </>
+                  )}
+                  {selectedArticle.source && <span className="nf-source-badge">{selectedArticle.source}</span>}
+                  {selectedArticle.published_at && <span>{formatDate(selectedArticle.published_at)}</span>}
+                  {selectedArticle.processed_at && <span className="nf-ai-badge-outline">AI 수집</span>}
+                </div>
+
+                <h2 className="text-[20px] md:text-[22px] font-bold text-gray-900 leading-tight">
+                  {selectedArticle.title}
+                </h2>
+
+                {selectedArticle.summary && (
+                  <p className="text-[14px] text-gray-500 leading-relaxed mt-3 border-l-2 border-gray-200 pl-3">
+                    {selectedArticle.summary}
+                  </p>
+                )}
+
+                {selectedArticle.content && (
+                  <div
+                    className="mt-5 text-[14px] md:text-[15px] leading-[1.8] text-gray-700 [&_p]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-1"
+                    dangerouslySetInnerHTML={{ __html: plainTextToHtml(selectedArticle.content) }}
+                  />
+                )}
+
+                {selectedArticle.source_url && (
+                  <a
+                    href={selectedArticle.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[12px] text-gray-400 hover:text-gray-600 mt-4 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    원문 보기
+                  </a>
+                )}
+              </div>
+
+
+              <div className="nf-detail-actions">
+                {importedMap.has(selectedArticle.id) ? (
+                  <div className="text-center text-[13px] text-gray-400 py-1">
+                    {importedMap.get(selectedArticle.id) === "published" ? "발행 완료" : "가져오기 완료"}
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => handleImport(e, selectedArticle)}
+                      className="admin-btn admin-btn-ghost flex-1 py-2.5 text-[13px] font-medium"
+                    >
+                      가져오기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handlePublish(e, selectedArticle)}
+                      className="admin-btn admin-btn-primary flex-1 py-2.5 text-[13px] font-medium"
+                    >
+                      바로 발행
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

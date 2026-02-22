@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "erntllkkeczystqsjija.supabase.co",
       },
+      {
+        protocol: "https",
+        hostname: "**.go.kr",
+      },
     ],
   },
   async headers() {
@@ -25,7 +29,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' va.vercel-scripts.com vitals.vercel-insights.com",
               "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
               "font-src 'self' fonts.gstatic.com",
-              "img-src 'self' erntllkkeczystqsjija.supabase.co data: blob:",
+              "img-src 'self' erntllkkeczystqsjija.supabase.co *.go.kr data: blob:",
               "connect-src 'self' erntllkkeczystqsjija.supabase.co vitals.vercel-insights.com wss://erntllkkeczystqsjija.supabase.co",
               "frame-ancestors 'none'",
               "base-uri 'self'",

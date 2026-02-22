@@ -107,14 +107,12 @@ export default async function SpecialArticlePage({ params }: PageProps) {
         </div>
 
         {hasImage(article.thumbnailUrl) && (
-          <div className="relative aspect-[16/9] rounded-lg overflow-hidden mb-8">
-            <Image
+          <div className="rounded-lg overflow-hidden mb-8 flex justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={article.thumbnailUrl}
               alt={article.title}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 1024px) 100vw, 800px"
+              className="max-w-full max-h-[560px] w-auto h-auto rounded-lg"
             />
           </div>
         )}

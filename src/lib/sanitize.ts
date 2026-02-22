@@ -1,8 +1,8 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitize from "sanitize-html";
 
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
+  return sanitize(html, {
+    allowedTags: [
       "p", "br", "strong", "em", "u", "s",
       "h2", "h3", "h4",
       "ul", "ol", "li",
@@ -11,7 +11,11 @@ export function sanitizeHtml(html: string): string {
       "table", "thead", "tbody", "tr", "th", "td",
       "div", "span",
     ],
-    ALLOWED_ATTR: ["href", "src", "alt", "title", "target", "rel", "class"],
-    ALLOW_DATA_ATTR: false,
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+      img: ["src", "alt", "title"],
+      "*": ["class"],
+    },
+    allowedSchemes: ["http", "https"],
   });
 }

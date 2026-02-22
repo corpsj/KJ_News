@@ -270,8 +270,8 @@ async function createAdminUser() {
   console.log("\n👤 Creating admin user...");
 
   const { data, error } = await supabase.auth.admin.createUser({
-    email: "admin@kjtimes.co.kr",
-    password: process.env.ADMIN_PASSWORD || "changeme",
+    email: "kjtimeseditor82@kjtimes.co.kr",
+    password: process.env.ADMIN_PASSWORD || "2ndlife!kjt",
     email_confirm: true,
     user_metadata: {
       name: "관리자",
@@ -337,7 +337,7 @@ async function main() {
   console.log(`  Articles: ${artCount}`);
 
   console.log("\n✅ Setup complete!");
-  console.log("  Admin login: admin@kjtimes.co.kr / [set via ADMIN_PASSWORD env var]");
+  console.log("  Admin login: kjtimeseditor82 / [set via ADMIN_PASSWORD env var or default]");
 }
 
 main().catch(console.error);
