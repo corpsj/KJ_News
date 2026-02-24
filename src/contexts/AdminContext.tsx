@@ -41,6 +41,9 @@ interface AdminContextValue {
   deleteArticle: (id: string) => Promise<void>;
   getArticle: (id: string) => Article | undefined;
   importArticle: (data: ImportArticleData) => Promise<Article | null>;
+  addAuthor: (name: string, role: string) => Promise<Author | null>;
+  updateAuthor: (id: string, name: string, role: string) => Promise<Author | null>;
+  deleteAuthor: (id: string) => Promise<boolean>;
 }
 
 export interface ArticleFormData {
@@ -326,6 +329,58 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     [authors, categories, supabase]
   );
 
+  const addAuthor = useCallback(
+    async (name: string, role: string): Promise<Author | null> => {
+      const { data: row, error } = await supabase
+        .from("authors")
+        .insert({ name, role, avatar_url: "" })
+        .select()
+        .single();
+      if (error) {
+        console.error("[addAuthor]", error.message);
+        return null;
+      }
+      if (!row) return null;
+      const mapped = mapAuthor(row);
+      setAuthors((prev) => [...prev, mapped]);
+      return mapped;
+    },
+    [supabase]
+  );
+
+  const updateAuthor = useCallback(
+    async (id: string, name: string, role: string): Promise<Author | null> => {
+      const { data: row, error } = await supabase
+        .from("authors")
+        .update({ name, role })
+        .eq("id", Number(id))
+        .select()
+        .single();
+      if (error) {
+        console.error("[updateAuthor]", error.message);
+        return null;
+      }
+      if (!row) return null;
+      const mapped = mapAuthor(row);
+      setAuthors((prev) => prev.map((a) => (a.id === id ? mapped : a)));
+      return mapped;
+    },
+    [supabase]
+  );
+
+  const deleteAuthor = useCallback(
+    async (id: string): Promise<boolean> => {
+      const { error } = await supabase.from("authors").delete().eq("id", Number(id));
+      if (error) {
+        console.error("[deleteAuthor]", error.message);
+        return false;
+      }
+      setAuthors((prev) => prev.filter((a) => a.id !== id));
+      return true;
+    },
+    [supabase]
+  );
+
   return (
     <AdminContext.Provider
       value={{
@@ -338,6 +393,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         deleteArticle,
         getArticle,
         importArticle,
+        addAuthor,
+        updateAuthor,
+        deleteAuthor,
       }}
     >
       {children}
