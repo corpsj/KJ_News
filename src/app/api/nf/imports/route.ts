@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -74,6 +75,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidatePath("/");
+  revalidatePath("/category/[slug]", "page");
   return NextResponse.json(data, { status: 201 });
 }
 
@@ -121,5 +124,7 @@ export async function DELETE(request: NextRequest) {
 
   if (delImportsErr) return NextResponse.json({ error: delImportsErr.message }, { status: 500 });
 
+  revalidatePath("/");
+  revalidatePath("/category/[slug]", "page");
   return NextResponse.json({ deleted: nf_article_ids.length });
 }
