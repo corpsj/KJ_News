@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatDate } from "@/lib/utils";
 import { sanitizeHtml } from "@/lib/sanitize";
 
@@ -46,13 +47,17 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex items-start justify-center">
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-fade-backdrop"
         onClick={onClose}
       />
-
       <div className="relative z-[71] w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl md:my-8 bg-white md:rounded-xl md:border md:border-gray-200 overflow-y-auto animate-fade-in">
         <button
           type="button"
@@ -79,21 +84,17 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
               <span className="admin-badge">{article.category.name}</span>
             )}
           </div>
-
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
             {article.title}
           </h1>
-
           {article.subtitle && (
             <p className="text-lg text-gray-500 mt-2">{article.subtitle}</p>
           )}
-
           <div className="flex items-center gap-2 text-sm text-gray-400 mt-3">
             {article.author && <span>{article.author.name}</span>}
             {article.author && article.publishedAt && <span>·</span>}
             {article.publishedAt && <span>{formatDate(article.publishedAt)}</span>}
           </div>
-
           {article.thumbnailUrl && article.thumbnailUrl.trim() && (
             <div className="mt-6 rounded-lg overflow-hidden">
               <img
@@ -103,7 +104,6 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
               />
             </div>
           )}
-
           {article.excerpt && (
             <div className="mt-6 bg-gray-50 rounded-lg p-4">
               <p className="text-[14px] text-gray-600 italic leading-relaxed">
@@ -111,15 +111,15 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
               </p>
             </div>
           )}
-
            <div className="border-t border-gray-200 mt-6 pt-6">
-             <div
-               className="text-[15px] md:text-[16px] leading-[1.8] text-gray-700 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-4 [&_ul]:my-3 [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:pl-6 [&_li]:mb-1 [&_a]:text-gray-900 [&_a]:underline"
-               dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
-             />
-           </div>
+            <div
+              className="text-[15px] md:text-[16px] leading-[1.8] text-gray-700 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-4 [&_ul]:my-3 [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:pl-6 [&_li]:mb-1 [&_a]:text-gray-900 [&_a]:underline"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
