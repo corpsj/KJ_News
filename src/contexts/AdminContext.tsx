@@ -28,7 +28,7 @@ interface DbArticle {
   source: string;
   source_url: string;
   categories: { id: number; name: string; slug: string; description: string; color: string } | null;
-  authors: { id: number; name: string; role: string; avatar_url: string } | null;
+  authors: { id: number; name: string; role: string } | null;
 }
 
 interface AdminContextValue {
@@ -85,12 +85,11 @@ function mapCategory(row: {
   };
 }
 
-function mapAuthor(row: { id: number; name: string; role: string; avatar_url: string }): Author {
+function mapAuthor(row: { id: number; name: string; role: string }): Author {
   return {
     id: String(row.id),
     name: row.name,
     role: row.role,
-    avatarUrl: row.avatar_url || "",
   };
 }
 
@@ -106,7 +105,7 @@ function mapArticle(row: DbArticle): Article {
       : { id: "0", name: "미분류", slug: "uncategorized", description: "", color: "#64748b" },
     author: row.authors
       ? mapAuthor(row.authors)
-      : { id: "0", name: "알 수 없음", role: "", avatarUrl: "" },
+      : { id: "0", name: "알 수 없음", role: "" },
     publishedAt: row.published_at || "",
     thumbnailUrl: row.thumbnail_url || "",
     viewCount: row.view_count || 0,
@@ -333,7 +332,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     async (name: string, role: string): Promise<Author | null> => {
       const { data: row, error } = await supabase
         .from("authors")
-        .insert({ name, role, avatar_url: "" })
+        .insert({ name, role })
         .select()
         .single();
       if (error) {
@@ -365,7 +364,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       setAuthors((prev) => prev.map((a) => (a.id === id ? mapped : a)));
       setArticles((prev) =>
         prev.map((a) =>
-          a.author.id === id ? { ...a, author: { ...a.author, name: mapped.name, role: mapped.role } } : a
+          a.author.id === id ? { ...a, author: mapped } : a
         )
       );
       return mapped;

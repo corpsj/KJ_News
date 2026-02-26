@@ -23,7 +23,7 @@ interface DbArticle {
   created_at: string;
   updated_at: string;
   categories: { id: number; name: string; slug: string; description: string; color: string } | null;
-  authors: { id: number; name: string; role: string; avatar_url: string } | null;
+  authors: { id: number; name: string; role: string } | null;
 }
 
 function mapArticle(row: DbArticle): Article {
@@ -47,9 +47,8 @@ function mapArticle(row: DbArticle): Article {
           id: String(row.authors.id),
           name: row.authors.name,
           role: row.authors.role,
-          avatarUrl: row.authors.avatar_url || "",
         }
-      : { id: "0", name: "알 수 없음", role: "", avatarUrl: "" },
+      : { id: "0", name: "알 수 없음", role: "" },
     publishedAt: row.published_at || "",
     thumbnailUrl: row.thumbnail_url || "",
     viewCount: row.view_count || 0,

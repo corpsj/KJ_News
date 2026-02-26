@@ -52,16 +52,21 @@ export default function ArticlesPage() {
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    if (deleteTarget.type === "bulk") {
-      await Promise.all(Array.from(selected).map((id) => deleteArticle(id)));
-      toast(`${selected.size}개 기사가 삭제되었습니다.`, "success");
-      setSelected(new Set());
-    } else if (deleteTarget.type === "single" && deleteTarget.id) {
-      await deleteArticle(deleteTarget.id);
-      toast("기사가 삭제되었습니다.", "success");
-      setSelected((prev) => { const next = new Set(prev); next.delete(deleteTarget.id!); return next; });
+    try {
+      if (deleteTarget.type === "bulk") {
+        await Promise.all(Array.from(selected).map((id) => deleteArticle(id)));
+        toast(`${selected.size}개 기사가 삭제되었습니다.`, "success");
+        setSelected(new Set());
+      } else if (deleteTarget.type === "single" && deleteTarget.id) {
+        await deleteArticle(deleteTarget.id);
+        toast("기사가 삭제되었습니다.", "success");
+        setSelected((prev) => { const next = new Set(prev); next.delete(deleteTarget.id!); return next; });
+      }
+    } catch {
+      toast("삭제 중 오류가 발생했습니다.", "error");
+    } finally {
+      setDeleteTarget(null);
     }
-    setDeleteTarget(null);
   }
 
   function handleDelete(id: string, title: string) {

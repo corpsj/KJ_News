@@ -2,7 +2,6 @@ export interface Author {
   id: string;
   name: string;
   role: string;
-  avatarUrl: string;
 }
 
 export interface Category {

@@ -5,6 +5,7 @@ import type { NfArticle, NfRegion, NfCategory } from "@/lib/types";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
 import { NF_TO_KJ_CATEGORY, NF_CATEGORY_LABELS, DEFAULT_NF_CATEGORY_SLUG, plainTextToHtml } from "@/lib/nf-constants";
+import { sanitizeHtml } from "@/lib/sanitize";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
 
@@ -473,7 +474,7 @@ export default function NfArticleExplorer() {
           <button type="button" className="admin-btn admin-btn-primary flex-shrink-0" onClick={doSearch}>
             검색
           </button>
-          <button type="button" className="admin-btn admin-btn-ghost flex-shrink-0" onClick={() => { setPage(0); fetchArticlesData(); }} disabled={loading} title="새로고침">
+          <button type="button" className="admin-btn admin-btn-ghost flex-shrink-0" onClick={() => fetchArticlesData()} disabled={loading} title="새로고침">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
             새로고침
           </button>
@@ -760,7 +761,7 @@ export default function NfArticleExplorer() {
                 {selectedArticle.content && (
                   <div
                     className="mt-5 text-[14px] md:text-[15px] leading-[1.8] text-gray-700 [&_p]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-1"
-                    dangerouslySetInnerHTML={{ __html: plainTextToHtml(selectedArticle.content) }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(plainTextToHtml(selectedArticle.content)) }}
                   />
                 )}
 
