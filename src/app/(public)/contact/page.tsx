@@ -11,6 +11,7 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [honeypot, setHoneypot] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +27,7 @@ export default function ContactPage() {
           senderEmail: email,
           subject,
           body,
+          honeypot,
         }),
       });
 
@@ -42,6 +44,7 @@ export default function ContactPage() {
       setEmail("");
       setSubject("");
       setBody("");
+      setHoneypot("");
       setLoading(false);
     } catch (err) {
       setError("요청 처리 중 오류가 발생했습니다.");
@@ -89,6 +92,7 @@ export default function ContactPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            maxLength={100}
             className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             placeholder="이름을 입력하세요"
           />
@@ -104,6 +108,7 @@ export default function ContactPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            maxLength={254}
             className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             placeholder="이메일을 입력하세요"
           />
@@ -118,6 +123,7 @@ export default function ContactPage() {
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
+            maxLength={200}
             className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             placeholder="제목을 입력하세요 (선택사항)"
           />
@@ -133,10 +139,23 @@ export default function ContactPage() {
             onChange={(e) => setBody(e.target.value)}
             required
             rows={6}
+            maxLength={10000}
             className="w-full px-3 py-3 md:py-2.5 border border-gray-200 rounded-lg text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
             placeholder="내용을 입력하세요"
           />
         </div>
+
+        {/* Honeypot field */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          className="absolute -left-[9999px] opacity-0 h-0 w-0"
+          aria-hidden="true"
+          tabIndex={-1}
+          autoComplete="off"
+        />
 
         <button
           type="submit"
