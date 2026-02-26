@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import type { NfArticle, NfRegion, NfCategory } from "@/lib/types";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/contexts/ToastContext";
-import { NF_TO_KJ_CATEGORY, NF_CATEGORY_LABELS, DEFAULT_NF_CATEGORY_SLUG, plainTextToHtml } from "@/lib/nf-constants";
+import { NF_TO_KJ_CATEGORY, NF_CATEGORY_LABELS, DEFAULT_NF_CATEGORY_SLUG, plainTextToHtml, nfContentToHtml } from "@/lib/nf-constants";
 import { sanitizeHtml } from "@/lib/sanitize";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
@@ -147,9 +147,10 @@ export default function NfArticleExplorer() {
     const categorySlug = NF_TO_KJ_CATEGORY[article.category] || DEFAULT_NF_CATEGORY_SLUG;
     const result = await importArticle({
       title: article.title,
-      content: plainTextToHtml(article.content),
+      content: nfContentToHtml(article.content, article.images),
       excerpt: article.summary || "",
       categorySlug,
+      thumbnailUrl: article.images?.[0] || "",
       source: article.source,
       sourceUrl: article.source_url,
     });
@@ -177,7 +178,7 @@ export default function NfArticleExplorer() {
     const result = await addArticle({
       title: article.title,
       subtitle: "",
-      content: plainTextToHtml(article.content),
+      content: nfContentToHtml(article.content, article.images),
       excerpt: article.summary || "",
       categorySlug,
       authorId: authors[0]?.id ?? "",
@@ -694,14 +695,26 @@ export default function NfArticleExplorer() {
               </div>
 
 
-              {selectedArticle.images?.[0] && (
+              {selectedArticle.images && selectedArticle.images.length > 0 && (
                 <div className="relative">
                   <img
                     src={selectedArticle.images[0]}
                     alt={selectedArticle.title}
                     className="w-full aspect-[2/1] object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  {selectedArticle.images.length > 1 && (
+                    <div className="grid grid-cols-2 gap-1 mt-1">
+                      {selectedArticle.images.slice(1).map((img, i) => (
+                        <img
+                          key={`${img}-${i}`}
+                          src={img}
+                          alt={`${selectedArticle.title} 이미지 ${i + 2}`}
+                          className="w-full aspect-[3/2] object-cover"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                   <div className="absolute bottom-3 left-4 flex items-center gap-1.5">
                     <span className="nf-ai-badge">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

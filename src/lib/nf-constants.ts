@@ -16,3 +16,19 @@ export function plainTextToHtml(text: string): string {
     .map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`)
     .join("\n");
 }
+
+export function nfContentToHtml(content: string, images: string[]): string {
+  if (!content && (!images || images.length === 0)) return "";
+
+  const cleanedContent = content.replace(/<img[^>]*>/gi, "");
+  const htmlBody = plainTextToHtml(cleanedContent);
+
+  if (!images || images.length === 0) return htmlBody;
+
+  const imageTags = images
+    .filter((url) => url && url.trim())
+    .map((url) => `<figure><img src="${url}" alt="" /></figure>`)
+    .join("\n");
+
+  return htmlBody + "\n" + imageTags;
+}

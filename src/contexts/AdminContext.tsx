@@ -63,6 +63,7 @@ export interface ImportArticleData {
   content: string;
   excerpt: string;
   categorySlug: string;
+  thumbnailUrl?: string;
   source?: string;
   sourceUrl?: string;
 }
@@ -299,7 +300,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           content: data.content,
           category_id: Number(category.id),
           author_id: Number(author.id),
-          thumbnail_url: "",
+          thumbnail_url: data.thumbnailUrl || "",
           tags: [],
           status: "pending_review",
           source: data.source || "",
