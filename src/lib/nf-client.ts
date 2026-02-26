@@ -36,7 +36,22 @@ interface NfConfig {
   key: string;
 }
 
+const CONFIG_TTL = 5 * 60 * 1000;
+const REGIONS_TTL = 60 * 60 * 1000;
+const CATEGORIES_TTL = 60 * 60 * 1000;
+
+let configCache: { data: NfConfig | null; expiresAt: number } | null = null;
+let regionsCache: { data: NfRegionsResponse; expiresAt: number } | null = null;
+let categoriesCache: { data: NfCategoriesResponse; expiresAt: number } | null = null;
+
 async function getConfig(): Promise<NfConfig | null> {
+  const now = Date.now();
+  if (configCache && now < configCache.expiresAt) {
+    return configCache.data;
+  }
+
+  let result: NfConfig | null = null;
+
   try {
     const supabase = await createClient();
     const { data } = await supabase
@@ -48,17 +63,23 @@ async function getConfig(): Promise<NfConfig | null> {
       const map: Record<string, string> = {};
       for (const row of data) map[row.key] = row.value;
       if (map.nf_api_url && map.nf_api_key) {
-        return { url: map.nf_api_url.replace(/\/+$/, ""), key: map.nf_api_key };
+        result = { url: map.nf_api_url.replace(/\/+$/, ""), key: map.nf_api_key };
       }
     }
   } catch {
     // DB read failed, fall through to env
   }
 
-  const url = process.env.NF_API_URL;
-  const key = process.env.NF_API_KEY;
-  if (!url || !key) return null;
-  return { url: url.replace(/\/+$/, ""), key };
+  if (!result) {
+    const url = process.env.NF_API_URL;
+    const key = process.env.NF_API_KEY;
+    if (url && key) {
+      result = { url: url.replace(/\/+$/, ""), key };
+    }
+  }
+
+  configCache = { data: result, expiresAt: now + CONFIG_TTL };
+  return result;
 }
 
 export async function isConfigured(): Promise<boolean> {
@@ -67,11 +88,15 @@ export async function isConfigured(): Promise<boolean> {
 
 const MAX_RETRIES = 3;
 
-async function fetchWithRetry(url: string, headers: Record<string, string>): Promise<Response> {
+async function fetchWithRetry(
+  url: string,
+  headers: Record<string, string>,
+  revalidate = 0
+): Promise<Response> {
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const res = await fetch(url, { headers, next: { revalidate: 0 } });
+    const res = await fetch(url, { headers, next: { revalidate } });
 
     if (res.status === 429) {
       const retryAfter = Number(res.headers.get("Retry-After") || "60");
@@ -115,7 +140,8 @@ export async function fetchArticles(
 
   const res = await fetchWithRetry(
     `${config.url}/api/v1/articles?${sp.toString()}`,
-    { Authorization: `Bearer ${config.key}` }
+    { Authorization: `Bearer ${config.key}` },
+    30
   );
 
   return res.json() as Promise<NfArticlesResponse>;
@@ -133,6 +159,11 @@ export async function fetchArticle(id: string): Promise<NfArticleResponse> {
 }
 
 export async function fetchRegions(): Promise<NfRegionsResponse> {
+  const now = Date.now();
+  if (regionsCache && now < regionsCache.expiresAt) {
+    return regionsCache.data;
+  }
+
   const config = await requireConfig();
 
   const res = await fetchWithRetry(
@@ -140,10 +171,17 @@ export async function fetchRegions(): Promise<NfRegionsResponse> {
     { Authorization: `Bearer ${config.key}` }
   );
 
-  return res.json() as Promise<NfRegionsResponse>;
+  const data = (await res.json()) as NfRegionsResponse;
+  regionsCache = { data, expiresAt: now + REGIONS_TTL };
+  return data;
 }
 
 export async function fetchCategories(): Promise<NfCategoriesResponse> {
+  const now = Date.now();
+  if (categoriesCache && now < categoriesCache.expiresAt) {
+    return categoriesCache.data;
+  }
+
   const config = await requireConfig();
 
   const res = await fetchWithRetry(
@@ -151,5 +189,7 @@ export async function fetchCategories(): Promise<NfCategoriesResponse> {
     { Authorization: `Bearer ${config.key}` }
   );
 
-  return res.json() as Promise<NfCategoriesResponse>;
+  const data = (await res.json()) as NfCategoriesResponse;
+  categoriesCache = { data, expiresAt: now + CATEGORIES_TTL };
+  return data;
 }

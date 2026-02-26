@@ -66,20 +66,11 @@ export default function NfArticleExplorer() {
       setArticles(arts);
       setTotal(data.total ?? 0);
 
-      const ids = arts.map((a) => a.id).join(",");
-      if (ids) {
-        const impRes = await fetch(`/api/nf/imports?nf_ids=${ids}`);
-        if (impRes.ok) {
-          const impData = await impRes.json();
-          const map = new Map<string, { importType: string; localId: number }>();
-          for (const imp of impData.imports || []) {
-            map.set(imp.nf_article_id, { importType: imp.import_type, localId: imp.local_article_id });
-          }
-          setImportedMap(map);
-        }
-      } else {
-        setImportedMap(new Map());
+      const map = new Map<string, { importType: string; localId: number }>();
+      for (const imp of data.imports || []) {
+        map.set(imp.nf_article_id, { importType: imp.import_type, localId: imp.local_article_id });
       }
+      setImportedMap(map);
     } catch {
       setError("데이터를 불러오지 못했습니다");
     } finally {
