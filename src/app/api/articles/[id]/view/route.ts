@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
+
+const rateLimitMap = new Map<string, number>();
+const RATE_LIMIT_MS = 24 * 60 * 60 * 1000;
+const MAX_VIEWED_IDS = 200;
 
 export async function POST(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
@@ -24,24 +28,24 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: false, message: "Already viewed" });
   }
 
-  const supabase = await createServiceClient();
+  const ip =
+    _request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    _request.headers.get("x-real-ip") ||
+    "unknown";
+  const rateLimitKey = `${articleId}:${ip}`;
+  const lastViewed = rateLimitMap.get(rateLimitKey);
 
-  const { data: article, error: fetchError } = await supabase
-    .from("articles")
-    .select("id, view_count")
-    .eq("id", articleId)
-    .single();
-
-  if (fetchError || !article) {
-    return NextResponse.json({ error: "Article not found" }, { status: 404 });
+  if (lastViewed && Date.now() - lastViewed < RATE_LIMIT_MS) {
+    return NextResponse.json({ success: false, message: "Rate limited" });
   }
 
-  const { data, error } = await supabase
-    .from("articles")
-    .update({ view_count: (article.view_count || 0) + 1 })
-    .eq("id", articleId)
-    .select("view_count")
-    .single();
+  rateLimitMap.set(rateLimitKey, Date.now());
+
+  const supabase = await createClient();
+
+  const { data: newCount, error } = await supabase.rpc("increment_view_count", {
+    article_id_param: articleId,
+  });
 
   if (error) {
     return NextResponse.json(
@@ -50,13 +54,18 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  const newViewedIds = [...viewedIds, id].join(",");
+  const updatedIds = [...viewedIds, id];
+  const cappedIds =
+    updatedIds.length > MAX_VIEWED_IDS
+      ? updatedIds.slice(updatedIds.length - MAX_VIEWED_IDS)
+      : updatedIds;
+
   const response = NextResponse.json({
     success: true,
-    viewCount: data.view_count,
+    viewCount: newCount,
   });
-  response.cookies.set("viewed_articles", newViewedIds, {
-    maxAge: 60 * 60 * 24, // 24 hours
+  response.cookies.set("viewed_articles", cappedIds.join(","), {
+    maxAge: 60 * 60 * 24,
     httpOnly: true,
     sameSite: "lax",
     path: "/",
