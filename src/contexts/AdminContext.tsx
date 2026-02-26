@@ -363,6 +363,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (!row) return null;
       const mapped = mapAuthor(row);
       setAuthors((prev) => prev.map((a) => (a.id === id ? mapped : a)));
+      setArticles((prev) =>
+        prev.map((a) =>
+          a.author.id === id ? { ...a, author: { ...a.author, name: mapped.name, role: mapped.role } } : a
+        )
+      );
       return mapped;
     },
     [supabase]
