@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   getPublishedArticlesPaginated,
@@ -7,7 +8,7 @@ import {
 } from "@/lib/db";
 import { formatDate, formatDateShort, hasImage } from "@/lib/utils";
 import type { Article } from "@/lib/types";
-import HeroSlider from "@/components/HeroSlider";
+import CategoryBadge from "@/components/CategoryBadge";
 import BreakingNewsTicker from "@/components/BreakingNewsTicker";
 import Pagination from "@/components/Pagination";
 
@@ -60,12 +61,14 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const totalPages = Math.ceil(total / perPage);
 
-  /* 주요 뉴스 슬라이더: 이미지 있는 기사 최대 5개 */
-  const sliderArticles = latestArticles.filter((a) => hasImage(a.thumbnailUrl)).slice(0, 5);
+  /* 1면 장식: 이미지 있는 기사 중 최신 3개만 선별 */
+  const withImages = latestArticles.filter((a) => hasImage(a.thumbnailUrl));
+  const heroArticle = withImages[0];
+  const subImageArticles = withImages.slice(1, 3);
 
-  /* 나머지 최신 기사 (슬라이더 제외) */
-  const sliderIds = new Set(sliderArticles.map((a) => a.id));
-  const textArticles = latestArticles.filter((a) => !sliderIds.has(a.id));
+  /* 나머지 최신 기사 (1면 장식 제외) */
+  const heroIds = new Set([heroArticle?.id, ...subImageArticles.map((a) => a.id)]);
+  const textArticles = latestArticles.filter((a) => !heroIds.has(a.id));
 
   /* 카테고리별 기사 (상위 6개 카테고리) */
   const displayCategories = categories.slice(0, 6);
@@ -92,25 +95,86 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       ) : (
         <>
-      <HeroSlider articles={sliderArticles} />
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-5 md:py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
+
+            {heroArticle && (
+              <div className="lg:col-span-5">
+                <Link href={`/article/${heroArticle.id}`} className="group block">
+                  {hasImage(heroArticle.thumbnailUrl) && (
+                    <div className="relative aspect-[16/9] md:aspect-[4/3] rounded-lg overflow-hidden mb-3">
+                      <Image
+                        src={heroArticle.thumbnailUrl}
+                        alt={heroArticle.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 42vw"
+                      />
+                    </div>
+                  )}
+                  <CategoryBadge category={heroArticle.category} size="md" />
+                  <h2 className="text-xl md:text-2xl lg:text-[28px] font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors">
+                    {heroArticle.title}
+                  </h2>
+                  <p className="text-[13px] md:text-[14px] text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                    {heroArticle.excerpt}
+                  </p>
+                  <span className="text-xs text-gray-400 mt-2 block">
+                    {heroArticle.author.name} · {formatDate(heroArticle.publishedAt)}
+                  </span>
+                </Link>
+              </div>
+            )}
+
+            <div className="lg:col-span-4 lg:border-l lg:border-r lg:border-gray-100 lg:px-5">
+              <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
+                주요 뉴스
+              </h2>
+              <div>
+                {textArticles.slice(0, 7).map((article) => (
+                  <HeadlineRow key={article.id} article={article} showExcerpt={false} />
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-5">
+              {subImageArticles.map((article) => (
+                <Link
+                  key={article.id}
+                  href={`/article/${article.id}`}
+                  className="group block"
+                >
+                  {hasImage(article.thumbnailUrl) && (
+                    <div className="relative aspect-[16/10] rounded-lg overflow-hidden mb-2">
+                      <Image
+                        src={article.thumbnailUrl}
+                        alt={article.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw"
+                      />
+                    </div>
+                  )}
+                  <CategoryBadge category={article.category} />
+                  <h3 className="text-[14px] md:text-[15px] font-bold text-gray-900 mt-1.5 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
+                    {article.title}
+                  </h3>
+                  <span className="text-[11px] text-gray-400 mt-1 block">
+                    {article.author.name} · {formatDate(article.publishedAt)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
 
           <div className="lg:col-span-9">
-            {textArticles.length > 0 && (
-              <section className="mb-8 md:mb-10">
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
-                  주요 뉴스
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                  {textArticles.slice(0, 7).map((article) => (
-                    <HeadlineRow key={article.id} article={article} />
-                  ))}
-                </div>
-              </section>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 md:gap-y-10">
               {categoryArticles.map(({ category, articles: catArticles }) => {
                 if (catArticles.length === 0) return null;
