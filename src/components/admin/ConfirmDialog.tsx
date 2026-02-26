@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 interface ConfirmDialogProps {
@@ -20,10 +20,18 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const triggerRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  useEffect(() => {
+    triggerRef.current = document.activeElement as HTMLElement;
+    return () => {
+      triggerRef.current?.focus();
+    };
   }, []);
 
   useEffect(() => {
