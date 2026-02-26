@@ -37,7 +37,7 @@ function mapUser(user: SupabaseUser | null): User | null {
     id: user.id,
     email: user.email,
     name: metadata?.name || metadata?.full_name || user.email,
-    role: metadata?.role || "admin",
+    role: metadata?.role || "viewer",
   };
 }
 

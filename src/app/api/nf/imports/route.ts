@@ -6,6 +6,10 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userRole = user.user_metadata?.role as string | undefined;
+  if (userRole !== undefined && userRole !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const sp = request.nextUrl.searchParams;
   const nfIds = sp.get("nf_ids");
@@ -37,6 +41,10 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userRole = user.user_metadata?.role as string | undefined;
+  if (userRole !== undefined && userRole !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   let body: Record<string, unknown>;
   try {
@@ -84,6 +92,10 @@ export async function DELETE(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userRole = user.user_metadata?.role as string | undefined;
+  if (userRole !== undefined && userRole !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   let body: Record<string, unknown>;
   try {
