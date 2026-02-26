@@ -19,5 +19,7 @@ export function formatDateShort(dateStr: string): string {
 
 
 export function hasImage(url: string | undefined | null): boolean {
-  return !!url && url.trim().length > 0;
+  if (!url || url.trim().length === 0) return false;
+  const trimmed = url.trim();
+  return trimmed.startsWith("http://") || trimmed.startsWith("https://");
 }
