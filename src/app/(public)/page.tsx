@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   getPublishedArticlesPaginated,
-  getArticlesByCategory,
+  getArticlesByCategorySlugs,
   getMostViewedArticles,
   getCategories,
 } from "@/lib/db";
@@ -72,12 +72,12 @@ export default async function Home({ searchParams }: HomeProps) {
 
   /* 카테고리별 기사 (상위 6개 카테고리) */
   const displayCategories = categories.slice(0, 6);
-  const categoryArticles = await Promise.all(
-    displayCategories.map(async (category) => ({
-      category,
-      articles: await getArticlesByCategory(category.slug),
-    }))
-  );
+  const categorySlugs = displayCategories.map((category) => category.slug);
+  const categoryArticlesBySlug = await getArticlesByCategorySlugs(categorySlugs, 4);
+  const categoryArticles = displayCategories.map((category) => ({
+    category,
+    articles: categoryArticlesBySlug[category.slug] || [],
+  }));
 
   return (
     <>

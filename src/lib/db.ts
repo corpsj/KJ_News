@@ -109,6 +109,60 @@ export async function getArticlesByCategory(slug: string): Promise<Article[]> {
   return (data as unknown as DbArticle[]).map(mapArticle);
 }
 
+export async function getArticlesByCategorySlugs(
+  slugs: string[],
+  limit: number = 4
+): Promise<Record<string, Article[]>> {
+  const normalizedSlugs = [...new Set(slugs.filter(Boolean))];
+  const grouped: Record<string, Article[]> = {};
+
+  for (const slug of normalizedSlugs) {
+    grouped[slug] = [];
+  }
+
+  if (normalizedSlugs.length === 0) {
+    return grouped;
+  }
+
+  const supabase = await createServiceClient();
+
+  const { data: categories, error: categoryError } = await supabase
+    .from("categories")
+    .select("id, slug")
+    .in("slug", normalizedSlugs);
+
+  if (categoryError || !categories || categories.length === 0) {
+    return grouped;
+  }
+
+  const categoryIds = categories.map((category) => category.id);
+
+  const { data, error } = await supabase
+    .from("articles")
+    .select(ARTICLE_SELECT)
+    .eq("status", "published")
+    .in("category_id", categoryIds)
+    .order("published_at", { ascending: false });
+
+  if (error || !data) {
+    return grouped;
+  }
+
+  for (const row of data as unknown as DbArticle[]) {
+    const article = mapArticle(row);
+    const slug = article.category.slug;
+    const bucket = grouped[slug];
+
+    if (!bucket || bucket.length >= limit) {
+      continue;
+    }
+
+    bucket.push(article);
+  }
+
+  return grouped;
+}
+
 export async function getMostViewedArticles(limit = 5): Promise<Article[]> {
   const supabase = await createServiceClient();
   const { data, error } = await supabase
