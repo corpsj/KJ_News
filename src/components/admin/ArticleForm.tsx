@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin, type ArticleFormData } from "@/contexts/AdminContext";
@@ -246,7 +247,7 @@ export default function ArticleForm({ article }: { article?: Article }) {
           />
           {form.thumbnailUrl ? (
             <div className="flex items-center gap-2 mt-2">
-              <img src={form.thumbnailUrl} alt="기사 썸네일 미리보기" className="w-16 h-10 object-cover rounded border border-gray-200" />
+              <Image src={form.thumbnailUrl} alt="기사 썸네일 미리보기" width={64} height={40} className="object-cover rounded border border-gray-200" />
               <span className="text-[11px] text-gray-400">썸네일로 사용될 이미지</span>
             </div>
           ) : (

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -172,11 +173,13 @@ export default async function ArticlePage({ params }: PageProps) {
 
           {hasImage(article.thumbnailUrl) && (
             <figure className="mb-6 md:mb-8">
-              <div className="overflow-hidden">
-                <img
+              <div className="relative w-full aspect-video overflow-hidden">
+                <Image
                   src={article.thumbnailUrl}
                   alt={article.title}
-                  className="block mx-auto max-w-full max-h-[560px] w-auto h-auto"
+                  fill
+                  className="object-cover"
+                  priority={true}
                 />
               </div>
               <figcaption className="text-xs text-gray-400 mt-2 text-center">
