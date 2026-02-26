@@ -92,6 +92,7 @@ export default function Header({ categories }: { categories: Category[] }) {
             onClick={toggleMenu}
             aria-label="메뉴"
             aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
           >
             <svg
               className="w-6 h-6"
@@ -192,6 +193,7 @@ export default function Header({ categories }: { categories: Category[] }) {
         className="md:hidden fixed inset-0 top-[57px] z-50 pointer-events-none"
       >
         <nav
+          id="mobile-menu"
           aria-label="모바일 메뉴"
           className={`pointer-events-auto bg-white w-[280px] max-w-[80vw] h-full overflow-y-auto shadow-xl transition-transform duration-300 ease-in-out ${
             mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
