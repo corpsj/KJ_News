@@ -160,14 +160,6 @@ export default function Header({ categories }: { categories: Category[] }) {
       <nav aria-label="주 메뉴" className="hidden md:block bg-gray-900">
         <div className="max-w-7xl mx-auto px-4">
           <ul className="flex items-center gap-1">
-            <li>
-              <Link
-                href="/special"
-                className="block px-4 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors"
-              >
-                창간특별호
-              </Link>
-            </li>
             {categories.map((cat) => (
               <li key={cat.id}>
                 <Link
@@ -210,13 +202,6 @@ export default function Header({ categories }: { categories: Category[] }) {
           </div>
 
           <div className="py-2">
-            <Link
-              href="/special"
-              className="flex items-center px-5 min-h-[48px] text-[15px] font-bold text-gray-900 active:bg-gray-50 transition-colors"
-              onClick={closeMenu}
-            >
-              창간특별호
-            </Link>
             {categories.map((cat) => (
               <Link
                 key={cat.id}

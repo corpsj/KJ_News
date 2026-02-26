@@ -147,48 +147,6 @@ export async function getRelatedArticles(article: Article, limit = 4): Promise<A
   return (data as unknown as DbArticle[]).map(mapArticle);
 }
 
-export async function getSpecialEditionArticles(): Promise<Article[]> {
-  const supabase = await createServiceClient();
-  const { data, error } = await supabase
-    .from("articles")
-    .select(ARTICLE_SELECT)
-    .eq("status", "published")
-    .order("published_at", { ascending: false });
-
-  if (error || !data) return [];
-  return (data as unknown as DbArticle[]).map(mapArticle);
-}
-
-export async function getSpecialRelatedArticles(article: Article, limit = 4): Promise<Article[]> {
-  const supabase = await createServiceClient();
-
-  const { data: sameCatData } = await supabase
-    .from("articles")
-    .select(ARTICLE_SELECT)
-    .eq("status", "published")
-    .eq("category_id", parseInt(article.category.id, 10))
-    .neq("id", parseInt(article.id, 10))
-    .order("published_at", { ascending: false })
-    .limit(limit);
-
-  const sameCat = sameCatData
-    ? (sameCatData as unknown as DbArticle[]).map(mapArticle)
-    : [];
-
-  if (sameCat.length >= limit) return sameCat;
-
-  const { data: restData } = await supabase
-    .from("articles")
-    .select(ARTICLE_SELECT)
-    .eq("status", "published")
-    .neq("category_id", parseInt(article.category.id, 10))
-    .neq("id", parseInt(article.id, 10))
-    .order("published_at", { ascending: false })
-    .limit(limit - sameCat.length);
-
-  const rest = restData ? (restData as unknown as DbArticle[]).map(mapArticle) : [];
-  return [...sameCat, ...rest];
-}
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createServiceClient();
