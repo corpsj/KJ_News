@@ -33,12 +33,21 @@ export default function NfArticleExplorer() {
   const [page, setPage] = useState(0);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedImageIndices, setSelectedImageIndices] = useState<Set<number>>(new Set());
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [datePreset, setDatePreset] = useState<string>("");
 
   const selectedArticle = articles.find(a => a.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (selectedArticle?.images) {
+      setSelectedImageIndices(new Set(selectedArticle.images.map((_, i) => i)));
+    } else {
+      setSelectedImageIndices(new Set());
+    }
+  }, [selectedArticle?.id]);
 
   useEffect(() => {
     setSelectedIds(new Set());
@@ -108,6 +117,30 @@ export default function NfArticleExplorer() {
     }
   }
 
+  function toggleImageSelection(index: number) {
+    setSelectedImageIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
+  function toggleAllImages() {
+    if (!selectedArticle?.images) return;
+    const allSelected = selectedArticle.images.length === selectedImageIndices.size;
+    if (allSelected) {
+      setSelectedImageIndices(new Set());
+    } else {
+      setSelectedImageIndices(new Set(selectedArticle.images.map((_, i) => i)));
+    }
+  }
+
+  function getSelectedImages(article: NfArticle): string[] {
+    if (article.id !== selectedId || selectedImageIndices.size === 0) return article.images;
+    return article.images.filter((_, i) => selectedImageIndices.has(i));
+  }
+
   const groupedArticles = useMemo(() => {
     const groups: { date: string; label: string; articles: NfArticle[] }[] = [];
     const map = new Map<string, NfArticle[]>();
@@ -163,13 +196,14 @@ export default function NfArticleExplorer() {
   async function handleImport(e: React.MouseEvent | null, article: NfArticle) {
     if (e) e.stopPropagation();
     const categorySlug = NF_TO_KJ_CATEGORY[article.category] || DEFAULT_NF_CATEGORY_SLUG;
-    const uploadedImages = await uploadNfImages(article.images);
+    const images = getSelectedImages(article);
+    const uploadedImages = await uploadNfImages(images);
     const result = await importArticle({
       title: article.title,
       content: nfContentToHtml(article.content, uploadedImages),
       excerpt: article.summary || "",
       categorySlug,
-      thumbnailUrl: uploadedImages[0] || "",
+      thumbnailUrl: uploadedImages.find(url => url && url.trim()) || "",
       source: article.source,
       sourceUrl: article.source_url,
     });
@@ -194,7 +228,8 @@ export default function NfArticleExplorer() {
   async function handlePublish(e: React.MouseEvent | null, article: NfArticle) {
     if (e) e.stopPropagation();
     const categorySlug = NF_TO_KJ_CATEGORY[article.category] || DEFAULT_NF_CATEGORY_SLUG;
-    const uploadedImages = await uploadNfImages(article.images);
+    const images = getSelectedImages(article);
+    const uploadedImages = await uploadNfImages(images);
     const result = await addArticle({
       title: article.title,
       subtitle: "",
@@ -202,7 +237,7 @@ export default function NfArticleExplorer() {
       excerpt: article.summary || "",
       categorySlug,
       authorId: authors[0]?.id ?? "",
-      thumbnailUrl: uploadedImages[0] || "",
+      thumbnailUrl: uploadedImages.find(url => url && url.trim()) || "",
       tags: "",
       status: "published",
     });
@@ -716,37 +751,95 @@ export default function NfArticleExplorer() {
 
 
               {selectedArticle.images && selectedArticle.images.length > 0 && (
-                <div className="relative">
-                  <img
-                    src={selectedArticle.images[0]}
-                    alt={selectedArticle.title}
-                    className="w-full aspect-[2/1] object-cover"
-                  />
-                  {selectedArticle.images.length > 1 && (
-                    <div className="grid grid-cols-2 gap-1 mt-1">
-                      {selectedArticle.images.slice(1).map((img, i) => (
-                        <img
-                          key={`${img}-${i}`}
-                          src={img}
-                          alt={`${selectedArticle.title} 이미지 ${i + 2}`}
-                          className="w-full aspect-[3/2] object-cover"
-                        />
-                      ))}
+                <div>
+                  {!importedMap.has(selectedArticle.id) && (
+                    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-100">
+                      <span className="text-[11px] text-gray-500">
+                        이미지 {selectedImageIndices.size}/{selectedArticle.images.length}장 선택
+                      </span>
+                      <button
+                        type="button"
+                        onClick={toggleAllImages}
+                        className="text-[11px] text-gray-400 hover:text-gray-600"
+                      >
+                        {selectedArticle.images.length === selectedImageIndices.size ? "전체 해제" : "전체 선택"}
+                      </button>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute bottom-3 left-4 flex items-center gap-1.5">
-                    <span className="nf-ai-badge">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                      </svg>
-                      뉴스팩토리
-                    </span>
-                    {selectedArticle.category && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-white/20 backdrop-blur-sm text-white">
-                        {NF_CATEGORY_LABELS[selectedArticle.category] || selectedArticle.category}
-                      </span>
+
+                  <div className="relative">
+                    <div
+                      className="relative cursor-pointer"
+                      onClick={() => !importedMap.has(selectedArticle.id) && toggleImageSelection(0)}
+                    >
+                      <img
+                        src={selectedArticle.images[0]}
+                        alt={selectedArticle.title}
+                        className={`w-full aspect-[2/1] object-cover transition-opacity ${
+                          !importedMap.has(selectedArticle.id) && !selectedImageIndices.has(0) ? "opacity-30" : ""
+                        }`}
+                      />
+                      {!importedMap.has(selectedArticle.id) && (
+                        <div className="absolute top-2 left-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedImageIndices.has(0)}
+                            onChange={() => toggleImageSelection(0)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 rounded border-gray-300 accent-gray-900"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedArticle.images.length > 1 && (
+                      <div className="grid grid-cols-2 gap-1 mt-1">
+                        {selectedArticle.images.slice(1).map((img, i) => {
+                          const idx = i + 1;
+                          return (
+                            <div
+                              key={`${img}-${i}`}
+                              className="relative cursor-pointer"
+                              onClick={() => !importedMap.has(selectedArticle.id) && toggleImageSelection(idx)}
+                            >
+                              <img
+                                src={img}
+                                alt={`${selectedArticle.title} 이미지 ${idx + 1}`}
+                                className={`w-full aspect-[3/2] object-cover transition-opacity ${
+                                  !importedMap.has(selectedArticle.id) && !selectedImageIndices.has(idx) ? "opacity-30" : ""
+                                }`}
+                              />
+                              {!importedMap.has(selectedArticle.id) && (
+                                <div className="absolute top-2 left-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedImageIndices.has(idx)}
+                                    onChange={() => toggleImageSelection(idx)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-3 left-4 flex items-center gap-1.5">
+                      <span className="nf-ai-badge">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                        </svg>
+                        뉴스팩토리
+                      </span>
+                      {selectedArticle.category && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-white/20 backdrop-blur-sm text-white">
+                          {NF_CATEGORY_LABELS[selectedArticle.category] || selectedArticle.category}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

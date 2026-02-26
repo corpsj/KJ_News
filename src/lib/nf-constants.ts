@@ -30,5 +30,5 @@ export function nfContentToHtml(content: string, images: string[]): string {
     .map((url) => `<figure><img src="${url}" alt="" /></figure>`)
     .join("\n");
 
-  return htmlBody + "\n" + imageTags;
+  return imageTags + "\n" + htmlBody;
 }

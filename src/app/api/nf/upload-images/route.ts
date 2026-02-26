@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MIN_IMAGE_BYTES = 5 * 1024; // 5KB 미만 = 트래킹 픽셀/아이콘
 const FETCH_TIMEOUT_MS = 15000;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
@@ -49,7 +50,7 @@ async function uploadImageUrl(
     if (!response.ok) return url;
 
     const arrayBuffer = await response.arrayBuffer();
-    if (arrayBuffer.byteLength > MAX_IMAGE_BYTES) return url;
+    if (arrayBuffer.byteLength > MAX_IMAGE_BYTES || arrayBuffer.byteLength < MIN_IMAGE_BYTES) return "";
 
     const contentType = getContentType(response, trimmedUrl);
     const ext = getExtFromContentType(contentType);
