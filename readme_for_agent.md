@@ -169,10 +169,6 @@ Defined in `.env.example`. Every variable with exact usage locations:
         │   ├── category/[slug]/page.tsx            (252 lines)
         │   ├── search/page.tsx                     (90 lines)
         │   └── contact/page.tsx                    (151 lines)
-        ├── special/
-        │   ├── layout.tsx                          (73 lines)  Standalone layout
-        │   ├── page.tsx                            (231 lines)
-        │   └── [id]/page.tsx                       (175 lines)
         ├── admin/
         │   ├── layout.tsx                          (10 lines)  Server layout
         │   ├── AdminLayoutClient.tsx               (94 lines)  Client auth wrapper
@@ -616,7 +612,7 @@ getArticleById(id: string): Promise<Article | null>
 ```
 - Parses `id` as integer: `parseInt(id, 10)`
 - Query: `articles` WHERE `id = <parsed>`, single result
-- Used by: article detail pages, special article pages
+|- Used by: article detail pages
 
 ```typescript
 getArticlesByCategory(slug: string): Promise<Article[]>
@@ -630,7 +626,7 @@ getArticlesByCategory(slug: string): Promise<Article[]>
 getMostViewedArticles(limit: number = 5): Promise<Article[]>
 ```
 - Query: `articles` WHERE `status = 'published'`, ORDER BY `view_count DESC`, LIMIT
-- Used by: homepage sidebar, article detail sidebar, category page sidebar, special page sidebar
+|- Used by: homepage sidebar, article detail sidebar, category page sidebar
 
 ```typescript
 getRelatedArticles(article: Article, limit: number = 4): Promise<Article[]>
@@ -640,26 +636,13 @@ getRelatedArticles(article: Article, limit: number = 4): Promise<Article[]>
 - Used by: article detail page
 
 ```typescript
-getSpecialEditionArticles(): Promise<Article[]>
-```
-- Query: ALL `articles` WHERE `status = 'published'`, ORDER BY `published_at DESC` (NO limit)
-- Used by: special edition page
-
-```typescript
-getSpecialRelatedArticles(article: Article, limit: number = 4): Promise<Article[]>
-```
-- Two-phase: same category first (excluding current), then other categories if not enough
-- Phase 1: same `category_id`, exclude current `id`, ORDER BY `published_at DESC`, LIMIT
-- Phase 2 (if `sameCat.length < limit`): different `category_id`, exclude current `id`, LIMIT `(limit - sameCat.length)`
-- Returns concatenated `[...sameCat, ...rest]`
-- Used by: special article detail page
 
 ```typescript
 getCategories(): Promise<Category[]>
 ```
 - Query: ALL categories, ORDER BY `id`
 - Maps: `{ id: String(c.id), name, slug, description: c.description || "", color: c.color || "#64748b" }`
-- Used by: homepage, public layout (Header), special page, dashboard
+|- Used by: homepage, public layout (Header), dashboard
 
 ```typescript
 getCategoryBySlug(slug: string): Promise<Category | null>
@@ -672,7 +655,7 @@ getPublishedArticleIds(): Promise<string[]>
 ```
 - Query: `articles` SELECT `id` WHERE `status = 'published'`
 - Returns string array of IDs
-- Used by: `generateStaticParams()` in article and special article pages
+|- Used by: `generateStaticParams()` in article pages
 
 ```typescript
 getCategorySlugs(): Promise<string[]>
@@ -1169,27 +1152,6 @@ const [{ articles: latestArticles, total }, mostViewed, categories] = await Prom
 **On success**: replaces entire page with green success message + home link
 **On error**: shows red error text above form
 
-### 14.8 Special Edition — `src/app/special/`
-
-**Layout** (`layout.tsx`): Standalone — does NOT use public layout. Has its own:
-- Header: centered logo + "창간특별호" badge
-- Footer: company info, registration, contact details
-
-**Special Page** (`page.tsx`): Same layout logic as homepage but:
-- All links go to `/special/{id}` instead of `/article/{id}`
-- No pagination (loads all published articles)
-- Category sections filter from `allArticles` in memory instead of separate DB calls
-- "더보기" links NOT shown (no category detail page for special)
-- "더 많은 기사" section instead of "최신 기사"
-
-**Special Article** (`[id]/page.tsx`):
-- Revalidate: 3600
-- Uses `getSpecialRelatedArticles()` (fills from other categories)
-- Back link → `/special`
-- Author avatar with fallback initial circle
-- Tags as rounded-full badges (not clickable to search)
-- Related articles link to `/special/{id}`
-- NO ViewCounter, NO PrintButton, NO Sidebar, NO JSON-LD
 
 ### 14.9 Admin Dashboard — `src/app/admin/page.tsx`
 **Client component**
@@ -1314,7 +1276,7 @@ Otherwise renders `<ArticleForm article={article} />`.
 **Features**:
 - Date display: Korean format "YYYY년 M월 D일 X요일" via `getTodayKorean()`
 - Admin detection: checks `supabase.auth.getSession()` on mount, subscribes to auth state changes. Shows "관리자" link if logged in, "로그인" link if not.
-- Desktop: search bar (w-64), dark nav bar (gray-900) with "창간특별호" first + all categories
+|- Desktop: search bar (w-64), dark nav bar (gray-900) with all categories
 - Mobile: hamburger menu (left slide-out 280px, 80vw max), search toggle, backdrop overlay
 - Body scroll lock: adds/removes `menu-open` class on body when mobile menu toggles
 
@@ -1488,8 +1450,7 @@ Split-view UI with list panel (left) and detail panel (right).
 ### 16.1 Sitemap — `src/app/sitemap.ts`
 
 Generates entries for:
-- `/` — priority 1, hourly
-- `/special` — priority 0.9, daily
+|- `/` — priority 1, hourly
 - `/terms` — priority 0.3, monthly
 - `/privacy` — priority 0.3, monthly
 - All published articles: `/article/{id}` — priority 0.8, daily, lastModified from `updated_at`
@@ -1657,8 +1618,6 @@ All prefixed `nf-`:
 | `/category/[slug]` | ISR | 60s | Yes — all category slugs |
 | `/search` | Dynamic | `force-dynamic` | No |
 | `/contact` | Client component | N/A | No |
-| `/special` | ISR | 60s | No |
-| `/special/[id]` | ISR | 3600s | Yes — all published article IDs |
 | `/admin/*` | Client components | N/A | No |
 | `/feed.xml` | On-demand | `s-maxage=3600` header | No |
 | `/sitemap.xml` | On-demand | Default | No |
@@ -1696,8 +1655,8 @@ import "@testing-library/jest-dom";
 
 | Path | Usage |
 |---|---|
-| `/brand/KJ_sloganLogo.png` | Public Header, Special Header, Login page, OG image generator |
-| `/brand/KJ_Logo.png` | Public Footer (inverted), Special Footer (inverted) |
+| `/brand/KJ_sloganLogo.png` | Public Header, Login page, OG image generator |
+| `/brand/KJ_Logo.png` | Public Footer (inverted) |
 
 ---
 
