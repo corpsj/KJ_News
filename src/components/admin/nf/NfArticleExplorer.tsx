@@ -90,6 +90,24 @@ export default function NfArticleExplorer() {
 
   useEffect(() => { fetchArticlesData(); }, [fetchArticlesData]);
 
+  async function uploadNfImages(images: string[]): Promise<string[]> {
+    if (!images || images.length === 0) return [];
+
+    try {
+      const res = await fetch("/api/nf/upload-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: images.filter(url => url && url.trim()) }),
+      });
+
+      if (!res.ok) return images;
+      const data = await res.json() as { urls?: string[] };
+      return data.urls ?? images;
+    } catch {
+      return images;
+    }
+  }
+
   const groupedArticles = useMemo(() => {
     const groups: { date: string; label: string; articles: NfArticle[] }[] = [];
     const map = new Map<string, NfArticle[]>();
@@ -145,12 +163,13 @@ export default function NfArticleExplorer() {
   async function handleImport(e: React.MouseEvent | null, article: NfArticle) {
     if (e) e.stopPropagation();
     const categorySlug = NF_TO_KJ_CATEGORY[article.category] || DEFAULT_NF_CATEGORY_SLUG;
+    const uploadedImages = await uploadNfImages(article.images);
     const result = await importArticle({
       title: article.title,
-      content: nfContentToHtml(article.content, article.images),
+      content: nfContentToHtml(article.content, uploadedImages),
       excerpt: article.summary || "",
       categorySlug,
-      thumbnailUrl: article.images?.[0] || "",
+      thumbnailUrl: uploadedImages[0] || "",
       source: article.source,
       sourceUrl: article.source_url,
     });
@@ -175,14 +194,15 @@ export default function NfArticleExplorer() {
   async function handlePublish(e: React.MouseEvent | null, article: NfArticle) {
     if (e) e.stopPropagation();
     const categorySlug = NF_TO_KJ_CATEGORY[article.category] || DEFAULT_NF_CATEGORY_SLUG;
+    const uploadedImages = await uploadNfImages(article.images);
     const result = await addArticle({
       title: article.title,
       subtitle: "",
-      content: nfContentToHtml(article.content, article.images),
+      content: nfContentToHtml(article.content, uploadedImages),
       excerpt: article.summary || "",
       categorySlug,
       authorId: authors[0]?.id ?? "",
-      thumbnailUrl: article.images?.[0] || "",
+      thumbnailUrl: uploadedImages[0] || "",
       tags: "",
       status: "published",
     });
