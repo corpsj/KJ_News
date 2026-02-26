@@ -58,7 +58,6 @@ export default function ArticleForm({ article }: { article?: Article }) {
     try {
       setForm(JSON.parse(saved));
     } catch (err) {
-      console.warn("[ArticleForm] Failed to parse saved draft:", err);
       localStorage.removeItem(AUTOSAVE_KEY);
     }
     setHasSavedDraft(false);

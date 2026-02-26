@@ -159,7 +159,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const category = categories.find((c) => c.slug === data.categorySlug) ?? categories[0];
       const author = authors.find((a) => a.id === data.authorId) ?? authors[0];
       if (!category || !author) {
-        console.error("[addArticle] 카테고리 또는 작성자 없음", { category: !!category, author: !!author, categories: categories.length, authors: authors.length });
         return null;
       }
 
@@ -185,7 +184,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error("[addArticle]", error.message, error.details);
         return null;
       }
       if (!row) return null;
@@ -231,7 +229,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error("[updateArticle]", error.message, error.details);
         return null;
       }
       if (!row) return null;
@@ -262,7 +259,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error("[updateArticleStatus]", error.message, error.details);
         return;
       }
       if (!row) return;
@@ -277,7 +273,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     async (id: string) => {
       const { error } = await supabase.from("articles").delete().eq("id", Number(id));
       if (error) {
-        console.error("[deleteArticle]", error.message, error.details);
         return;
       }
       setArticles((prev) => prev.filter((a) => a.id !== id));
@@ -290,7 +285,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const category = categories.find((c) => c.slug === data.categorySlug) ?? categories[0];
       const author = authors[0];
       if (!category || !author) {
-        console.error("[importArticle] 카테고리 또는 작성자 없음", { category: !!category, author: !!author, categories: categories.length, authors: authors.length });
         return null;
       }
 
@@ -316,7 +310,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error("[importArticle]", error.message, error.details);
         return null;
       }
       if (!row) return null;
@@ -336,7 +329,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .select()
         .single();
       if (error) {
-        console.error("[addAuthor]", error.message);
         return null;
       }
       if (!row) return null;
@@ -356,7 +348,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .select()
         .single();
       if (error) {
-        console.error("[updateAuthor]", error.message);
         return null;
       }
       if (!row) return null;
@@ -376,7 +367,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     async (id: string): Promise<boolean> => {
       const { error } = await supabase.from("authors").delete().eq("id", Number(id));
       if (error) {
-        console.error("[deleteAuthor]", error.message);
         return false;
       }
       setAuthors((prev) => prev.filter((a) => a.id !== id));
