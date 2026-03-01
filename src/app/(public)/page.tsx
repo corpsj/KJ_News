@@ -11,6 +11,7 @@ import BreakingNewsTicker from "@/components/BreakingNewsTicker";
 import Pagination from "@/components/Pagination";
 import MainNewsSection from "@/components/MainNewsSection";
 import AdBanner from "@/components/AdBanner";
+import YoutubeSection from "@/components/YoutubeSection";
 
 export const revalidate = 60;
 
@@ -133,20 +134,12 @@ export default async function Home({ searchParams }: HomeProps) {
               <AdBanner slot="category_below" />
             </div>
 
-            {textArticles.length > 7 && (
-              <section className="mt-8 md:mt-10">
-                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
-                  최신 기사
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                  {textArticles.slice(7).map((article) => (
-                    <HeadlineRow key={article.id} article={article} showExcerpt />
-                  ))}
-                </div>
-              </section>
-            )}
+            {/* 영상 클립 섹션 */}
+            <div className="mt-8 md:mt-10">
+              <YoutubeSection />
+            </div>
 
-            {/* 광고 배너 3: 최신기사 하단 */}
+            {/* 광고 배너 3: 영상 섹션 하단 */}
             <div className="mt-8">
               <AdBanner slot="latest_below" />
             </div>
