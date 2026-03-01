@@ -16,7 +16,7 @@ import ViewCounter from "@/components/ViewCounter";
 import PrintButton from "@/components/PrintButton";
 import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 
 interface PageProps {

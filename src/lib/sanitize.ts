@@ -22,9 +22,13 @@ export function sanitizeHtml(html: string): string {
 }
 
 /**
- * 본문 HTML에서 첫 번째 <img> 태그를 제거한다.
+ * 본문 HTML에서 첫 번째 이미지(또는 figure로 감싼 이미지)를 제거한다.
  * 썸네일과 본문 첫 이미지가 동일할 때 중복 표시 방지용.
  */
 export function removeFirstImage(html: string): string {
+  // figure로 감싼 이미지가 있으면 figure 전체 제거
+  const figureRemoved = html.replace(/<figure[^>]*>[\s\S]*?<img[^>]*>[\s\S]*?<\/figure>/, "");
+  if (figureRemoved !== html) return figureRemoved;
+  // 단독 img 태그 제거
   return html.replace(/<img[^>]*>/, "");
 }

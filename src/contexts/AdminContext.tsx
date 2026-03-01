@@ -12,6 +12,21 @@ import {
 import type { Article, ArticleStatus, Author, Category } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 
+/** 캐시 무효화 헬퍼 – 기사 변경 후 호출 */
+async function revalidatePages(articleId?: string) {
+  try {
+    const paths = ["/"];
+    if (articleId) paths.push(`/article/${articleId}`);
+    await fetch("/api/revalidate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paths }),
+    });
+  } catch {
+    /* 무시: revalidation 실패해도 사용자 흐름 중단 안 함 */
+  }
+}
+
 interface DbArticle {
   id: number;
   title: string;
@@ -191,6 +206,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
       const mapped = mapArticle(row as unknown as DbArticle);
       setArticles((prev) => [mapped, ...prev]);
+      revalidatePages(mapped.id);
       return mapped;
     },
     [authors, categories, supabase]
@@ -236,6 +252,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
       const mapped = mapArticle(row as unknown as DbArticle);
       setArticles((prev) => prev.map((article) => (article.id === id ? mapped : article)));
+      revalidatePages(id);
       return mapped;
     },
     [articles, authors, categories, supabase]
@@ -266,6 +283,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
       const mapped = mapArticle(row as unknown as DbArticle);
       setArticles((prev) => prev.map((article) => (article.id === id ? mapped : article)));
+      revalidatePages(id);
     },
     [articles, supabase]
   );
@@ -277,6 +295,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         return;
       }
       setArticles((prev) => prev.filter((a) => a.id !== id));
+      revalidatePages(id);
     },
     [supabase]
   );
