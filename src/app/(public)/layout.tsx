@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import LandingPopup from "@/components/LandingPopup";
 import { getCategories } from "@/lib/db";
 
 export default async function PublicLayout({
@@ -19,6 +20,7 @@ export default async function PublicLayout({
       <Header categories={categories} />
       <main id="main-content" className="min-h-screen">{children}</main>
       <Footer />
+      <LandingPopup />
     </>
   );
 }

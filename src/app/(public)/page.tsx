@@ -10,6 +10,7 @@ import type { Article } from "@/lib/types";
 import BreakingNewsTicker from "@/components/BreakingNewsTicker";
 import Pagination from "@/components/Pagination";
 import MainNewsSection from "@/components/MainNewsSection";
+import AdBanner from "@/components/AdBanner";
 
 export const revalidate = 60;
 
@@ -94,6 +95,9 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
+      {/* 광고 배너 1: 주요뉴스 하단 */}
+      <AdBanner slot="main_news_below" />
+
       <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
 
@@ -124,6 +128,11 @@ export default async function Home({ searchParams }: HomeProps) {
               })}
             </div>
 
+            {/* 광고 배너 2: 카테고리별 뉴스 하단 */}
+            <div className="mt-8">
+              <AdBanner slot="category_below" />
+            </div>
+
             {textArticles.length > 7 && (
               <section className="mt-8 md:mt-10">
                  <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
@@ -136,6 +145,11 @@ export default async function Home({ searchParams }: HomeProps) {
                 </div>
               </section>
             )}
+
+            {/* 광고 배너 3: 최신기사 하단 */}
+            <div className="mt-8">
+              <AdBanner slot="latest_below" />
+            </div>
           </div>
 
           <div className="lg:col-span-3">
