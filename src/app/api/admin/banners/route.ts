@@ -49,8 +49,6 @@ export async function POST(request: NextRequest) {
       link_url: body.link_url || "",
       slot: body.slot,
       is_active: body.is_active ?? false,
-      start_date: body.start_date || null,
-      end_date: body.end_date || null,
       sort_order: body.sort_order || 0,
     })
     .select()

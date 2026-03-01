@@ -43,8 +43,6 @@ export async function POST(request: NextRequest) {
       image_url: body.image_url || "",
       link_url: body.link_url || "",
       is_active: body.is_active ?? false,
-      start_date: body.start_date || null,
-      end_date: body.end_date || null,
       position: body.position || "center",
       width: body.width || 480,
     })

@@ -26,8 +26,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       image_url: body.image_url,
       link_url: body.link_url,
       is_active: body.is_active,
-      start_date: body.start_date || null,
-      end_date: body.end_date || null,
       position: body.position,
       width: body.width,
       updated_at: new Date().toISOString(),

@@ -6,8 +6,6 @@ CREATE TABLE popups (
   image_url TEXT DEFAULT '',
   link_url TEXT DEFAULT '',
   is_active BOOLEAN DEFAULT false,
-  start_date TIMESTAMPTZ,
-  end_date TIMESTAMPTZ,
   position TEXT DEFAULT 'center' CHECK (position IN ('center', 'top', 'bottom')),
   width INTEGER DEFAULT 480,
   created_at TIMESTAMPTZ DEFAULT now(),
@@ -22,8 +20,6 @@ CREATE TABLE ad_banners (
   link_url TEXT DEFAULT '',
   slot TEXT NOT NULL CHECK (slot IN ('main_news_below', 'category_below', 'latest_below')),
   is_active BOOLEAN DEFAULT false,
-  start_date TIMESTAMPTZ,
-  end_date TIMESTAMPTZ,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()

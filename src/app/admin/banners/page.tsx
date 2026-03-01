@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/contexts/ToastContext";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 
@@ -11,8 +11,6 @@ interface Banner {
   link_url: string;
   slot: string;
   is_active: boolean;
-  start_date: string | null;
-  end_date: string | null;
   sort_order: number;
 }
 
@@ -28,17 +26,8 @@ const emptyBanner: Omit<Banner, "id"> = {
   link_url: "",
   slot: "main_news_below",
   is_active: false,
-  start_date: null,
-  end_date: null,
   sort_order: 0,
 };
-
-function toLocalDatetime(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 16);
-}
 
 export default function BannersPage() {
   const { toast } = useToast();
@@ -50,6 +39,8 @@ export default function BannersPage() {
   const [deleteTarget, setDeleteTarget] = useState<Banner | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [filterSlot, setFilterSlot] = useState<string>("all");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchBanners = useCallback(async () => {
     setLoading(true);
@@ -79,15 +70,38 @@ export default function BannersPage() {
       link_url: banner.link_url,
       slot: banner.slot,
       is_active: banner.is_active,
-      start_date: banner.start_date,
-      end_date: banner.end_date,
       sort_order: banner.sort_order,
     });
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setForm((f) => ({ ...f, image_url: data.url }));
+        toast("이미지가 업로드되었습니다.", "success");
+      } else {
+        const data = await res.json();
+        toast(data.error || "업로드 실패", "error");
+      }
+    } catch {
+      toast("네트워크 오류", "error");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   async function handleSave() {
     if (!form.title.trim()) { toast("제목을 입력하세요.", "error"); return; }
-    if (!form.image_url.trim()) { toast("이미지 URL을 입력하세요.", "error"); return; }
+    if (!form.image_url.trim()) { toast("이미지를 업로드하세요.", "error"); return; }
     setSaving(true);
     try {
       const url = editing ? `/api/admin/banners/${editing.id}` : "/api/admin/banners";
@@ -171,8 +185,30 @@ export default function BannersPage() {
               <input className="admin-input" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="배너 제목 (관리용)" />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">이미지 URL * (권장 비율 6:1)</label>
-              <input className="admin-input" value={form.image_url} onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))} placeholder="https://..." />
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">이미지 * (권장 비율 6:1)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="admin-btn admin-btn-ghost text-[13px] px-3 py-1.5"
+                >
+                  {uploading ? "업로드 중..." : "파일 선택"}
+                </button>
+                <input
+                  className="admin-input flex-1"
+                  value={form.image_url}
+                  onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
+                  placeholder="이미지 URL 직접 입력 또는 파일 업로드"
+                />
+              </div>
               {form.image_url && (
                 <div className="mt-2 rounded-lg overflow-hidden border border-gray-200">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -194,7 +230,7 @@ export default function BannersPage() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">정렬 순서</label>
                 <input className="admin-input" type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) }))} />
@@ -204,16 +240,6 @@ export default function BannersPage() {
                   <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="w-4 h-4 rounded border-gray-300" />
                   <span className="text-[13px] font-medium text-gray-700">활성화</span>
                 </label>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">시작일시</label>
-                <input className="admin-input" type="datetime-local" value={toLocalDatetime(form.start_date)} onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value ? new Date(e.target.value).toISOString() : null }))} />
-              </div>
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">종료일시</label>
-                <input className="admin-input" type="datetime-local" value={toLocalDatetime(form.end_date)} onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value ? new Date(e.target.value).toISOString() : null }))} />
               </div>
             </div>
           </div>

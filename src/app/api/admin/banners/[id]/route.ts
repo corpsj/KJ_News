@@ -26,8 +26,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       link_url: body.link_url,
       slot: body.slot,
       is_active: body.is_active,
-      start_date: body.start_date || null,
-      end_date: body.end_date || null,
       sort_order: body.sort_order,
       updated_at: new Date().toISOString(),
     })
