@@ -5,6 +5,8 @@ import { useToast } from "@/contexts/ToastContext";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import Image from "next/image";
 
+const POPUP_WIDTH = 400;
+
 interface Popup {
   id: number;
   title: string;
@@ -12,8 +14,6 @@ interface Popup {
   image_url: string;
   link_url: string;
   is_active: boolean;
-  position: string;
-  width: number;
 }
 
 const emptyPopup: Omit<Popup, "id"> = {
@@ -22,8 +22,6 @@ const emptyPopup: Omit<Popup, "id"> = {
   image_url: "",
   link_url: "",
   is_active: false,
-  position: "center",
-  width: 480,
 };
 
 export default function PopupsPage() {
@@ -67,8 +65,6 @@ export default function PopupsPage() {
       image_url: popup.image_url,
       link_url: popup.link_url,
       is_active: popup.is_active,
-      position: popup.position,
-      width: popup.width,
     });
   }
 
@@ -157,7 +153,7 @@ export default function PopupsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900">팝업 관리</h1>
-          <p className="text-[13px] text-gray-500 mt-1">랜딩페이지에 표시되는 팝업을 관리합니다</p>
+          <p className="text-[13px] text-gray-500 mt-1">랜딩페이지 왼쪽 상단에 표시되는 팝업을 관리합니다 (고정 너비 {POPUP_WIDTH}px)</p>
         </div>
         <button
           type="button"
@@ -221,25 +217,11 @@ export default function PopupsPage() {
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">링크 URL</label>
                 <input className="admin-input" value={form.link_url} onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))} placeholder="https://..." />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">위치</label>
-                  <select className="admin-input" value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))}>
-                    <option value="center">중앙</option>
-                    <option value="top">상단</option>
-                    <option value="bottom">하단</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">너비 (px)</label>
-                  <input className="admin-input" type="number" value={form.width} onChange={(e) => setForm((f) => ({ ...f, width: Number(e.target.value) }))} />
-                </div>
-                <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="w-4 h-4 rounded border-gray-300" />
-                    <span className="text-[13px] font-medium text-gray-700">활성화</span>
-                  </label>
-                </div>
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="w-4 h-4 rounded border-gray-300" />
+                  <span className="text-[13px] font-medium text-gray-700">활성화</span>
+                </label>
               </div>
             </div>
             <div className="flex items-center gap-2 mt-6 pt-5 border-t border-gray-100">
@@ -254,10 +236,10 @@ export default function PopupsPage() {
           <div className="lg:col-span-2">
             <div className="admin-card p-4">
               <h3 className="text-[13px] font-semibold text-gray-600 mb-3">미리보기</h3>
-              <div className="bg-gray-100 rounded-lg p-4 min-h-[300px] flex items-start justify-center">
+              <div className="bg-gray-100 rounded-lg p-4 min-h-[300px] flex items-start justify-start">
                 <div
                   className="shadow-lg border border-gray-300 bg-white"
-                  style={{ width: Math.min(form.width, 360), maxWidth: "100%" }}
+                  style={{ width: Math.min(POPUP_WIDTH, 340), maxWidth: "100%" }}
                 >
                   {/* 타이틀 바 */}
                   <div className="flex items-center justify-between bg-gray-700 px-3 py-2">
@@ -279,7 +261,7 @@ export default function PopupsPage() {
                           alt={form.title || "미리보기"}
                           fill
                           className="object-cover"
-                          sizes="360px"
+                          sizes="340px"
                         />
                       </div>
                     )}
@@ -325,7 +307,6 @@ export default function PopupsPage() {
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left py-2.5 px-4 font-semibold text-gray-600">팝업</th>
                 <th className="text-center py-2.5 px-4 font-semibold text-gray-600 w-20">상태</th>
-                <th className="text-center py-2.5 px-4 font-semibold text-gray-600 w-20">너비</th>
                 <th className="text-right py-2.5 px-4 font-semibold text-gray-600 w-40">액션</th>
               </tr>
             </thead>
@@ -351,9 +332,6 @@ export default function PopupsPage() {
                       {popup.is_active ? "활성" : "비활성"}
                     </button>
                   </td>
-                  <td className="py-3 px-4 text-center text-gray-500 text-[12px]">
-                    {popup.width}px
-                  </td>
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button type="button" onClick={() => setPreviewPopup(popup)} className="admin-btn admin-btn-ghost text-[11px] py-1 px-2">미리보기</button>
@@ -374,7 +352,7 @@ export default function PopupsPage() {
           <div onClick={(e) => e.stopPropagation()}>
             <div
               className="shadow-lg border border-gray-300 bg-white"
-              style={{ width: previewPopup.width, maxWidth: "calc(100vw - 40px)" }}
+              style={{ width: POPUP_WIDTH, maxWidth: "calc(100vw - 40px)" }}
             >
               {/* 타이틀 바 */}
               <div className="flex items-center justify-between bg-gray-700 px-3 py-2">
@@ -400,7 +378,7 @@ export default function PopupsPage() {
                       alt={previewPopup.title}
                       fill
                       className="object-cover"
-                      sizes={`${previewPopup.width}px`}
+                      sizes={`${POPUP_WIDTH}px`}
                     />
                   </div>
                 )}

@@ -6,8 +6,6 @@ CREATE TABLE popups (
   image_url TEXT DEFAULT '',
   link_url TEXT DEFAULT '',
   is_active BOOLEAN DEFAULT false,
-  position TEXT DEFAULT 'center' CHECK (position IN ('center', 'top', 'bottom')),
-  width INTEGER DEFAULT 480,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
