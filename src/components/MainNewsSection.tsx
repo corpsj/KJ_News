@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Article } from "@/lib/types";
@@ -23,7 +23,7 @@ function hasImage(url: string | undefined | null): boolean {
   return trimmed.startsWith("http://") || trimmed.startsWith("https://");
 }
 
-const PER_PAGE = 7;
+const PER_PAGE = 10;
 
 interface MainNewsSectionProps {
   articles: Article[];
@@ -32,11 +32,25 @@ interface MainNewsSectionProps {
 export default function MainNewsSection({ articles }: MainNewsSectionProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const [leftHeight, setLeftHeight] = useState<number | undefined>(undefined);
 
   const totalPages = Math.ceil(articles.length / PER_PAGE);
   const startIdx = (currentPage - 1) * PER_PAGE;
   const pageArticles = articles.slice(startIdx, startIdx + PER_PAGE);
   const selected = articles[selectedIndex] || articles[0];
+
+  /* 좌측 높이가 바뀔 때마다 우측 높이를 동기화 */
+  useEffect(() => {
+    if (!leftRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setLeftHeight(entry.contentRect.height);
+      }
+    });
+    ro.observe(leftRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   const handleSelect = (globalIndex: number) => {
     setSelectedIndex(globalIndex);
@@ -45,7 +59,6 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
-    // 페이지 변경 시 해당 페이지 첫 번째 기사 선택
     const newStartIdx = (page - 1) * PER_PAGE;
     setSelectedIndex(newStartIdx);
   };
@@ -59,7 +72,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
       </h2>
       <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
         {/* 좌측: 선택한 기사 상세 */}
-        <div className="lg:w-[58%] flex-shrink-0">
+        <div ref={leftRef} className="lg:w-[58%] flex-shrink-0">
           <Link href={`/article/${selected.id}`} className="group block">
             {hasImage(selected.thumbnailUrl) ? (
               <div className="relative aspect-[16/9] md:aspect-[16/10] rounded-lg overflow-hidden mb-3">
@@ -105,8 +118,11 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
         </div>
 
         {/* 우측: 주요뉴스 리스트 + 페이지네이션 */}
-        <div className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col">
-          <div className="flex-1">
+        <div
+          className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col"
+          style={leftHeight ? { height: leftHeight } : undefined}
+        >
+          <div className="flex-1 overflow-y-auto min-h-0">
             {pageArticles.map((article, i) => {
               const globalIdx = startIdx + i;
               const isActive = globalIdx === selectedIndex;
@@ -115,26 +131,26 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
                   key={article.id}
                   type="button"
                   onClick={() => handleSelect(globalIdx)}
-                  className={`group flex gap-3 py-2.5 border-b border-gray-100 last:border-b-0 items-start w-full text-left transition-colors ${
+                  className={`group flex gap-3 py-2 border-b border-gray-100 last:border-b-0 items-start w-full text-left transition-colors ${
                     isActive ? "bg-gray-50 -mx-2 px-2 rounded" : ""
                   }`}
                 >
                   <div
-                    className={`flex-shrink-0 w-1 rounded-full mt-2 self-start h-4 ${
+                    className={`flex-shrink-0 w-1 rounded-full mt-1.5 self-start h-4 ${
                       isActive ? "bg-gray-900" : "bg-gray-300"
                     }`}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                      <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 whitespace-nowrap">
                         {article.category.name}
                       </span>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[11px] text-gray-400 whitespace-nowrap">
                         {formatDate(article.publishedAt)}
                       </span>
                     </div>
                     <h4
-                      className={`text-[13px] md:text-[14px] font-bold leading-snug line-clamp-2 transition-colors ${
+                      className={`text-[13px] md:text-[14px] font-bold leading-snug line-clamp-1 transition-colors ${
                         isActive
                           ? "text-gray-900"
                           : "text-gray-700 group-hover:text-gray-500"
@@ -150,7 +166,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
 
           {/* 페이지네이션 */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1 mt-3 pt-3 border-t border-gray-100">
+            <div className="flex-shrink-0 flex items-center justify-center gap-1 mt-auto pt-3 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => goToPage(currentPage - 1)}
