@@ -35,3 +35,6 @@
 - Only Header/Footer imported categories from it (public scope)
 - After T2+T3, no public files will import mock-data.ts
 - T7: Can safely delete entire mock-data.ts (articles, authors, categories all unused by public)
+
+## Build Lock Gotcha
+- `next build` can fail once with `.next/lock` contention; immediate retry succeeded without code changes

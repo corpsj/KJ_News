@@ -46,6 +46,11 @@
 - POST /api/articles/[id]/view route
 - ViewCounter.tsx client component with useRef guard
 
+## T10.1: View Count Concurrency + Abuse Controls
+- Use Supabase `createClient()` and call SECURITY DEFINER RPC `increment_view_count` (no service role client in route)
+- Add module-level key `${articleId}:${ip}` with 24h TTL window for one increment per IP/article/day
+- Keep cookie dedup (`viewed_articles`) and cap stored IDs to most recent 200 entries
+
 ## T11: Pagination
 - Add paginated DB functions with range + count
 - Pagination component reads ?page= from searchParams
@@ -61,3 +66,7 @@
 
 ## T17: Analytics
 - @vercel/analytics, <Analytics /> in layout.tsx body
+
+## Admin/NF Authorization Safety
+- Client-side auth context default role set to `viewer` to avoid optimistic admin UI assumptions
+- Server-side role checks use explicit deny model: only block when `user_metadata.role` exists and is not `admin`; unset role remains allowed for single-user backward compatibility

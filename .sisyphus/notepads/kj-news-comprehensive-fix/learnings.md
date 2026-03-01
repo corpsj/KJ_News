@@ -40,3 +40,12 @@
 - NEVER install unnecessary npm packages (only DOMPurify, @vercel/analytics)
 - Keep monochrome design
 - article detail uses dangerouslySetInnerHTML — needs DOMPurify sanitization
+
+## T10 View Counter Hardening
+- Prefer RPC (`increment_view_count`) for atomic increments to avoid SELECT+UPDATE race conditions
+- Route-level dedupe should combine cookie checks (`viewed_articles`) with IP+article in-memory cooldown
+- Cap persisted cookie article IDs to a fixed max (200) to prevent unbounded growth
+
+## Admin API Role Enforcement
+- For admin/NF API routes, enforce role after auth with: allow when role is unset, deny with 403 when role is explicitly non-admin
+- Keep public endpoints (contact, article view counter) outside admin role enforcement to avoid accidental lockout or behavior change
