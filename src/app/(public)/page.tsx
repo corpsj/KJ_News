@@ -11,6 +11,7 @@ import type { Article } from "@/lib/types";
 import CategoryBadge from "@/components/CategoryBadge";
 import BreakingNewsTicker from "@/components/BreakingNewsTicker";
 import Pagination from "@/components/Pagination";
+import MainNewsSection from "@/components/MainNewsSection";
 
 export const revalidate = 60;
 
@@ -128,45 +129,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </div>
             )}
 
-            <div className="lg:col-span-4 lg:border-l lg:border-r lg:border-gray-100 lg:px-5">
-              <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-1 border-b-2 border-gray-900">
-                주요 뉴스
-              </h2>
-              <div>
-                {textArticles.slice(0, 7).map((article) => (
-                  <HeadlineRow key={article.id} article={article} showExcerpt={false} />
-                ))}
-              </div>
-            </div>
-
-            <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-5">
-              {subImageArticles.map((article) => (
-                <Link
-                  key={article.id}
-                  href={`/article/${article.id}`}
-                  className="group block"
-                >
-                  {hasImage(article.thumbnailUrl) && (
-                    <div className="relative aspect-[16/10] rounded-lg overflow-hidden mb-2">
-                      <Image
-                        src={article.thumbnailUrl}
-                        alt={article.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 25vw"
-                      />
-                    </div>
-                  )}
-                  <CategoryBadge category={article.category} />
-                  <h3 className="text-[14px] md:text-[15px] font-bold text-gray-900 mt-1.5 leading-snug group-hover:text-gray-500 transition-colors line-clamp-2">
-                    {article.title}
-                  </h3>
-                  <span className="text-[11px] text-gray-400 mt-1 block">
-                    {article.author.name} · {formatDate(article.publishedAt)}
-                  </span>
-                </Link>
-              ))}
-            </div>
+            <MainNewsSection articles={textArticles} />
           </div>
         </div>
       </section>
