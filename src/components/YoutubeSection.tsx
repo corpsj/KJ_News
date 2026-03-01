@@ -63,10 +63,7 @@ export default function YoutubeSection() {
 
   return (
     <section>
-      <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-4 border-b-2 border-gray-900 flex items-center gap-2">
-        <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-        </svg>
+      <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-4 border-b-2 border-gray-900">
         광전타임즈 Youtube
       </h2>
 
