@@ -53,28 +53,29 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
   if (articles.length === 0) return null;
 
   return (
-    <div className="lg:col-span-7 lg:border-l lg:border-gray-100 lg:pl-5">
+    <div className="w-full">
       <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-3 border-b-2 border-gray-900">
         주요 뉴스
       </h2>
-      <div className="flex flex-col lg:flex-row gap-5">
+      <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
         {/* 좌측: 선택한 기사 상세 */}
-        <div className="lg:w-[55%] flex-shrink-0">
+        <div className="lg:w-[58%] flex-shrink-0">
           <Link href={`/article/${selected.id}`} className="group block">
             {hasImage(selected.thumbnailUrl) ? (
-              <div className="relative aspect-[16/10] rounded-lg overflow-hidden mb-3">
+              <div className="relative aspect-[16/9] md:aspect-[16/10] rounded-lg overflow-hidden mb-3">
                 <Image
                   src={selected.thumbnailUrl}
                   alt={selected.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 768px) 100vw, 35vw"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 58vw"
                 />
               </div>
             ) : (
-              <div className="aspect-[16/10] rounded-lg overflow-hidden mb-3 bg-gray-100 flex items-center justify-center">
+              <div className="aspect-[16/9] md:aspect-[16/10] rounded-lg overflow-hidden mb-3 bg-gray-100 flex items-center justify-center">
                 <svg
-                  className="w-12 h-12 text-gray-300"
+                  className="w-16 h-16 text-gray-300"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={1.5}
@@ -91,7 +92,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
             <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
               {selected.category.name}
             </span>
-            <h3 className="text-lg md:text-xl font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors line-clamp-2">
+            <h3 className="text-xl md:text-2xl lg:text-[28px] font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors line-clamp-2">
               {selected.title}
             </h3>
             <p className="text-[13px] md:text-[14px] text-gray-500 mt-2 line-clamp-3 leading-relaxed">
@@ -104,7 +105,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
         </div>
 
         {/* 우측: 주요뉴스 리스트 + 페이지네이션 */}
-        <div className="lg:w-[45%] flex flex-col">
+        <div className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col">
           <div className="flex-1">
             {pageArticles.map((article, i) => {
               const globalIdx = startIdx + i;

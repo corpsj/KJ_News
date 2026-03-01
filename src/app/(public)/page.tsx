@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   getPublishedArticlesPaginated,
@@ -6,9 +5,8 @@ import {
   getMostViewedArticles,
   getCategories,
 } from "@/lib/db";
-import { formatDate, formatDateShort, hasImage } from "@/lib/utils";
+import { formatDate, formatDateShort } from "@/lib/utils";
 import type { Article } from "@/lib/types";
-import CategoryBadge from "@/components/CategoryBadge";
 import BreakingNewsTicker from "@/components/BreakingNewsTicker";
 import Pagination from "@/components/Pagination";
 import MainNewsSection from "@/components/MainNewsSection";
@@ -62,14 +60,8 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const totalPages = Math.ceil(total / perPage);
 
-  /* 1면 장식: 이미지 있는 기사 중 최신 3개만 선별 */
-  const withImages = latestArticles.filter((a) => hasImage(a.thumbnailUrl));
-  const heroArticle = withImages[0];
-  const subImageArticles = withImages.slice(1, 3);
-
-  /* 나머지 최신 기사 (1면 장식 제외) */
-  const heroIds = new Set([heroArticle?.id, ...subImageArticles.map((a) => a.id)]);
-  const textArticles = latestArticles.filter((a) => !heroIds.has(a.id));
+  /* 주요뉴스: 모든 최신 기사를 주요뉴스 섹션에서 표시 */
+  const textArticles = latestArticles;
 
   /* 카테고리별 기사 (상위 6개 카테고리) */
   const displayCategories = categories.slice(0, 6);
@@ -98,39 +90,7 @@ export default async function Home({ searchParams }: HomeProps) {
         <>
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-5 md:py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6">
-
-            {heroArticle && (
-              <div className="lg:col-span-5">
-                <Link href={`/article/${heroArticle.id}`} className="group block">
-                  {hasImage(heroArticle.thumbnailUrl) && (
-                    <div className="relative aspect-[16/9] md:aspect-[4/3] rounded-lg overflow-hidden mb-3">
-                      <Image
-                        src={heroArticle.thumbnailUrl}
-                        alt={heroArticle.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        priority
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 42vw"
-                      />
-                    </div>
-                  )}
-                  <CategoryBadge category={heroArticle.category} size="md" />
-                  <h2 className="text-xl md:text-2xl lg:text-[28px] font-extrabold text-gray-900 mt-2 leading-tight group-hover:text-gray-500 transition-colors">
-                    {heroArticle.title}
-                  </h2>
-                  <p className="text-[13px] md:text-[14px] text-gray-500 mt-2 line-clamp-2 leading-relaxed">
-                    {heroArticle.excerpt}
-                  </p>
-                  <span className="text-xs text-gray-400 mt-2 block">
-                    {heroArticle.author.name} · {formatDate(heroArticle.publishedAt)}
-                  </span>
-                </Link>
-              </div>
-            )}
-
-            <MainNewsSection articles={textArticles} />
-          </div>
+          <MainNewsSection articles={textArticles} />
         </div>
       </section>
 
