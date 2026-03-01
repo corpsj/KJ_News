@@ -8,7 +8,7 @@ import {
   getMostViewedArticles,
 } from "@/lib/db";
 import { formatDate, hasImage } from "@/lib/utils";
-import { sanitizeHtml } from "@/lib/sanitize";
+import { sanitizeHtml, removeFirstImage } from "@/lib/sanitize";
 import CategoryBadge from "@/components/CategoryBadge";
 import ArticleCard from "@/components/ArticleCard";
 import Sidebar from "@/components/Sidebar";
@@ -191,7 +191,7 @@ export default async function ArticlePage({ params }: PageProps) {
           <div
             data-article-body
             className="article-body prose max-w-none"
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(hasImage(article.thumbnailUrl) ? removeFirstImage(article.content) : article.content) }}
           />
 
           {article.tags.length > 0 && (

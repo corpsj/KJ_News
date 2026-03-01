@@ -10,6 +10,7 @@ export function sanitizeHtml(html: string): string {
       "blockquote", "pre", "code",
       "table", "thead", "tbody", "tr", "th", "td",
       "div", "span",
+      "figure", "figcaption",
     ],
     allowedAttributes: {
       a: ["href", "target", "rel"],
@@ -18,4 +19,12 @@ export function sanitizeHtml(html: string): string {
     },
     allowedSchemes: ["http", "https"],
   });
+}
+
+/**
+ * 본문 HTML에서 첫 번째 <img> 태그를 제거한다.
+ * 썸네일과 본문 첫 이미지가 동일할 때 중복 표시 방지용.
+ */
+export function removeFirstImage(html: string): string {
+  return html.replace(/<img[^>]*>/, "");
 }
