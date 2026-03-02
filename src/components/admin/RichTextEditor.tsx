@@ -63,6 +63,7 @@ export default function RichTextEditor({
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [urlError, setUrlError] = useState("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -151,11 +152,17 @@ export default function RichTextEditor({
     setImageCaption("");
     setPendingImageUrl(null);
     setShowLinkInput(false);
+    setUrlError("");
   }
 
   function insertImageByUrl() {
     const url = imageUrl.trim();
     if (!url) return;
+    if (!/^https?:\/\/.+/.test(url)) {
+      setUrlError("올바른 이미지 URL을 입력하세요 (https://...)");
+      return;
+    }
+    setUrlError("");
     setPendingImageUrl(url);
     setImageCaption("");
   }
@@ -279,48 +286,51 @@ export default function RichTextEditor({
 
       {showImageInput && (
         <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 space-y-2">
-          {!pendingImageUrl ? (
-            <div className="flex items-center gap-2">
-              <input
-                ref={(el) => el?.focus()}
-                type="text"
-                className="flex-1 text-sm px-2.5 py-1.5 border border-gray-300 rounded bg-white focus:outline-none focus:border-gray-900"
-                placeholder="이미지 URL을 입력하세요"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") insertImageByUrl(); }}
-              />
-              <button
-                type="button"
-                className="text-xs font-medium px-3 py-1.5 bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
-                onClick={insertImageByUrl}
-              >
-                다음
-              </button>
-              {onImageUpload && (
-                <button
-                  type="button"
-                  className="text-xs px-3 py-1.5 border border-gray-300 rounded text-gray-600 hover:bg-gray-100 transition-colors"
-                  onClick={insertImageByFile}
-                >
-                  파일 업로드
-                </button>
-              )}
-              <button
-                type="button"
-                className="text-gray-400 hover:text-gray-600 p-1"
-                onClick={() => setShowImageInput(false)}
-                aria-label="닫기"
-              >
-                ✕
-              </button>
-            </div>
-          ) : (
+           {!pendingImageUrl ? (
+             <>
+               <div className="flex items-center gap-2">
+                 <input
+                   ref={(el) => el?.focus()}
+                   type="text"
+                   className="flex-1 text-sm px-2.5 py-1.5 border border-gray-300 rounded bg-white focus:outline-none focus:border-gray-900"
+                   placeholder="이미지 URL을 입력하세요"
+                   value={imageUrl}
+                   onChange={(e) => { setImageUrl(e.target.value); setUrlError(""); }}
+                   onKeyDown={(e) => { if (e.key === "Enter") insertImageByUrl(); }}
+                 />
+                 <button
+                   type="button"
+                   className="text-xs font-medium px-3 py-1.5 bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors"
+                   onClick={insertImageByUrl}
+                 >
+                   다음
+                 </button>
+                 {onImageUpload && (
+                   <button
+                     type="button"
+                     className="text-xs px-3 py-1.5 border border-gray-300 rounded text-gray-600 hover:bg-gray-100 transition-colors"
+                     onClick={insertImageByFile}
+                   >
+                     파일 업로드
+                   </button>
+                 )}
+                 <button
+                   type="button"
+                   className="text-gray-400 hover:text-gray-600 p-1"
+                   onClick={() => setShowImageInput(false)}
+                   aria-label="닫기"
+                 >
+                   ✕
+                 </button>
+               </div>
+                {urlError && <p className="text-[11px] text-red-500 mt-1">{urlError}</p>}
+              </>
+            ) : (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-16 h-10 rounded overflow-hidden border border-gray-200 flex-shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={pendingImageUrl} alt="" className="w-full h-full object-cover" />
+                   <img src={pendingImageUrl || ""} alt="" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-[12px] text-gray-500 truncate flex-1">이미지 선택됨</span>
               </div>
