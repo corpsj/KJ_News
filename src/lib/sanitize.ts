@@ -15,6 +15,7 @@ export function sanitizeHtml(html: string): string {
     allowedAttributes: {
       a: ["href", "target", "rel"],
       img: ["src", "alt", "title"],
+      figure: ["data-type"],
       "*": ["class"],
     },
     allowedSchemes: ["http", "https"],

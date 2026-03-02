@@ -27,7 +27,7 @@ export function nfContentToHtml(content: string, images: string[]): string {
 
   const imageTags = images
     .filter((url) => url && url.trim())
-    .map((url) => `<figure><img src="${url}" alt="" /></figure>`)
+    .map((url) => `<figure class="img-figure"><img src="${url}" alt="" /><figcaption class="img-caption"></figcaption></figure>`)
     .join("\n");
 
   return imageTags + "\n" + htmlBody;
