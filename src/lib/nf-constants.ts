@@ -17,7 +17,7 @@ export function plainTextToHtml(text: string): string {
     .join("\n");
 }
 
-export function nfContentToHtml(content: string, images: string[]): string {
+export function nfContentToHtml(content: string, images: string[], title?: string): string {
   if (!content && (!images || images.length === 0)) return "";
 
   const cleanedContent = content.replace(/<img[^>]*>/gi, "");
@@ -25,9 +25,10 @@ export function nfContentToHtml(content: string, images: string[]): string {
 
   if (!images || images.length === 0) return htmlBody;
 
+  const altText = title ? title.replace(/"/g, '&quot;') : "";
   const imageTags = images
     .filter((url) => url && url.trim())
-    .map((url) => `<figure class="img-figure"><img src="${url}" alt="" /><figcaption class="img-caption"></figcaption></figure>`)
+    .map((url) => `<figure class="img-figure"><img src="${url}" alt="${altText}" /><figcaption class="img-caption"></figcaption></figure>`)
     .join("\n");
 
   return imageTags + "\n" + htmlBody;

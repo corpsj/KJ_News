@@ -200,7 +200,7 @@ export default function NfArticleExplorer() {
     const uploadedImages = await uploadNfImages(images);
     const result = await importArticle({
       title: article.title,
-      content: nfContentToHtml(article.content, uploadedImages),
+      content: nfContentToHtml(article.content, uploadedImages, article.title),
       excerpt: article.summary || "",
       categorySlug,
       thumbnailUrl: uploadedImages.find(url => url && url.trim()) || "",
@@ -233,7 +233,7 @@ export default function NfArticleExplorer() {
     const result = await addArticle({
       title: article.title,
       subtitle: "",
-      content: nfContentToHtml(article.content, uploadedImages),
+      content: nfContentToHtml(article.content, uploadedImages, article.title),
       excerpt: article.summary || "",
       categorySlug,
       authorId: authors[0]?.id ?? "",
