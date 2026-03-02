@@ -14,11 +14,17 @@ export function sanitizeHtml(html: string): string {
     ],
     allowedAttributes: {
       a: ["href", "target", "rel"],
-      img: ["src", "alt", "title"],
+      img: ["src", "alt", "title", "loading", "style"],
       figure: ["data-type"],
       "*": ["class"],
     },
     allowedSchemes: ["http", "https"],
+    transformTags: {
+      img: (tagName: string, attribs: Record<string, string>) => ({
+        tagName,
+        attribs: { ...attribs, loading: "lazy" },
+      }),
+    },
   });
 }
 
