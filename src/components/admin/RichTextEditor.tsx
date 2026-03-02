@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import ImageExtension from "@tiptap/extension-image";
 import LinkExtension from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import CharacterCount from "@tiptap/extension-character-count";
+import FigureNode from "@/extensions/FigureNode";
 
 interface RichTextEditorProps {
   value: string;
@@ -61,6 +61,8 @@ export default function RichTextEditor({
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -71,11 +73,41 @@ export default function RichTextEditor({
         underline: false,
       }),
       Underline,
-      ImageExtension,
+      FigureNode,
       LinkExtension.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder }),
       CharacterCount,
     ],
+    editorProps: {
+      handleDrop(view, event, _slice, moved) {
+        if (moved || !onImageUpload) return false;
+        const files = event.dataTransfer?.files;
+        if (!files?.length) return false;
+        const images = Array.from(files).filter((file) => file.type.startsWith("image/"));
+        if (images.length === 0) return false;
+        event.preventDefault();
+        setDragOver(false);
+        for (const file of images) {
+          void handleDropOrPaste(file, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos);
+        }
+        return true;
+      },
+      handlePaste(_view, event) {
+        if (!onImageUpload) return false;
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        const images = Array.from(items).filter((item) => item.type.startsWith("image/"));
+        if (images.length === 0) return false;
+        event.preventDefault();
+        for (const item of images) {
+          const file = item.getAsFile();
+          if (file) {
+            void handleDropOrPaste(file);
+          }
+        }
+        return true;
+      },
+    },
     content: value,
     onUpdate: ({ editor: ed }) => {
       isInternalChange.current = true;
@@ -90,15 +122,27 @@ export default function RichTextEditor({
     isInternalChange.current = false;
   }, [value, editor]);
 
-  /** figure+figcaption HTML을 에디터에 삽입 */
-  function insertImageWithCaption(url: string, caption: string) {
-    if (!editor || !url) return;
-    const escapedCaption = caption.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const captionHtml = escapedCaption
-      ? `<figcaption class="img-caption">${escapedCaption}</figcaption>`
-      : "";
-    const html = `<figure class="img-figure"><img src="${url}" alt="${escapedCaption}" />${captionHtml}</figure><p></p>`;
-    editor.chain().focus().insertContent(html).run();
+  async function handleDropOrPaste(file: File, pos?: number) {
+    if (!editor || !onImageUpload) return;
+    setUploading(true);
+    try {
+      const url = await onImageUpload(file);
+      if (!url) return;
+      if (pos !== undefined) {
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(pos, {
+            type: "figure",
+            attrs: { src: url, alt: "", caption: "" },
+          })
+          .run();
+        return;
+      }
+      editor.commands.insertFigure({ src: url, alt: "", caption: "" });
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handleImageInsert() {
@@ -123,10 +167,15 @@ export default function RichTextEditor({
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file || !onImageUpload) return;
-      const url = await onImageUpload(file);
-      if (url) {
-        setPendingImageUrl(url);
-        setImageCaption("");
+      setUploading(true);
+      try {
+        const url = await onImageUpload(file);
+        if (url) {
+          setPendingImageUrl(url);
+          setImageCaption("");
+        }
+      } finally {
+        setUploading(false);
       }
     };
     input.click();
@@ -134,7 +183,8 @@ export default function RichTextEditor({
 
   function confirmInsert() {
     if (!pendingImageUrl) return;
-    insertImageWithCaption(pendingImageUrl, imageCaption);
+    const caption = imageCaption.trim();
+    editor?.commands.insertFigure({ src: pendingImageUrl, alt: caption, caption });
     setShowImageInput(false);
     setPendingImageUrl(null);
     setImageUrl("");
@@ -143,7 +193,7 @@ export default function RichTextEditor({
 
   function skipCaption() {
     if (!pendingImageUrl) return;
-    insertImageWithCaption(pendingImageUrl, "");
+    editor?.commands.insertFigure({ src: pendingImageUrl, alt: "", caption: "" });
     setShowImageInput(false);
     setPendingImageUrl(null);
     setImageUrl("");
@@ -350,9 +400,32 @@ export default function RichTextEditor({
         </div>
       )}
 
-      <div className="admin-editor">
+      {uploading && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border-b border-blue-100 text-[12px] text-blue-600">
+          <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          이미지 업로드 중...
+        </div>
+      )}
+
+      <section
+        className={`admin-editor ${dragOver ? "editor-drag-over" : ""}`}
+        aria-label="본문 에디터"
+        tabIndex={-1}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={(event) => {
+          const relatedTarget = event.relatedTarget;
+          if (!(relatedTarget instanceof Node) || !event.currentTarget.contains(relatedTarget)) {
+            setDragOver(false);
+          }
+        }}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={() => setDragOver(false)}
+      >
         <EditorContent editor={editor} />
-      </div>
+      </section>
 
       {editor && (
         <div className="flex justify-end gap-3 px-3 py-2 text-[11px] text-gray-400 border-t border-gray-200">

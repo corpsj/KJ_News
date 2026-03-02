@@ -326,19 +326,104 @@ body.menu-open {
   max-width: 100%; height: auto;
   border-radius: 8px; margin: 12px 0;
 }
-.admin-editor .tiptap figure.img-figure {
-  margin: 12px 0; text-align: center;
-}
-.admin-editor .tiptap figure.img-figure img {
-  margin: 0 auto 4px;
-}
-.admin-editor .tiptap figcaption,
-.admin-editor .tiptap .img-caption {
-  font-size: 12px; color: #9ca3af;
-  text-align: center; margin-top: 4px;
-}
 .admin-editor .tiptap hr {
   border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;
+}
+
+.admin-editor .tiptap figure.img-figure {
+  margin: 16px 0;
+  text-align: center;
+  position: relative;
+  border-radius: 8px;
+  transition: outline 0.15s ease;
+}
+.admin-editor .tiptap figure.figure-selected {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.admin-editor .tiptap figure.img-figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0 auto;
+  display: block;
+}
+
+.admin-editor .tiptap .figure-caption-input {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 6px 8px;
+  margin-top: 4px;
+}
+.admin-editor .tiptap .figure-caption-input:focus {
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+.admin-editor .tiptap .figure-caption-input::placeholder {
+  color: #d1d5db;
+}
+
+.admin-editor .tiptap .figure-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.admin-editor .tiptap .figure-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  background: #fef2f2;
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.admin-editor .tiptap .figure-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+  font-size: 12px;
+}
+.admin-editor .tiptap figure.img-figure:hover .figure-delete-btn {
+  opacity: 1;
+}
+
+.admin-editor.editor-drag-over {
+  outline: 2px dashed #3b82f6;
+  outline-offset: -2px;
+  background: #eff6ff;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .admin-toolbar {
@@ -975,6 +1060,22 @@ body.menu-open {
   text-align: center;
   margin-top: 0.5em;
   line-height: 1.5;
+}
+
+.article-body figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+.article-body figure img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.article-body figcaption:empty {
+  display: none;
 }
 
 .article-body h2 {
