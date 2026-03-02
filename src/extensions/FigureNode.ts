@@ -29,6 +29,9 @@ const FigureNode = Node.create({
       caption: {
         default: "",
       },
+      width: {
+        default: "100%",
+      },
       uploading: {
         default: false,
         rendered: false,
@@ -47,6 +50,7 @@ const FigureNode = Node.create({
             src: img.getAttribute("src"),
             alt: img.getAttribute("alt") || "",
             caption: (el as HTMLElement).querySelector("figcaption")?.textContent || "",
+            width: img.style?.width || img.getAttribute("width") || "100%",
           };
         },
       },
@@ -57,6 +61,7 @@ const FigureNode = Node.create({
             src: (el as HTMLElement).getAttribute("src"),
             alt: (el as HTMLElement).getAttribute("alt") || "",
             caption: "",
+            width: (el as HTMLElement).style?.width || (el as HTMLElement).getAttribute("width") || "100%",
           };
         },
       },
@@ -70,7 +75,7 @@ const FigureNode = Node.create({
     return [
       "figure",
       mergeAttributes({ class: "img-figure", "data-type": "figure" }),
-      ["img", { src: node.attrs.src, alt: node.attrs.alt || "" }],
+      ["img", { src: node.attrs.src, alt: node.attrs.alt || "", ...(node.attrs.width !== "100%" ? { style: `width:${node.attrs.width};height:auto` } : {}) }],
       ...(captionContent ? [["figcaption", figcaptionAttrs, captionContent]] : []),
     ];
   },

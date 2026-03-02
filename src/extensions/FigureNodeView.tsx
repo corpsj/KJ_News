@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 
 export default function FigureNodeView({
@@ -10,6 +10,9 @@ export default function FigureNodeView({
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [captionFocused, setCaptionFocused] = useState(false);
+  const [localCaption, setLocalCaption] = useState(node.attrs.caption || "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
   const src = node.attrs.src;
 
   useEffect(() => {
@@ -22,6 +25,24 @@ export default function FigureNodeView({
     setImgLoaded(false);
   }, [src]);
 
+  useEffect(() => {
+    if (!captionFocused) {
+      setLocalCaption(node.attrs.caption || "");
+    }
+  }, [node.attrs.caption, captionFocused]);
+
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  }, []);
+
+  function onCaptionChange(value: string) {
+    setLocalCaption(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateAttributes({ caption: value });
+    }, 300);
+  }
+
   return (
     <NodeViewWrapper
       as="figure"
@@ -32,11 +53,26 @@ export default function FigureNodeView({
         <button
           type="button"
           className="figure-delete-btn"
-          onClick={() => deleteNode()}
+          onClick={() => { if (window.confirm("이미지를 삭제하시겠습니까?")) deleteNode(); }}
           aria-label="이미지 삭제"
         >
           ✕
         </button>
+
+        {selected && (
+          <div className="figure-resize-bar">
+            {["25%", "50%", "75%", "100%"].map((w) => (
+              <button
+                key={w}
+                type="button"
+                className={`figure-resize-btn ${node.attrs.width === w || (!node.attrs.width && w === "100%") ? "active" : ""}`}
+                onClick={() => updateAttributes({ width: w })}
+              >
+                {w}
+              </button>
+            ))}
+          </div>
+        )}
 
         {node.attrs.uploading ? (
           <div className="figure-loading animate-pulse">이미지 업로드 중...</div>
@@ -58,6 +94,7 @@ export default function FigureNodeView({
               src={src}
               alt={node.attrs.alt || ""}
               className="w-full h-auto rounded-lg"
+              style={{ width: node.attrs.width || "100%", height: "auto", margin: "0 auto" }}
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
             />
@@ -67,11 +104,11 @@ export default function FigureNodeView({
         <input
           type="text"
           className="figure-caption-input"
-          value={node.attrs.caption || ""}
+          value={localCaption}
           placeholder={captionFocused ? "" : "이미지 설명을 입력하세요"}
           onFocus={() => setCaptionFocused(true)}
-          onBlur={() => setCaptionFocused(false)}
-          onChange={(event) => updateAttributes({ caption: event.target.value })}
+          onBlur={() => { setCaptionFocused(false); updateAttributes({ caption: localCaption }); }}
+          onChange={(event) => onCaptionChange(event.target.value)}
         />
       </div>
     </NodeViewWrapper>
