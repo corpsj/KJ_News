@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import type { Article } from "@/lib/types";
 
@@ -76,13 +75,11 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
           <Link href={`/article/${selected.id}`} className="group block">
             {hasImage(selected.thumbnailUrl) ? (
               <div className="relative aspect-[16/9] md:aspect-[16/10] rounded-lg overflow-hidden mb-3">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={selected.thumbnailUrl}
                   alt={selected.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 58vw"
+                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
             ) : (

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Article } from "@/lib/types";
 import { formatDate, hasImage } from "@/lib/utils";
@@ -35,12 +34,11 @@ export default function ArticleCard({ article }: { article: Article }) {
     <article className="group overflow-hidden rounded-lg bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       <Link href={`/article/${article.id}`} className="block">
         <div className="relative aspect-[16/10] overflow-hidden">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={article.thumbnailUrl}
             alt={article.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
           />
         </div>
       </Link>

@@ -132,13 +132,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             {hasImage(heroArticle.thumbnailUrl) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 mb-6 border-b border-gray-200">
                 <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={heroArticle.thumbnailUrl}
                     alt={heroArticle.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    priority
-                    sizes="(max-width: 768px) 100vw, 45vw"
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
                 <div className="flex flex-col justify-center">
