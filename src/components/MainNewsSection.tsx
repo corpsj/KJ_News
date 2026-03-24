@@ -22,7 +22,7 @@ function hasImage(url: string | undefined | null): boolean {
   return trimmed.startsWith("http://") || trimmed.startsWith("https://");
 }
 
-const MAX_ARTICLES = 10;
+const MAX_ARTICLES = 7;
 const AUTO_ROTATE_INTERVAL = 10000;
 
 interface MainNewsSectionProps {
@@ -54,11 +54,16 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
     if (limitedArticles.length <= 1 || isHovering) return;
 
     const interval = setInterval(() => {
-      handleSelect((selectedIndex + 1) % limitedArticles.length);
+      const nextIndex = (selectedIndex + 1) % limitedArticles.length;
+      if (!isAnimating) {
+        setIsAnimating(true);
+        setSelectedIndex(nextIndex);
+        setTimeout(() => setIsAnimating(false), 500);
+      }
     }, AUTO_ROTATE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [limitedArticles.length, isHovering, selectedIndex]);
+  }, [limitedArticles.length, isHovering, selectedIndex, isAnimating]);
 
   const handleSelect = (index: number) => {
     if (isAnimating || index === selectedIndex) return;
@@ -134,36 +139,35 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
           </Link>
         </div>
 
-        {/* 우측: 주요뉴스 리스트 (스크롤 없음) */}
         <div
-          className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col overflow-hidden"
+          className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col"
           style={leftHeight ? { height: leftHeight } : undefined}
         >
-          <div className="flex-1 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col">
             {limitedArticles.map((article, index) => {
               const isActive = index === selectedIndex;
               return (
                 <div
                   key={article.id}
-                  className={`group flex gap-3 py-2 border-b border-gray-100 last:border-b-0 items-start transition-all duration-500 ease-in-out ${
+                  className={`group flex gap-3 py-2 border-b border-gray-100 last:border-b-0 items-center flex-1 min-h-0 transition-all duration-500 ease-in-out ${
                     isActive 
-                      ? "bg-gray-50 -mx-2 px-2 rounded transform scale-[1.02]" 
+                      ? "bg-gray-50 -mx-2 px-2 rounded" 
                       : "hover:bg-gray-50/50"
                   }`}
                 >
                   <Link
                     href={`/article/${article.id}`}
-                    className="flex gap-3 w-full items-start cursor-pointer"
+                    className="flex gap-3 w-full items-center cursor-pointer"
                     onMouseEnter={() => handleMouseEnter(index)}
                     onMouseLeave={handleMouseLeave}
                   >
                     <div
-                      className={`flex-shrink-0 w-1 rounded-full mt-1.5 self-start h-4 transition-all duration-500 ${
-                        isActive ? "bg-gray-900 h-6" : "bg-gray-300"
+                      className={`flex-shrink-0 w-1 rounded-full self-center h-5 transition-all duration-500 ${
+                        isActive ? "bg-gray-900 h-8" : "bg-gray-300"
                       }`}
                     />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
+                    <div className="flex-1 min-w-0 py-1">
+                      <div className="flex items-center gap-2 mb-1">
                         <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 whitespace-nowrap">
                           {article.category.name}
                         </span>
@@ -172,9 +176,9 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
                         </span>
                       </div>
                       <h4
-                        className={`text-[13px] md:text-[14px] font-bold leading-snug line-clamp-1 transition-all duration-500 ${
+                        className={`text-[13px] md:text-[14px] font-bold leading-snug line-clamp-2 transition-all duration-500 ${
                           isActive
-                            ? "text-gray-900 transform translate-x-1"
+                            ? "text-gray-900"
                             : "text-gray-700 group-hover:text-gray-500"
                         }`}
                       >
