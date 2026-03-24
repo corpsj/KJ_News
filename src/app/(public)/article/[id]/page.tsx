@@ -174,12 +174,11 @@ export default async function ArticlePage({ params }: PageProps) {
           {hasImage(article.thumbnailUrl) && (
             <figure className="mb-6 md:mb-8">
               <div className="relative w-full aspect-video overflow-hidden">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={article.thumbnailUrl}
                   alt={article.title}
-                  fill
-                  className="object-cover"
-                  priority={true}
+                  className="object-cover w-full h-full"
                 />
               </div>
               <figcaption className="text-xs text-gray-400 mt-2 text-center">
