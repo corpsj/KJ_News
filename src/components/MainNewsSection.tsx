@@ -126,13 +126,13 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
           </Link>
         </div>
 
-        <div className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col justify-center gap-1">
+        <div className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col">
           {limitedArticles.map((article, index) => {
             const isActive = index === selectedIndex;
             return (
               <div
                 key={article.id}
-                className={`group flex gap-2 py-1.5 px-2 rounded-lg items-start transition-all duration-300 ease-out ${
+                className={`group flex gap-2 px-2 rounded-lg items-center flex-1 min-h-0 transition-all duration-300 ease-out ${
                   isActive 
                     ? "bg-gray-100" 
                     : "hover:bg-gray-50"
@@ -140,12 +140,12 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
               >
                 <Link
                   href={`/article/${article.id}`}
-                  className="flex gap-2 w-full items-start cursor-pointer"
+                  className="flex gap-2 w-full items-center cursor-pointer py-1"
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
                   <div
-                    className={`flex-shrink-0 w-1 rounded-full mt-1.5 h-4 transition-all duration-300 ${
+                    className={`flex-shrink-0 w-1 rounded-full h-4 transition-all duration-300 ${
                       isActive ? "bg-gray-900" : "bg-gray-300"
                     }`}
                   />
