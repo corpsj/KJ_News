@@ -22,7 +22,7 @@ function hasImage(url: string | undefined | null): boolean {
   return trimmed.startsWith("http://") || trimmed.startsWith("https://");
 }
 
-const MAX_ARTICLES = 7;
+const MAX_ARTICLES = 6;
 const AUTO_ROTATE_INTERVAL = 10000;
 
 interface MainNewsSectionProps {
@@ -35,20 +35,8 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const leftRef = useRef<HTMLDivElement>(null);
-  const [leftHeight, setLeftHeight] = useState<number | undefined>(undefined);
 
   const selected = limitedArticles[selectedIndex] || limitedArticles[0];
-
-  useEffect(() => {
-    if (!leftRef.current) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setLeftHeight(entry.contentRect.height);
-      }
-    });
-    ro.observe(leftRef.current);
-    return () => ro.disconnect();
-  }, []);
 
   useEffect(() => {
     if (limitedArticles.length <= 1 || isHovering) return;
@@ -89,7 +77,6 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
         주요 뉴스
       </h2>
       <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
-        {/* 좌측: 선택한 기사 상세 */}
         <div ref={leftRef} className="lg:w-[58%] flex-shrink-0">
           <Link 
             href={`/article/${selected.id}`} 
@@ -139,57 +126,52 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
           </Link>
         </div>
 
-        <div
-          className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col"
-          style={leftHeight ? { height: leftHeight } : undefined}
-        >
-          <div className="flex-1 flex flex-col">
-            {limitedArticles.map((article, index) => {
-              const isActive = index === selectedIndex;
-              return (
-                <div
-                  key={article.id}
-                  className={`group flex gap-3 py-2 border-b border-gray-100 last:border-b-0 items-center flex-1 min-h-0 transition-all duration-500 ease-in-out ${
-                    isActive 
-                      ? "bg-gray-50 -mx-2 px-2 rounded" 
-                      : "hover:bg-gray-50/50"
-                  }`}
+        <div className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col justify-center gap-1">
+          {limitedArticles.map((article, index) => {
+            const isActive = index === selectedIndex;
+            return (
+              <div
+                key={article.id}
+                className={`group flex gap-2 py-1.5 px-2 rounded-lg items-start transition-all duration-300 ease-out ${
+                  isActive 
+                    ? "bg-gray-100" 
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                <Link
+                  href={`/article/${article.id}`}
+                  className="flex gap-2 w-full items-start cursor-pointer"
+                  onMouseEnter={() => handleMouseEnter(index)}
+                  onMouseLeave={handleMouseLeave}
                 >
-                  <Link
-                    href={`/article/${article.id}`}
-                    className="flex gap-3 w-full items-center cursor-pointer"
-                    onMouseEnter={() => handleMouseEnter(index)}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <div
-                      className={`flex-shrink-0 w-1 rounded-full self-center h-5 transition-all duration-500 ${
-                        isActive ? "bg-gray-900 h-8" : "bg-gray-300"
-                      }`}
-                    />
-                    <div className="flex-1 min-w-0 py-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 whitespace-nowrap">
-                          {article.category.name}
-                        </span>
-                        <span className="text-[11px] text-gray-400 whitespace-nowrap">
-                          {formatDate(article.publishedAt)}
-                        </span>
-                      </div>
-                      <h4
-                        className={`text-[13px] md:text-[14px] font-bold leading-snug line-clamp-2 transition-all duration-500 ${
-                          isActive
-                            ? "text-gray-900"
-                            : "text-gray-700 group-hover:text-gray-500"
-                        }`}
-                      >
-                        {article.title}
-                      </h4>
+                  <div
+                    className={`flex-shrink-0 w-1 rounded-full mt-1.5 h-4 transition-all duration-300 ${
+                      isActive ? "bg-gray-900" : "bg-gray-300"
+                    }`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-gray-200 text-gray-600">
+                        {article.category.name}
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        {formatDate(article.publishedAt)}
+                      </span>
                     </div>
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
+                    <h4
+                      className={`text-[13px] font-semibold leading-snug line-clamp-2 transition-all duration-300 ${
+                        isActive
+                          ? "text-gray-900"
+                          : "text-gray-700 group-hover:text-gray-500"
+                      }`}
+                    >
+                      {article.title}
+                    </h4>
+                  </div>
+                </Link>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
