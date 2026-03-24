@@ -7,7 +7,6 @@ import {
 } from "@/lib/db";
 import { formatDate, formatDateShort } from "@/lib/utils";
 import type { Article } from "@/lib/types";
-import BreakingNewsTicker from "@/components/BreakingNewsTicker";
 import Pagination from "@/components/Pagination";
 import MainNewsSection from "@/components/MainNewsSection";
 import AdBanner from "@/components/AdBanner";
@@ -76,8 +75,6 @@ export default async function Home({ searchParams }: HomeProps) {
 
   return (
     <>
-      <BreakingNewsTicker articles={latestArticles.slice(0, 5)} />
-
       {latestArticles.length === 0 ? (
         <div className="max-w-7xl mx-auto px-4 py-20 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 border border-gray-100 mb-5">
