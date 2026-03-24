@@ -22,24 +22,22 @@ function hasImage(url: string | undefined | null): boolean {
   return trimmed.startsWith("http://") || trimmed.startsWith("https://");
 }
 
-const PER_PAGE = 10;
+const MAX_ARTICLES = 7;
+const AUTO_ROTATE_INTERVAL = 10000;
 
 interface MainNewsSectionProps {
   articles: Article[];
 }
 
 export default function MainNewsSection({ articles }: MainNewsSectionProps) {
+  const limitedArticles = articles.slice(0, MAX_ARTICLES);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [isHovering, setIsHovering] = useState(false);
   const leftRef = useRef<HTMLDivElement>(null);
   const [leftHeight, setLeftHeight] = useState<number | undefined>(undefined);
 
-  const totalPages = Math.ceil(articles.length / PER_PAGE);
-  const startIdx = (currentPage - 1) * PER_PAGE;
-  const pageArticles = articles.slice(startIdx, startIdx + PER_PAGE);
-  const selected = articles[selectedIndex] || articles[0];
+  const selected = limitedArticles[selectedIndex] || limitedArticles[0];
 
-  /* 좌측 높이가 바뀔 때마다 우측 높이를 동기화 */
   useEffect(() => {
     if (!leftRef.current) return;
     const ro = new ResizeObserver((entries) => {
@@ -51,18 +49,26 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
     return () => ro.disconnect();
   }, []);
 
-  const handleSelect = (globalIndex: number) => {
-    setSelectedIndex(globalIndex);
+  useEffect(() => {
+    if (limitedArticles.length <= 1 || isHovering) return;
+
+    const interval = setInterval(() => {
+      setSelectedIndex((prev) => (prev + 1) % limitedArticles.length);
+    }, AUTO_ROTATE_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [limitedArticles.length, isHovering]);
+
+  const handleMouseEnter = (index: number) => {
+    setIsHovering(true);
+    setSelectedIndex(index);
   };
 
-  const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-    const newStartIdx = (page - 1) * PER_PAGE;
-    setSelectedIndex(newStartIdx);
+  const handleMouseLeave = () => {
+    setIsHovering(false);
   };
 
-  if (articles.length === 0) return null;
+  if (limitedArticles.length === 0) return null;
 
   return (
     <div className="w-full">
@@ -70,15 +76,13 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
         주요 뉴스
       </h2>
       <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
-        {/* 좌측: 선택한 기사 상세 */}
         <div ref={leftRef} className="lg:w-[58%] flex-shrink-0">
           <Link href={`/article/${selected.id}`} className="group block">
             {hasImage(selected.thumbnailUrl) ? (
               <div className="relative aspect-[16/9] md:aspect-[16/10] rounded-lg overflow-hidden mb-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={selected.thumbnailUrl}
-                  alt={selected.title}
+                  alt={selected.title || "기사 이미지"}
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -90,6 +94,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
                   stroke="currentColor"
                   strokeWidth={1.5}
                   viewBox="0 0 24 24"
+                  aria-label="이미지 없음"
                 >
                   <path
                     strokeLinecap="round"
@@ -114,92 +119,55 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
           </Link>
         </div>
 
-        {/* 우측: 주요뉴스 리스트 + 페이지네이션 */}
         <div
           className="lg:w-[42%] lg:border-l lg:border-gray-100 lg:pl-5 flex flex-col"
           style={leftHeight ? { height: leftHeight } : undefined}
         >
           <div className="flex-1 overflow-y-auto min-h-0">
-            {pageArticles.map((article, i) => {
-              const globalIdx = startIdx + i;
-              const isActive = globalIdx === selectedIndex;
+            {limitedArticles.map((article, index) => {
+              const isActive = index === selectedIndex;
               return (
-                <button
+                <div
                   key={article.id}
-                  type="button"
-                  onClick={() => handleSelect(globalIdx)}
-                  className={`group flex gap-3 py-2 border-b border-gray-100 last:border-b-0 items-start w-full text-left transition-colors ${
+                  className={`group flex gap-3 py-2 border-b border-gray-100 last:border-b-0 items-start transition-colors ${
                     isActive ? "bg-gray-50 -mx-2 px-2 rounded" : ""
                   }`}
                 >
-                  <div
-                    className={`flex-shrink-0 w-1 rounded-full mt-1.5 self-start h-4 ${
-                      isActive ? "bg-gray-900" : "bg-gray-300"
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 whitespace-nowrap">
-                        {article.category.name}
-                      </span>
-                      <span className="text-[11px] text-gray-400 whitespace-nowrap">
-                        {formatDate(article.publishedAt)}
-                      </span>
-                    </div>
-                    <h4
-                      className={`text-[13px] md:text-[14px] font-bold leading-snug line-clamp-1 transition-colors ${
-                        isActive
-                          ? "text-gray-900"
-                          : "text-gray-700 group-hover:text-gray-500"
+                  <Link
+                    href={`/article/${article.id}`}
+                    className="flex gap-3 w-full items-start cursor-pointer"
+                    onMouseEnter={() => handleMouseEnter(index)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <div
+                      className={`flex-shrink-0 w-1 rounded-full mt-1.5 self-start h-4 ${
+                        isActive ? "bg-gray-900" : "bg-gray-300"
                       }`}
-                    >
-                      {article.title}
-                    </h4>
-                  </div>
-                </button>
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 whitespace-nowrap">
+                          {article.category.name}
+                        </span>
+                        <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                          {formatDate(article.publishedAt)}
+                        </span>
+                      </div>
+                      <h4
+                        className={`text-[13px] md:text-[14px] font-bold leading-snug line-clamp-1 transition-colors ${
+                          isActive
+                            ? "text-gray-900"
+                            : "text-gray-700 group-hover:text-gray-500"
+                        }`}
+                      >
+                        {article.title}
+                      </h4>
+                    </div>
+                  </Link>
+                </div>
               );
             })}
           </div>
-
-          {/* 페이지네이션 */}
-          {totalPages > 1 && (
-            <div className="flex-shrink-0 flex items-center justify-center gap-1 mt-auto pt-3 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center justify-center w-8 h-8 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="이전 페이지"
-              >
-                ←
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    onClick={() => goToPage(page)}
-                    className={`flex items-center justify-center w-8 h-8 text-sm rounded-lg transition-colors ${
-                      page === currentPage
-                        ? "bg-gray-900 text-white font-semibold"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
-              <button
-                type="button"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="flex items-center justify-center w-8 h-8 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="다음 페이지"
-              >
-                →
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
