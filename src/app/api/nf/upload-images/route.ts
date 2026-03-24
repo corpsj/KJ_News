@@ -64,15 +64,19 @@ async function uploadImageUrl(
         upsert: false,
       });
 
-    if (error || !data?.path) return url;
+    if (error || !data?.path) {
+      console.error("[upload-images] Storage upload failed:", error);
+      return "";
+    }
 
     const {
       data: { publicUrl },
     } = serviceClient.storage.from("press_image").getPublicUrl(data.path);
 
-    return publicUrl || url;
-  } catch {
-    return url;
+    return publicUrl || "";
+  } catch (err) {
+    console.error("[upload-images] Failed to upload image:", url, err);
+    return "";
   }
 }
 

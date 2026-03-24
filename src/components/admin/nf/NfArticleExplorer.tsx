@@ -109,11 +109,15 @@ export default function NfArticleExplorer() {
         body: JSON.stringify({ urls: images.filter(url => url && url.trim()) }),
       });
 
-      if (!res.ok) return images;
+      if (!res.ok) {
+        console.error("[uploadNfImages] API error:", res.status);
+        return [];
+      }
       const data = await res.json() as { urls?: string[] };
-      return data.urls ?? images;
-    } catch {
-      return images;
+      return (data.urls ?? []).filter(url => url && url.trim());
+    } catch (err) {
+      console.error("[uploadNfImages] Failed:", err);
+      return [];
     }
   }
 
