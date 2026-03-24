@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 
 interface Video {
   id: number;
@@ -92,7 +91,7 @@ function LongVideoCard({ video, loaded }: { video: Video; loaded: boolean }) {
       <div className="group">
         <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
           <div className="absolute inset-0 flex items-center justify-center">
-            <svg className="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="currentColor" aria-label="유튜브 아이콘">
               <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
           </div>
@@ -110,17 +109,15 @@ function LongVideoCard({ video, loaded }: { video: Video; loaded: boolean }) {
       className="group"
     >
       <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-        <Image
+        <img
           src={video.thumbnail_url}
-          alt={video.title}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 768px) 50vw, 25vw"
+          alt={video.title || "유튜브 영상 썸네일"}
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
         />
         {/* 재생 아이콘 오버레이 */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
           <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-5 h-5 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor" aria-label="재생 아이콘">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
@@ -141,7 +138,7 @@ function ShortVideoCard({ video, loaded }: { video: Video; loaded: boolean }) {
       <div className="group">
         <div className="relative w-full aspect-[9/16] rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
           <div className="absolute inset-0 flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-8 h-8 text-gray-300" viewBox="0 0 24 24" fill="currentColor" aria-label="유튜브 아이콘">
               <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
           </div>
@@ -159,17 +156,15 @@ function ShortVideoCard({ video, loaded }: { video: Video; loaded: boolean }) {
       className="group"
     >
       <div className="relative w-full aspect-[9/16] rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-        <Image
+        <img
           src={video.thumbnail_url}
-          alt={video.title}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 768px) 33vw, 20vw"
+          alt={video.title || "유튜브 숏폼 썸네일"}
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
         />
         {/* 재생 아이콘 오버레이 */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
           <div className="w-9 h-9 bg-red-600 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor" aria-label="재생 아이콘">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
