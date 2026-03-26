@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import type { Category } from "@/lib/types";
 import SearchBar from "@/components/SearchBar";
 import { createClient } from "@/lib/supabase/client";
@@ -26,33 +26,8 @@ function getTodayKorean() {
 }
 
 export default function Header({ categories }: { categories: Category[] }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  const toggleMenu = useCallback(() => {
-    setMobileMenuOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        document.body.classList.add("menu-open");
-        setSearchOpen(false);
-      } else {
-        document.body.classList.remove("menu-open");
-      }
-      return next;
-    });
-  }, []);
-
-  const closeMenu = useCallback(() => {
-    setMobileMenuOpen(false);
-    document.body.classList.remove("menu-open");
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      document.body.classList.remove("menu-open");
-    };
-  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -86,40 +61,7 @@ export default function Header({ categories }: { categories: Category[] }) {
 
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-14 md:h-20">
-          <button
-            type="button"
-            className="md:hidden flex items-center justify-center w-11 h-11 -ml-2 rounded-lg active:bg-gray-100 transition-colors"
-            onClick={toggleMenu}
-            aria-label="메뉴"
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-menu"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              {mobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
-
-          <Link href="/" className="flex items-center" onClick={closeMenu}>
+          <Link href="/" className="flex items-center">
             <Image
               src="/brand/KJ_sloganLogo.png"
               alt="광전타임즈"
@@ -158,6 +100,23 @@ export default function Header({ categories }: { categories: Category[] }) {
         </div>
       </div>
 
+      <nav aria-label="모바일 메뉴" className="md:hidden bg-gray-900 border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-4">
+          <ul className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            {categories.map((cat) => (
+              <li key={cat.id} className="flex-shrink-0">
+                <Link
+                  href={`/category/${cat.slug}`}
+                  className="block px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap"
+                >
+                  {cat.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+
       <nav aria-label="주 메뉴" className="hidden md:block bg-gray-900">
         <div className="max-w-7xl mx-auto px-4">
           <ul className="flex items-center gap-1">
@@ -180,65 +139,6 @@ export default function Header({ categories }: { categories: Category[] }) {
           <SearchBar />
         </div>
       )}
-
-      {mobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 top-[57px] bg-black/40 z-40 animate-fade-backdrop"
-          onClick={closeMenu}
-          aria-hidden="true"
-        />
-      )}
-
-      <div
-        className="md:hidden fixed inset-0 top-[57px] z-50 pointer-events-none"
-      >
-        <nav
-          id="mobile-menu"
-          aria-label="모바일 메뉴"
-          className={`pointer-events-auto bg-white w-[280px] max-w-[80vw] h-full overflow-y-auto shadow-xl transition-transform duration-300 ease-in-out ${
-            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
-            <span className="text-xs text-gray-500">{getTodayKorean()}</span>
-          </div>
-
-          <div className="py-2">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/category/${cat.slug}`}
-                className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-700 active:bg-gray-50 transition-colors"
-                onClick={closeMenu}
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </div>
-
-          <div className="border-t border-gray-100 py-2">
-            {isAdmin ? (
-              <>
-                <Link
-                  href="/admin"
-                  className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-500 active:bg-gray-50"
-                  onClick={closeMenu}
-                >
-                  관리자 페이지
-                </Link>
-              </>
-            ) : (
-              <Link
-                href="/admin/login"
-                className="flex items-center px-5 min-h-[48px] text-[15px] font-medium text-gray-500 active:bg-gray-50"
-                onClick={closeMenu}
-              >
-                로그인
-              </Link>
-            )}
-          </div>
-        </nav>
-      </div>
     </header>
   );
 }
