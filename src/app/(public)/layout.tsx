@@ -19,7 +19,7 @@ export default async function PublicLayout({
       </a>
       <Header categories={categories} />
       <main id="main-content" className="min-h-screen">{children}</main>
-      <Footer />
+      <Footer categories={categories} />
       <LandingPopup />
     </>
   );

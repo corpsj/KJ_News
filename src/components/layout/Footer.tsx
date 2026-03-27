@@ -1,9 +1,29 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { getCategories } from "@/lib/db";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { Category } from "@/lib/types";
 
-export default async function Footer() {
-  const categories = await getCategories();
+interface FooterProps {
+  categories: Category[];
+}
+
+export default function Footer({ categories }: FooterProps) {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setIsAdmin(!!data.session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <footer role="contentinfo" className="bg-gray-900 text-gray-400">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -71,6 +91,25 @@ export default async function Footer() {
               <li>사업자등록번호: 173-91-02454</li>
             </ul>
           </div>
+        </div>
+
+        {/* Mobile Login/Admin Button */}
+        <div className="md:hidden mt-8 pt-6 border-t border-gray-800">
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              className="flex items-center justify-center w-full py-3 px-4 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              관리자 페이지
+            </Link>
+          ) : (
+            <Link
+              href="/admin/login"
+              className="flex items-center justify-center w-full py-3 px-4 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              로그인
+            </Link>
+          )}
         </div>
 
         <div className="mt-10 pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
