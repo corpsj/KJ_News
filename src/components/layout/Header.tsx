@@ -101,13 +101,13 @@ export default function Header({ categories }: { categories: Category[] }) {
       </div>
 
       <nav aria-label="모바일 메뉴" className="md:hidden bg-gray-900 border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <ul className="flex flex-wrap items-center gap-1">
+        <div className="max-w-7xl mx-auto px-2">
+          <ul className="flex items-center justify-between">
             {categories.map((cat) => (
-              <li key={cat.id}>
+              <li key={cat.id} className="flex-1 text-center">
                 <Link
                   href={`/category/${cat.slug}`}
-                  className="block px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap"
+                  className="block py-2.5 text-[11px] font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap"
                 >
                   {cat.name}
                 </Link>
