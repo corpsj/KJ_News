@@ -100,7 +100,7 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
               <img
                 src={article.thumbnailUrl}
                 alt={article.title}
-                className="w-full aspect-[16/9] object-cover"
+                className="block w-full h-auto"
               />
             </div>
           )}

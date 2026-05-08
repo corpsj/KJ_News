@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -173,12 +172,12 @@ export default async function ArticlePage({ params }: PageProps) {
 
           {hasImage(article.thumbnailUrl) && (
             <figure className="mb-6 md:mb-8">
-              <div className="relative w-full aspect-video overflow-hidden">
+              <div className="w-full">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={article.thumbnailUrl}
                   alt={article.title}
-                  className="object-cover w-full h-full"
+                  className="block w-full h-auto"
                 />
               </div>
               <figcaption className="text-xs text-gray-400 mt-2 text-center">
