@@ -1181,7 +1181,7 @@ body.menu-open {
 
 @media (max-width: 768px) {
   .article-body {
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1.85;
   }
   .article-body img {
@@ -1197,7 +1197,7 @@ body.menu-open {
 
 @media (max-width: 640px) {
   .article-body {
-    font-size: 15.5px;
+    font-size: 18px;
     line-height: 1.85;
   }
   .article-body h2 {
