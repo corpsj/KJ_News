@@ -28,6 +28,7 @@ export default function ArticleForm({ article }: { article?: Article }) {
   const [isDirty, setIsDirty] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
   const [form, setForm] = useState<ArticleFormData>({
     title: article?.title ?? "",
     subtitle: article?.subtitle ?? "",
@@ -121,17 +122,41 @@ export default function ArticleForm({ article }: { article?: Article }) {
       return;
     }
 
+    let scheduledIso: string | undefined;
+    if (status === "scheduled") {
+      if (!scheduledAt) {
+        toast("예약 발행 시각을 선택해주세요.", "error");
+        return;
+      }
+      const d = new Date(scheduledAt);
+      if (isNaN(d.getTime())) {
+        toast("예약 시각이 올바르지 않습니다.", "error");
+        return;
+      }
+      if (d.getTime() <= Date.now()) {
+        toast("예약 시각은 현재 이후여야 합니다.", "error");
+        return;
+      }
+      scheduledIso = d.toISOString();
+    }
+
+    const payload: ArticleFormData = {
+      ...form,
+      status,
+      ...(scheduledIso ? { scheduledAt: scheduledIso } : {}),
+    };
+
     setIsSubmitting(true);
     try {
       if (isEdit && article) {
-        const updated = await updateArticle(article.id, { ...form, status });
+        const updated = await updateArticle(article.id, payload);
         if (!updated) {
           toast("기사 수정에 실패했습니다. 브라우저 콘솔에서 상세 오류를 확인하세요.", "error");
           return;
         }
         toast("기사가 수정되었습니다.", "success");
       } else {
-        const created = await addArticle({ ...form, status });
+        const created = await addArticle(payload);
         if (!created) {
           toast("기사 저장에 실패했습니다. 브라우저 콘솔에서 상세 오류를 확인하세요.", "error");
           return;
@@ -140,6 +165,7 @@ export default function ArticleForm({ article }: { article?: Article }) {
           draft: "임시저장되었습니다.",
           pending_review: "검토 요청되었습니다.",
           published: "기사가 발행되었습니다.",
+          scheduled: "예약 발행되었습니다.",
         };
         toast(msgs[status] || "저장되었습니다.", "success");
       }
@@ -290,13 +316,26 @@ export default function ArticleForm({ article }: { article?: Article }) {
           >
             미리보기
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button type="button" className="admin-btn admin-btn-ghost" onClick={() => handleSubmit("draft")} disabled={isSubmitting}>
               {isSubmitting ? "처리 중..." : "임시저장"}
             </button>
             <button type="button" className="admin-btn admin-btn-ghost" onClick={() => handleSubmit("pending_review")} disabled={isSubmitting}>
               {isSubmitting ? "처리 중..." : "검토 요청"}
             </button>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+                className="admin-input text-[13px] py-1.5"
+                aria-label="예약 발행 시각 (KST)"
+                title="예약 발행 시각 (KST)"
+              />
+              <button type="button" className="admin-btn admin-btn-ghost" onClick={() => handleSubmit("scheduled")} disabled={isSubmitting}>
+                {isSubmitting ? "처리 중..." : "예약 발행"}
+              </button>
+            </div>
             <button type="button" className="admin-btn admin-btn-primary" onClick={() => handleSubmit("published")} disabled={isSubmitting}>
               {isSubmitting ? "처리 중..." : "바로 발행"}
             </button>

@@ -71,6 +71,8 @@ export interface ArticleFormData {
   thumbnailUrl: string;
   tags: string;
   status?: ArticleStatus;
+  /** ISO instant for status="scheduled" (future publish time). */
+  scheduledAt?: string;
 }
 
 export interface ImportArticleData {
@@ -188,7 +190,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           content: data.content,
           category_id: Number(category.id),
           author_id: Number(author.id),
-          published_at: status === "published" ? new Date().toISOString() : null,
+          published_at:
+            status === "published"
+              ? new Date().toISOString()
+              : status === "scheduled"
+                ? data.scheduledAt || null
+                : null,
           thumbnail_url: data.thumbnailUrl || "",
           tags: data.tags
             .split(",")
@@ -237,9 +244,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             .filter(Boolean),
           status,
           published_at:
-            status === "published" && existing.status !== "published"
-              ? new Date().toISOString()
-              : existing.publishedAt || null,
+            status === "scheduled"
+              ? data.scheduledAt || existing.publishedAt || null
+              : status === "published" && existing.status !== "published"
+                ? new Date().toISOString()
+                : existing.publishedAt || null,
         })
         .eq("id", Number(id))
         .select("*, categories(*), authors(*)")
