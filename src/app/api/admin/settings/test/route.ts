@@ -10,16 +10,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  let body: { url: string; key: string };
+  let body: { url?: string; key?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { url, key } = body;
+  // Fall back to the stored settings (the client no longer holds the raw key).
+  const { data: rows } = await supabase
+    .from("site_settings")
+    .select("key, value")
+    .in("key", ["nf_api_url", "nf_api_key"]);
+  const stored: Record<string, string> = {};
+  for (const r of rows ?? []) stored[r.key] = r.value;
+
+  const url = (body.url || stored.nf_api_url || "").trim();
+  const key = (body.key && !body.key.includes("•") ? body.key : stored.nf_api_key || "").trim();
   if (!url || !key) {
     return NextResponse.json({ error: "URL and key required" }, { status: 400 });
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url.replace(/\/+$/, ""));
+  } catch {
+    return NextResponse.json({ ok: false, message: "URL 형식이 올바르지 않습니다." });
+  }
+  if (parsed.protocol !== "https:") {
+    return NextResponse.json({ ok: false, message: "https URL만 허용됩니다." });
   }
 
   try {

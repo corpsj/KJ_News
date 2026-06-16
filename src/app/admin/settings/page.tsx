@@ -17,12 +17,13 @@ export default function SettingsPage() {
 
 
   const [settings, setSettings] = useState<NfSettings>({ nf_api_url: "", nf_api_key: "" });
-  const [saved, setSaved] = useState<NfSettings>({ nf_api_url: "", nf_api_key: "" });
+  const [savedUrl, setSavedUrl] = useState("");
+  const [keyHint, setKeyHint] = useState("");
+  const [keySet, setKeySet] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const [showKey, setShowKey] = useState(false);
 
 
   const [editingAuthor, setEditingAuthor] = useState<{ id: string; name: string; role: string } | null>(null);
@@ -36,12 +37,11 @@ export default function SettingsPage() {
       const res = await fetch("/api/admin/settings");
       if (res.ok) {
         const data = await res.json();
-        const s = {
-          nf_api_url: data.settings?.nf_api_url || "",
-          nf_api_key: data.settings?.nf_api_key || "",
-        };
-        setSettings(s);
-        setSaved(s);
+        // The raw key is never sent to the client — only a hint + a flag.
+        setSettings({ nf_api_url: data.settings?.nf_api_url || "", nf_api_key: "" });
+        setSavedUrl(data.settings?.nf_api_url || "");
+        setKeyHint(data.settings?.nf_api_key_hint || "");
+        setKeySet(Boolean(data.settings?.nf_api_key_set));
       }
     } catch {
       // ignore
@@ -54,20 +54,22 @@ export default function SettingsPage() {
     fetchSettings();
   }, [fetchSettings]);
 
-  const isDirty = settings.nf_api_url !== saved.nf_api_url || settings.nf_api_key !== saved.nf_api_key;
+  const isDirty = settings.nf_api_url !== savedUrl || settings.nf_api_key.trim() !== "";
 
   async function handleSave() {
     setSaving(true);
     setTestResult(null);
     try {
+      const payload: Record<string, string> = { nf_api_url: settings.nf_api_url };
+      if (settings.nf_api_key.trim()) payload.nf_api_key = settings.nf_api_key.trim();
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
-        setSaved({ ...settings });
         setTestResult({ ok: true, message: "저장되었습니다" });
+        await fetchSettings(); // refresh hint + clear the new-key input
       } else {
         const data = await res.json();
         setTestResult({ ok: false, message: data.error || "저장 실패" });
@@ -97,11 +99,6 @@ export default function SettingsPage() {
     }
   }
 
-  function maskKey(key: string) {
-    if (!key) return "";
-    if (key.length <= 12) return "••••••••";
-    return key.slice(0, 6) + "••••••••" + key.slice(-4);
-  }
 
 
   async function handleAddAuthor() {
@@ -185,27 +182,19 @@ export default function SettingsPage() {
 
             <div>
               <label htmlFor="nf-key" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                API Key
+                API Key {keySet && <span className="text-gray-400 font-normal">(변경 시에만 입력)</span>}
               </label>
-              <div className="relative">
-                <input
-                  id="nf-key"
-                  type={showKey ? "text" : "password"}
-                  className="admin-input pr-20"
-                  placeholder="nf_live_..."
-                  value={settings.nf_api_key}
-                  onChange={(e) => setSettings((s) => ({ ...s, nf_api_key: e.target.value }))}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 hover:text-gray-600 px-2 py-1 transition-colors"
-                >
-                  {showKey ? "숨기기" : "보기"}
-                </button>
-              </div>
-              {saved.nf_api_key && !showKey && settings.nf_api_key === saved.nf_api_key && (
-                <p className="text-[11px] text-gray-400 mt-1">현재: {maskKey(saved.nf_api_key)}</p>
+              <input
+                id="nf-key"
+                type="password"
+                className="admin-input"
+                placeholder={keySet ? "변경하려면 새 키 입력" : "nf_live_..."}
+                value={settings.nf_api_key}
+                onChange={(e) => setSettings((s) => ({ ...s, nf_api_key: e.target.value }))}
+                autoComplete="off"
+              />
+              {keySet && (
+                <p className="text-[11px] text-gray-400 mt-1">현재 저장된 키: {keyHint}</p>
               )}
             </div>
           </div>
@@ -220,7 +209,7 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={handleTest}
-              disabled={testing || !settings.nf_api_url || !settings.nf_api_key}
+              disabled={testing || !settings.nf_api_url || (!settings.nf_api_key.trim() && !keySet)}
               className="admin-btn admin-btn-ghost text-[13px] px-4 py-2"
             >
               {testing ? "테스트 중..." : "연결 테스트"}
