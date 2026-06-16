@@ -42,6 +42,7 @@ interface DbArticle {
   status: string;
   source: string;
   source_url: string;
+  rejection_reason: string | null;
   categories: { id: number; name: string; slug: string; description: string; color: string } | null;
   authors: { id: number; name: string; role: string } | null;
 }
@@ -52,7 +53,7 @@ interface AdminContextValue {
   authors: Author[];
   addArticle: (data: ArticleFormData) => Promise<Article | null>;
   updateArticle: (id: string, data: ArticleFormData) => Promise<Article | null>;
-  updateArticleStatus: (id: string, status: ArticleStatus) => Promise<void>;
+  updateArticleStatus: (id: string, status: ArticleStatus, rejectionReason?: string) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
   getArticle: (id: string) => Article | undefined;
   importArticle: (data: ImportArticleData) => Promise<Article | null>;
@@ -131,6 +132,7 @@ function mapArticle(row: DbArticle): Article {
     status: row.status as ArticleStatus,
     source: row.source || undefined,
     sourceUrl: row.source_url || undefined,
+    rejectionReason: row.rejection_reason || undefined,
   };
 }
 
@@ -268,7 +270,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   );
 
   const updateArticleStatus = useCallback(
-    async (id: string, status: ArticleStatus) => {
+    async (id: string, status: ArticleStatus, rejectionReason?: string) => {
       const existing = articles.find((a) => a.id === id);
       if (!existing) return;
 
@@ -276,6 +278,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         .from("articles")
         .update({
           status,
+          rejection_reason: status === "rejected" ? rejectionReason || "" : "",
           published_at:
             status === "published" && existing.status !== "published"
               ? new Date().toISOString()

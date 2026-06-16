@@ -10,7 +10,7 @@ import ArticlePreview from "@/components/admin/ArticlePreview";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 
 export default function ArticlesPage() {
-  const { articles, categories, deleteArticle } = useAdmin();
+  const { articles, categories, deleteArticle, updateArticleStatus } = useAdmin();
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
@@ -19,6 +19,8 @@ export default function ArticlesPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ type: "single" | "bulk"; id?: string; title?: string } | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ id: string; title: string } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
@@ -71,6 +73,28 @@ export default function ArticlesPage() {
 
   function handleDelete(id: string, title: string) {
     setDeleteTarget({ type: "single", id, title });
+  }
+
+  async function handleApprove(id: string) {
+    try {
+      await updateArticleStatus(id, "published");
+      toast("기사가 승인·발행되었습니다.", "success");
+    } catch {
+      toast("승인 중 오류가 발생했습니다.", "error");
+    }
+  }
+
+  async function confirmReject() {
+    if (!rejectTarget) return;
+    try {
+      await updateArticleStatus(rejectTarget.id, "rejected", rejectReason.trim());
+      toast("기사가 반려되었습니다.", "success");
+    } catch {
+      toast("반려 중 오류가 발생했습니다.", "error");
+    } finally {
+      setRejectTarget(null);
+      setRejectReason("");
+    }
   }
 
   return (
@@ -163,6 +187,9 @@ export default function ArticlesPage() {
                     <Link href={`/admin/articles/${a.id}/edit`} className="font-medium text-gray-900 hover:underline">
                       {a.title}
                     </Link>
+                    {a.status === "rejected" && a.rejectionReason && (
+                      <p className="text-[11px] text-red-500 mt-1">반려 사유: {a.rejectionReason}</p>
+                    )}
                   </td>
                   <td className="py-3 px-3"><span className="admin-badge">{a.category.name}</span></td>
                   <td className="py-3 px-3"><span className={`admin-badge-${a.status}`}>{ARTICLE_STATUS_LABELS[a.status]}</span></td>
@@ -171,6 +198,12 @@ export default function ArticlesPage() {
                   <td className="py-3 px-3 text-right text-gray-500">{a.viewCount.toLocaleString()}</td>
                   <td className="py-3 px-3 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {a.status === "pending_review" && (
+                        <>
+                          <button type="button" className="admin-btn admin-btn-primary text-[11px] py-1 px-2" onClick={() => handleApprove(a.id)}>승인</button>
+                          <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2 text-red-600" onClick={() => { setRejectReason(""); setRejectTarget({ id: a.id, title: a.title }); }}>반려</button>
+                        </>
+                      )}
                       <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => setPreviewArticle(a)}>미리보기</button>
                       <Link href={`/admin/articles/${a.id}/edit`} className="admin-btn admin-btn-ghost text-[11px] py-1 px-2">수정</Link>
                       <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => handleDelete(a.id, a.title)}>삭제</button>
@@ -217,7 +250,16 @@ export default function ArticlesPage() {
                     <span className="text-[11px] text-gray-400">{a.author.name}</span>
                     <span className="text-[11px] text-gray-400">{a.viewCount.toLocaleString()}회</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
+                  {a.status === "rejected" && a.rejectionReason && (
+                    <p className="text-[11px] text-red-500 mt-1.5">반려 사유: {a.rejectionReason}</p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {a.status === "pending_review" && (
+                      <>
+                        <button type="button" className="admin-btn admin-btn-primary text-[11px] py-1 px-2" onClick={() => handleApprove(a.id)}>승인</button>
+                        <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2 text-red-600" onClick={() => { setRejectReason(""); setRejectTarget({ id: a.id, title: a.title }); }}>반려</button>
+                      </>
+                    )}
                     <Link href={`/admin/articles/${a.id}/edit`} className="admin-btn admin-btn-ghost text-[11px] py-1 px-2">수정</Link>
                     <button type="button" className="admin-btn admin-btn-ghost text-[11px] py-1 px-2" onClick={() => handleDelete(a.id, a.title)}>삭제</button>
                   </div>
@@ -263,6 +305,33 @@ export default function ArticlesPage() {
           onConfirm={confirmDelete}
           onCancel={() => setDeleteTarget(null)}
         />
+      )}
+
+      {rejectTarget && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="기사 반려"
+          onClick={() => { setRejectTarget(null); setRejectReason(""); }}
+        >
+          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-base font-bold text-gray-900 mb-1">기사 반려</h2>
+            <p className="text-[13px] text-gray-500 mb-3 truncate">&quot;{rejectTarget.title}&quot;</p>
+            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">반려 사유 (작성자에게 전달)</label>
+            <textarea
+              className="admin-input min-h-[90px] w-full"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="반려 사유를 입력하세요"
+              autoFocus
+            />
+            <div className="flex items-center justify-end gap-2 mt-4">
+              <button type="button" className="admin-btn admin-btn-ghost text-[13px] px-4 py-2" onClick={() => { setRejectTarget(null); setRejectReason(""); }}>취소</button>
+              <button type="button" className="admin-btn admin-btn-danger text-[13px] px-4 py-2" onClick={confirmReject}>반려</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
