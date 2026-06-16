@@ -40,8 +40,10 @@ yarn-error.log*
 # supabase
 supabase/.temp
 
-# local agent working notes (Codex/Claude)
+# local agent working notes (Codex/Claude/Sisyphus) — never commit (may contain secrets)
 .codex/
+.sisyphus/
+.prometheus/
 
 # typescript
 *.tsbuildinfo

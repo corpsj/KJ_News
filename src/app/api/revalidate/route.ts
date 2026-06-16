@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
 
 /**
  * 관리자 기사 수정/생성 후 캐시 무효화 API
- * POST /api/revalidate
+ * POST /api/revalidate  (관리자 전용)
  * body: { paths?: string[] }
  */
 export async function POST(request: NextRequest) {
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json().catch(() => ({}));
     const paths: string[] = body.paths || [];
