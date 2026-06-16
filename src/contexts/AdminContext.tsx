@@ -56,6 +56,8 @@ interface AdminContextValue {
   updateArticleStatus: (id: string, status: ArticleStatus, rejectionReason?: string) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
   getArticle: (id: string) => Article | undefined;
+  fetchArticleById: (id: string) => Promise<Article | null>;
+  fetchArticlesPage: (opts: ArticlesPageQuery) => Promise<{ articles: Article[]; total: number }>;
   importArticle: (data: ImportArticleData) => Promise<Article | null>;
   addAuthor: (name: string, role: string) => Promise<Author | null>;
   updateAuthor: (id: string, name: string, role: string) => Promise<Author | null>;
@@ -71,6 +73,18 @@ export interface CategoryInput {
   description?: string;
   color?: string;
 }
+
+export interface ArticlesPageQuery {
+  page: number;
+  perPage: number;
+  search?: string;
+  status?: string;
+  categoryId?: string;
+}
+
+// Lightweight projection (no `content`) for the dashboard's full-set load.
+const ARTICLE_LIST_COLUMNS =
+  "id,title,subtitle,excerpt,category_id,author_id,published_at,thumbnail_url,view_count,tags,status,source,source_url,rejection_reason, categories(*), authors(*)";
 
 export interface ArticleFormData {
   title: string;
@@ -159,7 +173,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const [articleRes, categoryRes, authorRes] = await Promise.all([
         supabase
           .from("articles")
-          .select("*, categories(*), authors(*)")
+          .select(ARTICLE_LIST_COLUMNS)
           .order("published_at", { ascending: false }),
         supabase.from("categories").select("*").order("id"),
         supabase.from("authors").select("*").order("id"),
@@ -182,6 +196,47 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const getArticle = useCallback(
     (id: string) => articles.find((a) => a.id === id),
     [articles]
+  );
+
+  // Full article (incl. content) by id — used by the edit page, since the
+  // in-memory list omits content for payload reasons.
+  const fetchArticleById = useCallback(
+    async (id: string): Promise<Article | null> => {
+      if (!/^\d+$/.test(id)) return null;
+      const { data, error } = await supabase
+        .from("articles")
+        .select("*, categories(*), authors(*)")
+        .eq("id", Number(id))
+        .single();
+      if (error || !data) return null;
+      return mapArticle(data as unknown as DbArticle);
+    },
+    [supabase]
+  );
+
+  // Server-side paginated + filtered fetch for the admin article list.
+  const fetchArticlesPage = useCallback(
+    async (opts: ArticlesPageQuery): Promise<{ articles: Article[]; total: number }> => {
+      const from = (opts.page - 1) * opts.perPage;
+      const to = from + opts.perPage - 1;
+      let query = supabase
+        .from("articles")
+        .select("*, categories(*), authors(*)", { count: "exact" })
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: false })
+        .range(from, to);
+      const search = opts.search?.trim();
+      if (search) query = query.ilike("title", `%${search}%`);
+      if (opts.status) query = query.eq("status", opts.status);
+      if (opts.categoryId) query = query.eq("category_id", Number(opts.categoryId));
+      const { data, count, error } = await query;
+      if (error) return { articles: [], total: 0 };
+      return {
+        articles: ((data as unknown as DbArticle[]) || []).map(mapArticle),
+        total: count || 0,
+      };
+    },
+    [supabase]
   );
 
   const addArticle = useCallback(
@@ -470,6 +525,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         updateArticleStatus,
         deleteArticle,
         getArticle,
+        fetchArticleById,
+        fetchArticlesPage,
         importArticle,
         addAuthor,
         updateAuthor,
