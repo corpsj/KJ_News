@@ -8,21 +8,17 @@ import SearchBar from "@/components/SearchBar";
 import { createClient } from "@/lib/supabase/client";
 
 function getTodayKorean() {
-  const now = new Date();
-  const dayNames = [
-    "일요일",
-    "월요일",
-    "화요일",
-    "수요일",
-    "목요일",
-    "금요일",
-    "토요일",
-  ];
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const date = now.getDate();
-  const day = dayNames[now.getDay()];
-  return `${year}년 ${month}월 ${date}일 ${day}`;
+  // Always render the Korean (KST) date, independent of the runtime/browser
+  // timezone, so SSR and client agree and readers always see Korea's date.
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    weekday: "long",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("year")}년 ${get("month")}월 ${get("day")}일 ${get("weekday")}`;
 }
 
 export default function Header({ categories }: { categories: Category[] }) {

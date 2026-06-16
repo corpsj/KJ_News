@@ -2,15 +2,15 @@
 
 import { useAdmin } from "@/contexts/AdminContext";
 import { ARTICLE_STATUS_LABELS, type ArticleStatus } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, kstDayKey } from "@/lib/utils";
 import StatCard from "@/components/admin/StatCard";
 import Link from "next/link";
 
 export default function AdminDashboard() {
   const { articles, categories } = useAdmin();
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayCount = articles.filter((a) => a.publishedAt.slice(0, 10) === today).length;
+  const today = kstDayKey(new Date().toISOString());
+  const todayCount = articles.filter((a) => kstDayKey(a.publishedAt) === today).length;
   const totalViews = articles.reduce((sum, a) => sum + a.viewCount, 0);
   const pendingCount = articles.filter((a) => a.status === "pending_review").length;
 

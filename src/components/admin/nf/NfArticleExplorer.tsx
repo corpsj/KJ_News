@@ -7,7 +7,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { NF_TO_KJ_CATEGORY, NF_CATEGORY_LABELS, DEFAULT_NF_CATEGORY_SLUG, plainTextToHtml, nfContentToHtml } from "@/lib/nf-constants";
 import { sanitizeHtml } from "@/lib/sanitize";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
-import { formatDate } from "@/lib/utils";
+import { formatDate, kstDayKey } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
 
@@ -150,17 +150,30 @@ export default function NfArticleExplorer() {
     const map = new Map<string, NfArticle[]>();
     
     for (const article of articles) {
-      const dateKey = article.published_at?.slice(0, 10) || "unknown";
+      // Group by the KST calendar day, not the UTC day (slice(0, 10) of the
+      // stored UTC instant would shift articles published 00:00-09:00 KST to
+      // the previous day).
+      const dateKey = kstDayKey(article.published_at ?? "") || "unknown";
       if (!map.has(dateKey)) map.set(dateKey, []);
       map.get(dateKey)!.push(article);
     }
-    
+
     for (const [dateKey, arts] of map) {
-      const d = new Date(dateKey + "T00:00:00");
-      const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
-      const label = dateKey === "unknown" 
-        ? "날짜 없음" 
-        : `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${weekday})`;
+      if (dateKey === "unknown") {
+        groups.push({ date: dateKey, label: "날짜 없음", articles: arts });
+        continue;
+      }
+      // dateKey is a KST calendar day; format its parts in KST (noon avoids any
+      // boundary effects) so the weekday/label are correct on any browser TZ.
+      const parts = new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        weekday: "short",
+      }).formatToParts(new Date(dateKey + "T12:00:00+09:00"));
+      const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+      const label = `${get("year")}년 ${get("month")}월 ${get("day")}일 (${get("weekday")})`;
       groups.push({ date: dateKey, label, articles: arts });
     }
     
@@ -177,18 +190,21 @@ export default function NfArticleExplorer() {
       setDateFrom("");
       setDateTo("");
     } else {
-      const today = new Date();
-      const to = today.toISOString().slice(0, 10);
+      // Anchor the range on the KST calendar day (not the UTC day) so the
+      // preset windows align to Korea's dates. Noon KST keeps day-arithmetic
+      // clear of midnight boundaries regardless of the browser timezone.
+      const to = kstDayKey(new Date().toISOString());
+      const anchor = new Date(to + "T12:00:00+09:00");
       let from = to;
       if (preset === "3days") {
-        const d = new Date(today); d.setDate(d.getDate() - 3);
-        from = d.toISOString().slice(0, 10);
+        const d = new Date(anchor); d.setDate(d.getDate() - 3);
+        from = kstDayKey(d.toISOString());
       } else if (preset === "week") {
-        const d = new Date(today); d.setDate(d.getDate() - 7);
-        from = d.toISOString().slice(0, 10);
+        const d = new Date(anchor); d.setDate(d.getDate() - 7);
+        from = kstDayKey(d.toISOString());
       } else if (preset === "month") {
-        const d = new Date(today); d.setMonth(d.getMonth() - 1);
-        from = d.toISOString().slice(0, 10);
+        const d = new Date(anchor); d.setMonth(d.getMonth() - 1);
+        from = kstDayKey(d.toISOString());
       }
       setDatePreset(preset);
       setDateFrom(from);

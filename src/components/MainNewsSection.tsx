@@ -3,24 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import type { Article } from "@/lib/types";
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "-";
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}.${month}.${day} ${hours}:${minutes}`;
-}
-
-function hasImage(url: string | undefined | null): boolean {
-  if (!url || url.trim().length === 0) return false;
-  const trimmed = url.trim();
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://");
-}
+import { formatDate, hasImage } from "@/lib/utils";
 
 const MAX_ARTICLES = 6;
 const AUTO_ROTATE_INTERVAL = 10000;
