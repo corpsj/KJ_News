@@ -228,6 +228,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const search = opts.search?.trim();
       if (search) query = query.ilike("title", `%${search}%`);
       if (opts.status) query = query.eq("status", opts.status);
+      else query = query.neq("status", "archived"); // hide trashed items from the default list
       if (opts.categoryId) query = query.eq("category_id", Number(opts.categoryId));
       const { data, count, error } = await query;
       if (error) return { articles: [], total: 0 };

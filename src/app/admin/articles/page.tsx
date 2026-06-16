@@ -12,7 +12,7 @@ import ConfirmDialog from "@/components/admin/ConfirmDialog";
 const PER_PAGE = 20;
 
 export default function ArticlesPage() {
-  const { categories, deleteArticle, updateArticleStatus, fetchArticlesPage, fetchArticleById } = useAdmin();
+  const { categories, updateArticleStatus, fetchArticlesPage, fetchArticleById } = useAdmin();
   const { toast } = useToast();
 
   const [searchInput, setSearchInput] = useState("");
@@ -72,16 +72,16 @@ export default function ArticlesPage() {
     if (!deleteTarget) return;
     try {
       if (deleteTarget.type === "bulk") {
-        await Promise.all(Array.from(selected).map((id) => deleteArticle(id)));
-        toast(`${selected.size}개 기사가 삭제되었습니다.`, "success");
+        await Promise.all(Array.from(selected).map((id) => updateArticleStatus(id, "archived")));
+        toast(`${selected.size}개 기사를 휴지통으로 이동했습니다.`, "success");
         setSelected(new Set());
       } else if (deleteTarget.type === "single" && deleteTarget.id) {
-        await deleteArticle(deleteTarget.id);
-        toast("기사가 삭제되었습니다.", "success");
+        await updateArticleStatus(deleteTarget.id, "archived");
+        toast("기사를 휴지통으로 이동했습니다.", "success");
       }
       await reload();
     } catch {
-      toast("삭제 중 오류가 발생했습니다.", "error");
+      toast("처리 중 오류가 발생했습니다.", "error");
     } finally {
       setDeleteTarget(null);
     }
@@ -238,9 +238,9 @@ export default function ArticlesPage() {
 
       {deleteTarget && (
         <ConfirmDialog
-          title={deleteTarget.type === "bulk" ? "기사 일괄 삭제" : "기사 삭제"}
-          message={deleteTarget.type === "bulk" ? `선택한 ${selected.size}개의 기사를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.` : `"${deleteTarget.title}" 기사를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-          confirmLabel="삭제" cancelLabel="취소" onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)}
+          title={deleteTarget.type === "bulk" ? "기사 일괄 휴지통 이동" : "기사 휴지통 이동"}
+          message={deleteTarget.type === "bulk" ? `선택한 ${selected.size}개의 기사를 휴지통으로 이동하시겠습니까? 휴지통에서 복원하거나 영구 삭제할 수 있습니다.` : `"${deleteTarget.title}" 기사를 휴지통으로 이동하시겠습니까? 휴지통에서 복원하거나 영구 삭제할 수 있습니다.`}
+          confirmLabel="휴지통으로" cancelLabel="취소" onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)}
         />
       )}
 
