@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
+import { reportError } from "@/lib/observability";
 
 // Publishes due scheduled articles. Invoked by Vercel Cron (see vercel.json).
 // Protected by CRON_SECRET: Vercel attaches `Authorization: Bearer <CRON_SECRET>`
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
     .select("id");
 
   if (error) {
+    reportError(error, { route: "cron/publish-scheduled" });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
