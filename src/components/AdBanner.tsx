@@ -60,6 +60,9 @@ export default function AdBanner({ slot }: AdBannerProps) {
         className="object-cover"
         sizes="(max-width: 768px) 100vw, 1280px"
       />
+      <span className="absolute top-1 right-1 bg-black/55 text-white text-[10px] leading-none px-1.5 py-0.5 rounded">
+        광고
+      </span>
     </div>
   );
 

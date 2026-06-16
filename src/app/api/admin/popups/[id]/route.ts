@@ -26,6 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       image_url: body.image_url,
       link_url: body.link_url,
       is_active: body.is_active,
+      is_ad: body.is_ad ?? false,
       updated_at: new Date().toISOString(),
     })
     .eq("id", Number(id))

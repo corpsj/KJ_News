@@ -14,6 +14,7 @@ interface Popup {
   image_url: string;
   link_url: string;
   is_active: boolean;
+  is_ad: boolean;
 }
 
 const emptyPopup: Omit<Popup, "id"> = {
@@ -22,6 +23,7 @@ const emptyPopup: Omit<Popup, "id"> = {
   image_url: "",
   link_url: "",
   is_active: false,
+  is_ad: false,
 };
 
 export default function PopupsPage() {
@@ -65,6 +67,7 @@ export default function PopupsPage() {
       image_url: popup.image_url,
       link_url: popup.link_url,
       is_active: popup.is_active,
+      is_ad: popup.is_ad ?? false,
     });
   }
 
@@ -221,6 +224,10 @@ export default function PopupsPage() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="w-4 h-4 rounded border-gray-300" />
                   <span className="text-[13px] font-medium text-gray-700">활성화</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer mt-2">
+                  <input type="checkbox" checked={form.is_ad} onChange={(e) => setForm((f) => ({ ...f, is_ad: e.target.checked }))} className="w-4 h-4 rounded border-gray-300" />
+                  <span className="text-[13px] font-medium text-gray-700">광고 (&apos;광고&apos; 라벨 표시)</span>
                 </label>
               </div>
             </div>

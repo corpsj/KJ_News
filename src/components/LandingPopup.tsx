@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useIsClient } from "@/lib/use-is-client";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const POPUP_WIDTH = 400;
 
@@ -12,6 +13,7 @@ interface PopupData {
   content: string;
   image_url: string;
   link_url: string;
+  is_ad?: boolean;
 }
 
 function getTodayStorageKey() {
@@ -72,8 +74,15 @@ export default function LandingPopup() {
         >
           {/* 타이틀 바 */}
           <div className="flex items-center justify-between bg-gray-700 px-3 py-2">
-            <span className="text-[13px] font-semibold text-white truncate">
-              {popup.title}
+            <span className="flex items-center gap-1.5 min-w-0">
+              {popup.is_ad && (
+                <span className="flex-shrink-0 bg-white/20 text-white text-[10px] leading-none px-1.5 py-0.5 rounded">
+                  광고
+                </span>
+              )}
+              <span className="text-[13px] font-semibold text-white truncate">
+                {popup.title}
+              </span>
             </span>
             <button
               type="button"
@@ -119,7 +128,7 @@ export default function LandingPopup() {
               <div className="px-4 py-3">
                 <div
                   className="text-[13px] text-gray-700 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: popup.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(popup.content) }}
                 />
                 {popup.link_url && !popup.image_url && (
                   <a

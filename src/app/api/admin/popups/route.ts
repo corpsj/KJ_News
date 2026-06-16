@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       image_url: body.image_url || "",
       link_url: body.link_url || "",
       is_active: body.is_active ?? false,
+      is_ad: body.is_ad ?? false,
     })
     .select()
     .single();
