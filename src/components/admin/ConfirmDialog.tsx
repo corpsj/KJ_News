@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/use-is-client";
 
 interface ConfirmDialogProps {
   title: string;
@@ -21,6 +22,8 @@ export default function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const triggerRef = useRef<HTMLElement | null>(null);
+  const mounted = useIsClient();
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -41,9 +44,6 @@ export default function ConfirmDialog({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) return null;
 

@@ -1,8 +1,30 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import type { Article, Category } from "./types";
 
+export function parseArticleId(id: string): number | null {
+  if (!/^\d+$/.test(id)) return null;
+
+  const parsed = Number(id);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) return null;
+
+  return parsed;
+}
+
 function escapeLikeQuery(query: string): string {
   return query.replace(/[%_\\]/g, (char) => `\\${char}`);
+}
+
+export function normalizeSearchQuery(query: string): string {
+  return query
+    .trim()
+    .replace(/[,{}()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
+}
+
+function escapePostgrestArrayValue(value: string): string {
+  return value.replace(/["\\]/g, (char) => `\\${char}`);
 }
 
 interface DbArticle {
@@ -76,11 +98,15 @@ export async function getPublishedArticles(limit = 20): Promise<Article[]> {
 }
 
 export async function getArticleById(id: string): Promise<Article | null> {
+  const articleId = parseArticleId(id);
+  if (!articleId) return null;
+
   const supabase = await createServiceClient();
   const { data, error } = await supabase
     .from("articles")
     .select(ARTICLE_SELECT)
-    .eq("id", parseInt(id, 10))
+    .eq("id", articleId)
+    .eq("status", "published")
     .single();
 
   if (error || !data) return null;
@@ -178,6 +204,9 @@ export async function getMostViewedArticles(limit = 5): Promise<Article[]> {
 
 
 export async function getRelatedArticles(article: Article, limit = 4): Promise<Article[]> {
+  const articleId = parseArticleId(article.id);
+  if (!articleId) return [];
+
   const supabase = await createServiceClient();
   const { data: cat } = await supabase
     .from("categories")
@@ -192,7 +221,7 @@ export async function getRelatedArticles(article: Article, limit = 4): Promise<A
     .select(ARTICLE_SELECT)
     .eq("status", "published")
     .eq("category_id", cat.id)
-    .neq("id", parseInt(article.id, 10))
+    .neq("id", articleId)
     .order("published_at", { ascending: false })
     .limit(limit);
 
@@ -314,8 +343,12 @@ export async function searchArticlesPaginated(
   page: number,
   perPage: number
 ): Promise<{ articles: Article[]; total: number }> {
+  const normalizedQuery = normalizeSearchQuery(query);
+  if (!normalizedQuery) return { articles: [], total: 0 };
+
   const supabase = await createServiceClient();
-  const escaped = escapeLikeQuery(query);
+  const escaped = escapeLikeQuery(normalizedQuery);
+  const escapedTag = escapePostgrestArrayValue(normalizedQuery);
   const q = `%${escaped}%`;
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
@@ -324,7 +357,7 @@ export async function searchArticlesPaginated(
     .from("articles")
     .select(ARTICLE_SELECT, { count: "exact" })
     .eq("status", "published")
-    .or(`title.ilike.${q},excerpt.ilike.${q},tags.cs.{${escaped}}`)
+    .or(`title.ilike.${q},excerpt.ilike.${q},tags.cs.{"${escapedTag}"}`)
     .order("published_at", { ascending: false })
     .range(from, to);
 

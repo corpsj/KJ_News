@@ -3,6 +3,7 @@ import ArticleCard from "@/components/ArticleCard";
 import SearchBar from "@/components/SearchBar";
 import Pagination from "@/components/Pagination";
 import { SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
+import { parsePageNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +37,8 @@ export async function generateMetadata({ searchParams }: PageProps) {
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const { q, page: pageParam } = await searchParams;
-  const query = q || "";
-  const page = Math.max(1, parseInt(pageParam || "1", 10));
+  const query = (q || "").trim();
+  const page = parsePageNumber(pageParam);
   const perPage = 12;
 
   const { articles: results, total } = query

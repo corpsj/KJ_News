@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useIsClient } from "@/lib/use-is-client";
 
 const POPUP_WIDTH = 400;
 
@@ -13,19 +14,29 @@ interface PopupData {
   link_url: string;
 }
 
+function getTodayStorageKey() {
+  return `popup_dismissed_${new Date().toISOString().slice(0, 10)}`;
+}
+
+function readDismissedPopups() {
+  if (typeof window === "undefined") return new Set<number>();
+
+  const stored = localStorage.getItem(getTodayStorageKey());
+  if (!stored) return new Set<number>();
+
+  try {
+    return new Set<number>(JSON.parse(stored));
+  } catch {
+    return new Set<number>();
+  }
+}
+
 export default function LandingPopup() {
   const [popups, setPopups] = useState<PopupData[]>([]);
-  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
-  const [mounted, setMounted] = useState(false);
+  const [dismissed, setDismissed] = useState<Set<number>>(readDismissedPopups);
+  const mounted = useIsClient();
 
   useEffect(() => {
-    setMounted(true);
-    const todayKey = `popup_dismissed_${new Date().toISOString().slice(0, 10)}`;
-    const stored = localStorage.getItem(todayKey);
-    if (stored) {
-      try { setDismissed(new Set(JSON.parse(stored))); } catch { /* ignore */ }
-    }
-
     fetch("/api/popups")
       .then((r) => r.json())
       .then((data) => setPopups(data.popups || []))
@@ -37,8 +48,7 @@ export default function LandingPopup() {
       const next = new Set(prev);
       next.add(id);
       if (today) {
-        const todayKey = `popup_dismissed_${new Date().toISOString().slice(0, 10)}`;
-        localStorage.setItem(todayKey, JSON.stringify([...next]));
+        localStorage.setItem(getTodayStorageKey(), JSON.stringify([...next]));
       }
       return next;
     });

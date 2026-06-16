@@ -17,7 +17,11 @@ export function plainTextToHtml(text: string): string {
     .join("\n");
 }
 
-export function nfContentToHtml(content: string, images: string[], title?: string): string {
+export function nfContentToHtml(
+  content: string,
+  images?: string[],
+  title?: string
+): string {
   if (!content && (!images || images.length === 0)) return "";
 
   const cleanedContent = content.replace(/<img[^>]*>/gi, "");

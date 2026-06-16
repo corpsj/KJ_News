@@ -1,5 +1,7 @@
+import { PRESS_INFO, SITE_NAME } from "@/lib/constants";
+
 export const metadata = {
-  title: "이용약관 - 광전타임즈",
+  title: `이용약관 - ${SITE_NAME}`,
 };
 
 export default function TermsPage() {
@@ -11,7 +13,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">제1조 (목적)</h2>
           <p>
-            이 약관은 광전타임즈(이하 "회사")가 제공하는 뉴스 및 관련 서비스의 이용과 관련하여 회사와 이용자의 권리,
+            이 약관은 {SITE_NAME}(이하 &quot;회사&quot;)가 제공하는 뉴스 및 관련 서비스의 이용과 관련하여 회사와 이용자의 권리,
             의무 및 책임사항을 규정함을 목적으로 합니다.
           </p>
         </section>
@@ -19,7 +21,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">제2조 (정의)</h2>
           <p>
-            "서비스"란 회사가 제공하는 웹사이트 및 관련 제반 서비스를 말하며, "이용자"란 서비스에 접속하여 본 약관에
+            &quot;서비스&quot;란 회사가 제공하는 웹사이트 및 관련 제반 서비스를 말하며, &quot;이용자&quot;란 서비스에 접속하여 본 약관에
             따라 회사가 제공하는 서비스를 이용하는 자를 의미합니다.
           </p>
         </section>
@@ -76,11 +78,14 @@ export default function TermsPage() {
         <section className="pt-2 border-t border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">언론사 정보</h2>
           <ul className="space-y-1 text-gray-600">
-            <li>언론사명: 광전타임즈</li>
-            <li>주소: 전남 함평군 함평읍 영수길 148 2층</li>
-            <li>등록번호: 전남 아00607</li>
-            <li>대표·발행인: 선종인</li>
-            <li>편집인: 장혁훈</li>
+            <li>언론사명: {SITE_NAME}</li>
+            <li>주소: {PRESS_INFO.address}</li>
+            <li>등록번호: {PRESS_INFO.registrationNumber}</li>
+            <li>대표·발행인: {PRESS_INFO.publisher}</li>
+            <li>편집인: {PRESS_INFO.editor}</li>
+            <li>연락처: {PRESS_INFO.phone}</li>
+            <li>이메일: {PRESS_INFO.email}</li>
+            <li>사업자등록번호: {PRESS_INFO.businessNumber}</li>
           </ul>
         </section>
       </div>

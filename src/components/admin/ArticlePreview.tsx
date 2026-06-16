@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { formatDate } from "@/lib/utils";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { useIsClient } from "@/lib/use-is-client";
 
 interface ArticlePreviewProps {
   article: {
@@ -31,6 +32,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function ArticlePreview({ article, onClose }: ArticlePreviewProps) {
+  const mounted = useIsClient();
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -46,9 +49,6 @@ export default function ArticlePreview({ article, onClose }: ArticlePreviewProps
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) return null;
 

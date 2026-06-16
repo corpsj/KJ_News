@@ -8,7 +8,7 @@ describe("nfContentToHtml", () => {
   });
 
   it("returns empty string when content is empty and images array is undefined", () => {
-    const result = nfContentToHtml("", undefined as any);
+    const result = nfContentToHtml("", undefined);
     expect(result).toBe("");
   });
 

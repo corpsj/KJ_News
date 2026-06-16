@@ -17,6 +17,26 @@ import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const revalidate = 60;
 
+function isSafeExternalUrl(url: string | undefined): url is string {
+  if (!url) return false;
+
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+function getArticleWordCount(html: string): number {
+  const text = html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return text ? text.split(" ").length : 0;
+}
+
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -85,6 +105,11 @@ export default async function ArticlePage({ params }: PageProps) {
     updatedFormatted &&
     updatedFormatted !== "-" &&
     updatedFormatted !== publishedFormatted;
+  const safeSourceUrl = isSafeExternalUrl(article.sourceUrl)
+    ? article.sourceUrl
+    : undefined;
+  const hasSource = Boolean(article.source || safeSourceUrl);
+  const articleUrl = `${SITE_URL}/article/${id}`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
@@ -113,6 +138,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 headline: article.title,
                 description: article.excerpt,
                 image: article.thumbnailUrl || DEFAULT_OG_IMAGE,
+                url: articleUrl,
                 datePublished: article.publishedAt,
                 dateModified: article.updatedAt || article.publishedAt,
                 author: {
@@ -122,15 +148,26 @@ export default async function ArticlePage({ params }: PageProps) {
                 publisher: {
                   "@type": "Organization",
                   name: SITE_NAME,
+                  url: SITE_URL,
                   logo: {
                     "@type": "ImageObject",
                     url: `${SITE_URL}/brand/KJ_sloganLogo.png`,
                   },
                 },
+                articleSection: article.category.name,
+                keywords: article.tags.join(", "),
+                inLanguage: "ko-KR",
+                isAccessibleForFree: true,
+                wordCount: getArticleWordCount(article.content),
+                copyrightHolder: {
+                  "@type": "Organization",
+                  name: SITE_NAME,
+                },
                 mainEntityOfPage: {
                   "@type": "WebPage",
-                  "@id": `${SITE_URL}/article/${id}`,
+                  "@id": articleUrl,
                 },
+                ...(safeSourceUrl ? { isBasedOn: safeSourceUrl } : {}),
               }),
             }}
           />
@@ -164,6 +201,24 @@ export default async function ArticlePage({ params }: PageProps) {
             )}
           </div>
 
+          {hasSource && (
+            <div className="text-[13px] text-gray-500 mb-4 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-medium text-gray-700">출처</span>
+              {safeSourceUrl ? (
+                <a
+                  href={safeSourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="underline-offset-2 hover:underline hover:text-gray-900"
+                >
+                  {article.source || safeSourceUrl}
+                </a>
+              ) : (
+                <span>{article.source}</span>
+              )}
+            </div>
+          )}
+
           <div className="mb-5 md:mb-6">
             <PrintButton />
           </div>
@@ -191,6 +246,13 @@ export default async function ArticlePage({ params }: PageProps) {
             className="article-body prose max-w-none"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(hasImage(article.thumbnailUrl) ? removeFirstImage(article.content) : article.content) }}
           />
+
+          <div className="mt-8 border-y border-gray-200 py-4 text-[13px] text-gray-500 leading-6">
+            <p>저작권자 &copy; {SITE_NAME}. 무단전재 및 재배포 금지.</p>
+            <Link href="/contact" className="font-medium text-gray-700 hover:text-gray-900 underline-offset-2 hover:underline">
+              기사제보 및 정정 요청
+            </Link>
+          </div>
 
           {article.tags.length > 0 && (
             <div className="mt-8 pt-6 border-t border-gray-200">

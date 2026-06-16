@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
-import { SITE_URL, SITE_NAME } from "@/lib/constants";
+import {
+  DEFAULT_OG_IMAGE,
+  PRESS_INFO,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/constants";
 import { Analytics } from "@vercel/analytics/react";
 
 const notoSansKR = Noto_Sans_KR({
@@ -11,14 +17,29 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
+  applicationName: SITE_NAME,
   title: {
-    default: "광전타임즈",
-    template: "%s - 광전타임즈",
+    default: SITE_NAME,
+    template: `%s - ${SITE_NAME}`,
   },
-  description:
-    "광전타임즈 - 정치, 경제, 사회, 문화, 국제, IT/과학, 스포츠 등 빠르고 정확한 뉴스를 전합니다.",
+  description: SITE_DESCRIPTION,
   metadataBase: new URL(SITE_URL),
+  keywords: [
+    "광전타임즈",
+    "함평뉴스",
+    "전남뉴스",
+    "지역뉴스",
+    "정치",
+    "경제",
+    "사회",
+    "문화",
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "news",
   other: {
+    "press-registration-number": PRESS_INFO.registrationNumber,
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "default",
@@ -27,19 +48,26 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: SITE_NAME,
-    title: "광전타임즈",
-    description:
-      "광전타임즈 - 정치, 경제, 사회, 문화, 국제, IT/과학, 스포츠 등 빠르고 정확한 뉴스를 전합니다.",
-
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "광전타임즈",
-    description:
-      "광전타임즈 - 정치, 경제, 사회, 문화, 국제, IT/과학, 스포츠 등 빠르고 정확한 뉴스를 전합니다.",
-
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
   },
   alternates: {
+    canonical: SITE_URL,
     types: {
       "application/rss+xml": `${SITE_URL}/feed.xml`,
     },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { parseArticleId } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,11 +13,13 @@ const MAX_VIEWED_IDS = 200;
 
 export async function POST(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  const articleId = parseInt(id, 10);
+  const articleId = parseArticleId(id);
 
-  if (isNaN(articleId)) {
+  if (!articleId) {
     return NextResponse.json({ error: "Invalid article ID" }, { status: 400 });
   }
+
+  const normalizedId = String(articleId);
 
   const cookieStore = await cookies();
   const viewedCookie = cookieStore.get("viewed_articles");
@@ -24,7 +27,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     ? viewedCookie.value.split(",").filter(Boolean)
     : [];
 
-  if (viewedIds.includes(id)) {
+  if (viewedIds.includes(normalizedId)) {
     return NextResponse.json({ success: false, message: "Already viewed" });
   }
 
@@ -43,6 +46,24 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
 
   const supabase = await createClient();
 
+  const { data: article, error: articleError } = await supabase
+    .from("articles")
+    .select("id")
+    .eq("id", articleId)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (articleError) {
+    return NextResponse.json(
+      { error: "Failed to verify article" },
+      { status: 500 }
+    );
+  }
+
+  if (!article) {
+    return NextResponse.json({ error: "Article not found" }, { status: 404 });
+  }
+
   const { data: newCount, error } = await supabase.rpc("increment_view_count", {
     article_id_param: articleId,
   });
@@ -54,7 +75,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  const updatedIds = [...viewedIds, id];
+  const updatedIds = [...viewedIds, normalizedId];
   const cappedIds =
     updatedIds.length > MAX_VIEWED_IDS
       ? updatedIds.slice(updatedIds.length - MAX_VIEWED_IDS)

@@ -35,7 +35,27 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MIN_IMAGE_BYTES = 5 * 1024;
 const FETCH_TIMEOUT_MS = 15000;
 
-async function uploadImageToStorage(url: string, supabase: any): Promise<string> {
+interface StorageClientLike {
+  storage: {
+    from(bucket: string): {
+      upload(
+        path: string,
+        body: ArrayBuffer,
+        options: {
+          cacheControl: string;
+          contentType: string;
+          upsert: boolean;
+        }
+      ): Promise<{ data: { path: string } | null; error: { message: string } | null }>;
+      getPublicUrl(path: string): { data: { publicUrl: string } };
+    };
+  };
+}
+
+async function uploadImageToStorage(
+  url: string,
+  supabase: StorageClientLike
+): Promise<string> {
   const trimmedUrl = url.trim();
   if (!trimmedUrl) return "";
 

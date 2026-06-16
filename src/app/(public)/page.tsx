@@ -5,7 +5,7 @@ import {
   getMostViewedArticles,
   getCategories,
 } from "@/lib/db";
-import { formatDate, formatDateShort } from "@/lib/utils";
+import { formatDate, formatDateShort, parsePageNumber } from "@/lib/utils";
 import type { Article } from "@/lib/types";
 import Pagination from "@/components/Pagination";
 import MainNewsSection from "@/components/MainNewsSection";
@@ -50,7 +50,7 @@ interface HomeProps {
 
 export default async function Home({ searchParams }: HomeProps) {
   const { page: pageParam } = await searchParams;
-  const page = Math.max(1, parseInt(pageParam || "1", 10));
+  const page = parsePageNumber(pageParam);
   const perPage = 18;
 
   const [{ articles: latestArticles, total }, mostViewed, categories] = await Promise.all([

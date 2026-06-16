@@ -1,5 +1,7 @@
+import { PRESS_INFO, SITE_NAME } from "@/lib/constants";
+
 export const metadata = {
-  title: "개인정보처리방침 - 광전타임즈",
+  title: `개인정보처리방침 - ${SITE_NAME}`,
 };
 
 export default function PrivacyPage() {
@@ -11,7 +13,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">1. 총칙</h2>
           <p>
-            광전타임즈(이하 "회사")는 이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 등 관련 법령을 준수합니다.
+            {SITE_NAME}(이하 &quot;회사&quot;)는 이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 등 관련 법령을 준수합니다.
             회사는 개인정보처리방침을 통해 수집하는 개인정보의 항목, 이용목적, 보관기간 및 보호조치를 안내합니다.
           </p>
         </section>
@@ -75,12 +77,14 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">9. 개인정보 보호책임자</h2>
           <ul className="space-y-1 text-gray-600">
-            <li>언론사명: 광전타임즈</li>
-            <li>주소: 전남 함평군 함평읍 영수길 148 2층</li>
-            <li>등록번호: 전남 아00607</li>
-            <li>대표·발행인: 선종인</li>
-            <li>편집인: 장혁훈</li>
-            <li>사업자등록번호: 173-91-02454</li>
+            <li>언론사명: {SITE_NAME}</li>
+            <li>주소: {PRESS_INFO.address}</li>
+            <li>등록번호: {PRESS_INFO.registrationNumber}</li>
+            <li>대표·발행인: {PRESS_INFO.publisher}</li>
+            <li>편집인: {PRESS_INFO.editor}</li>
+            <li>연락처: {PRESS_INFO.phone}</li>
+            <li>이메일: {PRESS_INFO.email}</li>
+            <li>사업자등록번호: {PRESS_INFO.businessNumber}</li>
           </ul>
         </section>
       </div>

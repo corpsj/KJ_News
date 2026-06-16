@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PRESS_INFO, SITE_URL } from "@/lib/constants";
 import type { Category } from "@/lib/types";
 
 interface FooterProps {
@@ -40,7 +41,7 @@ export default function Footer({ categories }: FooterProps) {
               />
             </Link>
             <p className="text-sm leading-relaxed">
-              전남 함평군 함평읍 영수길 148 2층
+              {PRESS_INFO.address}
             </p>
           </div>
 
@@ -82,13 +83,13 @@ export default function Footer({ categories }: FooterProps) {
           <div>
             <h4 className="text-sm font-bold text-white mb-4">회사 정보</h4>
             <ul className="space-y-2 text-sm">
-              <li>등록번호: 전남, 아00607</li>
-              <li>대표·발행인: 선종인</li>
-              <li>편집인: 장혁훈</li>
-              <li>전화·제보: 010-9428-5361</li>
-              <li>팩스: 0504-255-5361</li>
-              <li>이메일: jebo@kjtimes.co.kr</li>
-              <li>사업자등록번호: 173-91-02454</li>
+              <li>등록번호: {PRESS_INFO.registrationNumber}</li>
+              <li>대표·발행인: {PRESS_INFO.publisher}</li>
+              <li>편집인: {PRESS_INFO.editor}</li>
+              <li>전화·제보: {PRESS_INFO.phone}</li>
+              <li>팩스: {PRESS_INFO.fax}</li>
+              <li>이메일: {PRESS_INFO.email}</li>
+              <li>사업자등록번호: {PRESS_INFO.businessNumber}</li>
             </ul>
           </div>
         </div>
@@ -120,7 +121,7 @@ export default function Footer({ categories }: FooterProps) {
 
         <div className="mt-10 pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs">
-            &copy; {new Date().getFullYear()} 광전타임즈. All rights reserved.
+            &copy; {new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", year: "numeric" }).format(new Date())} 광전타임즈. All rights reserved.
           </p>
           <div className="flex items-center gap-2 md:gap-6 text-xs">
             <Link href="/terms" className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
@@ -129,8 +130,11 @@ export default function Footer({ categories }: FooterProps) {
             <Link href="/privacy" className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
               개인정보처리방침
             </Link>
-            <a href="mailto:jebo@kjtimes.co.kr" className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
-              광고문의
+            <Link href="/contact" className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
+              제보/문의
+            </Link>
+            <a href={`${SITE_URL}/feed.xml`} className="inline-flex items-center min-h-[44px] px-2 hover:text-white transition-colors">
+              RSS
             </a>
           </div>
         </div>

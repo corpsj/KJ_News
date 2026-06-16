@@ -48,9 +48,28 @@ interface NfArticle {
   processed_at: string;
 }
 
-function isExternalUrl(url: string): boolean {
-  if (!url) return false;
-  return !url.includes('supabase.co') && !url.startsWith('data:') && !url.startsWith('/');
+interface StorageClientLike {
+  storage: {
+    from(bucket: string): {
+      upload(
+        path: string,
+        body: ArrayBuffer,
+        options: {
+          cacheControl: string;
+          contentType: string;
+          upsert: boolean;
+        }
+      ): Promise<{ data: { path: string } | null; error: { message: string } | null }>;
+      getPublicUrl(path: string): { data: { publicUrl: string } };
+    };
+  };
+}
+
+interface ArticleWithImport {
+  id: number;
+  title: string | null;
+  thumbnail_url: string | null;
+  nf_imports?: Array<{ nf_article_id: string }> | null;
 }
 
 function plainTextToHtml(text: string): string {
@@ -81,7 +100,7 @@ function nfContentToHtml(content: string, images: string[], title?: string): str
 
 async function uploadImageToStorage(
   url: string,
-  serviceClient: any
+  serviceClient: StorageClientLike
 ): Promise<string> {
   const trimmedUrl = url.trim();
   if (!trimmedUrl || trimmedUrl.includes('supabase.co')) return trimmedUrl;
@@ -231,7 +250,7 @@ async function main() {
   let failed = 0;
   let skipped = 0;
 
-  for (const article of articlesWithImports as any[]) {
+  for (const article of articlesWithImports as ArticleWithImport[]) {
     console.log(`\n📄 처리 중: ${article.title?.substring(0, 40)}...`);
     
     const nfArticleId = article.nf_imports?.[0]?.nf_article_id;

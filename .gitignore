@@ -40,6 +40,9 @@ yarn-error.log*
 # supabase
 supabase/.temp
 
+# local agent working notes (Codex/Claude)
+.codex/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

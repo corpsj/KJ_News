@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
 export default function PrintButton() {
+  const [copied, setCopied] = useState(false);
+
   const changeFontSize = (delta: number) => {
     const el = document.querySelector("[data-article-body]") as HTMLElement | null;
     if (!el) return;
@@ -9,8 +13,35 @@ export default function PrintButton() {
     el.style.fontSize = `${next}px`;
   };
 
+  const shareArticle = async () => {
+    const title = document.title;
+    const url = window.location.href;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
     <div className="print-button-container flex items-center gap-0 text-[13px] text-gray-500" data-print-hide>
+      <button
+        type="button"
+        onClick={shareArticle}
+        className="hover:text-gray-900"
+        aria-label="기사 공유"
+      >
+        {copied ? "복사됨" : "공유"}
+      </button>
+      <span className="mx-2 text-gray-300">|</span>
       <button
         type="button"
         onClick={() => window.print()}

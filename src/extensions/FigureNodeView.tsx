@@ -7,29 +7,17 @@ export default function FigureNodeView({
   selected,
   deleteNode,
 }: NodeViewProps) {
-  const [imgError, setImgError] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const src = node.attrs.src as string | undefined;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const [captionFocused, setCaptionFocused] = useState(false);
   const [localCaption, setLocalCaption] = useState(node.attrs.caption || "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  const src = node.attrs.src;
-
-  useEffect(() => {
-    if (!src) {
-      setImgError(true);
-      setImgLoaded(false);
-      return;
-    }
-    setImgError(false);
-    setImgLoaded(false);
-  }, [src]);
-
-  useEffect(() => {
-    if (!captionFocused) {
-      setLocalCaption(node.attrs.caption || "");
-    }
-  }, [node.attrs.caption, captionFocused]);
+  const imgError = !src || failedSrc === src;
+  const imgLoaded = Boolean(src && loadedSrc === src && failedSrc !== src);
+  const displayedCaption = captionFocused
+    ? localCaption
+    : node.attrs.caption || "";
 
   useEffect(() => () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -95,8 +83,8 @@ export default function FigureNodeView({
               alt={node.attrs.alt || ""}
               className="w-full h-auto rounded-lg"
               style={{ width: node.attrs.width || "100%", height: "auto", margin: "0 auto" }}
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
+              onLoad={() => setLoadedSrc(src)}
+              onError={() => setFailedSrc(src)}
             />
           </div>
         )}
@@ -104,9 +92,12 @@ export default function FigureNodeView({
         <input
           type="text"
           className="figure-caption-input"
-          value={localCaption}
+          value={displayedCaption}
           placeholder={captionFocused ? "" : "이미지 설명을 입력하세요"}
-          onFocus={() => setCaptionFocused(true)}
+          onFocus={() => {
+            setCaptionFocused(true);
+            setLocalCaption(node.attrs.caption || "");
+          }}
           onBlur={() => { setCaptionFocused(false); updateAttributes({ caption: localCaption }); }}
           onChange={(event) => onCaptionChange(event.target.value)}
         />

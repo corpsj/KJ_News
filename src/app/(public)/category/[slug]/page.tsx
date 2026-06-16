@@ -7,8 +7,7 @@ import {
   getArticlesByCategoryPaginated,
   getMostViewedArticles,
 } from "@/lib/db";
-import { formatDate, formatDateShort, hasImage } from "@/lib/utils";
-import CategoryBadge from "@/components/CategoryBadge";
+import { formatDate, formatDateShort, hasImage, parsePageNumber } from "@/lib/utils";
 import Pagination from "@/components/Pagination";
 import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/constants";
 
@@ -63,7 +62,7 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const { page: pageParam } = await searchParams;
-  const page = Math.max(1, parseInt(pageParam || "1", 10));
+  const page = parsePageNumber(pageParam);
   const perPage = 15;
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
