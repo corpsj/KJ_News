@@ -50,6 +50,8 @@ export default function MediaPage() {
     setLoading(false);
   }, [supabase, page, toast]);
 
+  // load() sets a loading flag then fetches; safe data-fetch-on-mount pattern.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
   async function confirmDelete() {
