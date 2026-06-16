@@ -67,7 +67,9 @@ export const metadata: Metadata = {
     images: [DEFAULT_OG_IMAGE],
   },
   alternates: {
-    canonical: SITE_URL,
+    // No site-wide canonical here — each page sets its own self-referential
+    // canonical. A static canonical in the root layout would propagate to every
+    // page (all articles canonicalizing to the homepage), wrecking indexing.
     types: {
       "application/rss+xml": `${SITE_URL}/feed.xml`,
     },

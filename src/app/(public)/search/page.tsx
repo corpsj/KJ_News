@@ -20,6 +20,9 @@ export async function generateMetadata({ searchParams }: PageProps) {
   return {
     title,
     description,
+    alternates: { canonical: "/search" },
+    // Search-result pages should not be indexed (thin/duplicate URLs).
+    robots: { index: false, follow: true },
     openGraph: {
       title: `${title} - ${SITE_NAME}`,
       description,

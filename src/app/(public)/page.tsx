@@ -14,6 +14,10 @@ import YoutubeSection from "@/components/YoutubeSection";
 
 export const revalidate = 60;
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 
 function HeadlineRow({ article, showExcerpt = false }: { article: Article; showExcerpt?: boolean }) {
   return (

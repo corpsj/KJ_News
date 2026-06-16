@@ -32,6 +32,7 @@ export async function generateMetadata({ params }: PageProps) {
     title: category.name,
     description:
       category.description || `${SITE_NAME}의 ${category.name} 뉴스`,
+    alternates: { canonical: `/category/${slug}` },
     openGraph: {
       type: "website",
       locale: "ko_KR",
@@ -110,6 +111,24 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-5 md:py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "홈", item: SITE_URL },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: category.name,
+                item: `${SITE_URL}/category/${slug}`,
+              },
+            ],
+          }),
+        }}
+      />
       <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4 md:mb-6">
         <Link href="/" className="flex-shrink-0 hover:text-gray-800 transition-colors">
           홈

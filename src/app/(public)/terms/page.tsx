@@ -2,6 +2,7 @@ import { PRESS_INFO, SITE_NAME } from "@/lib/constants";
 
 export const metadata = {
   title: `이용약관 - ${SITE_NAME}`,
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

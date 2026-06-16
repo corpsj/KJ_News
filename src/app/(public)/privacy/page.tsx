@@ -2,6 +2,7 @@ import { PRESS_INFO, SITE_NAME } from "@/lib/constants";
 
 export const metadata = {
   title: `개인정보처리방침 - ${SITE_NAME}`,
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
