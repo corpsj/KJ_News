@@ -60,6 +60,16 @@ interface AdminContextValue {
   addAuthor: (name: string, role: string) => Promise<Author | null>;
   updateAuthor: (id: string, name: string, role: string) => Promise<Author | null>;
   deleteAuthor: (id: string) => Promise<boolean>;
+  addCategory: (data: CategoryInput) => Promise<Category | null>;
+  updateCategory: (id: string, data: CategoryInput) => Promise<Category | null>;
+  deleteCategory: (id: string) => Promise<boolean>;
+}
+
+export interface CategoryInput {
+  name: string;
+  slug: string;
+  description?: string;
+  color?: string;
 }
 
 export interface ArticleFormData {
@@ -407,6 +417,48 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     [supabase]
   );
 
+  const addCategory = useCallback(
+    async (data: CategoryInput): Promise<Category | null> => {
+      const { data: row, error } = await supabase
+        .from("categories")
+        .insert({ name: data.name, slug: data.slug, description: data.description || "", color: data.color || "#64748b" })
+        .select()
+        .single();
+      if (error || !row) return null;
+      const mapped = mapCategory(row);
+      setCategories((prev) => [...prev, mapped]);
+      return mapped;
+    },
+    [supabase]
+  );
+
+  const updateCategory = useCallback(
+    async (id: string, data: CategoryInput): Promise<Category | null> => {
+      const { data: row, error } = await supabase
+        .from("categories")
+        .update({ name: data.name, slug: data.slug, description: data.description || "", color: data.color || "#64748b" })
+        .eq("id", Number(id))
+        .select()
+        .single();
+      if (error || !row) return null;
+      const mapped = mapCategory(row);
+      setCategories((prev) => prev.map((c) => (c.id === id ? mapped : c)));
+      setArticles((prev) => prev.map((a) => (a.category.id === id ? { ...a, category: mapped } : a)));
+      return mapped;
+    },
+    [supabase]
+  );
+
+  const deleteCategory = useCallback(
+    async (id: string): Promise<boolean> => {
+      const { error } = await supabase.from("categories").delete().eq("id", Number(id));
+      if (error) return false;
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      return true;
+    },
+    [supabase]
+  );
+
   return (
     <AdminContext.Provider
       value={{
@@ -422,6 +474,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         addAuthor,
         updateAuthor,
         deleteAuthor,
+        addCategory,
+        updateCategory,
+        deleteCategory,
       }}
     >
       {children}
