@@ -30,11 +30,11 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' va.vercel-scripts.com vitals.vercel-insights.com",
+              "script-src 'self' 'unsafe-inline' va.vercel-scripts.com vitals.vercel-insights.com t1.kakaocdn.net",
               "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
               "font-src 'self' fonts.gstatic.com",
               "img-src 'self' erntllkkeczystqsjija.supabase.co *.go.kr https: data: blob:",
-              "connect-src 'self' erntllkkeczystqsjija.supabase.co vitals.vercel-insights.com wss://erntllkkeczystqsjija.supabase.co",
+              "connect-src 'self' erntllkkeczystqsjija.supabase.co vitals.vercel-insights.com wss://erntllkkeczystqsjija.supabase.co https://*.kakao.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
