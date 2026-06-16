@@ -12,8 +12,8 @@ function userWithRole(role?: string): User {
   return {
     id: "1",
     email: "a@b.com",
-    user_metadata: role ? { role } : {},
-    app_metadata: {},
+    user_metadata: {},
+    app_metadata: role ? { role } : {},
     aud: "authenticated",
     created_at: "",
   } as User;

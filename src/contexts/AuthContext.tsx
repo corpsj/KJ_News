@@ -33,11 +33,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function mapUser(user: SupabaseUser | null): User | null {
   if (!user || !user.email) return null;
   const metadata = user.user_metadata as Record<string, string | undefined> | undefined;
+  const appMetadata = user.app_metadata as Record<string, string | undefined> | undefined;
   return {
     id: user.id,
     email: user.email,
     name: metadata?.name || metadata?.full_name || user.email,
-    role: metadata?.role || "viewer",
+    role: appMetadata?.role || "viewer",
   };
 }
 

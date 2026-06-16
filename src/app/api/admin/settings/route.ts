@@ -11,7 +11,7 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userRole = user.user_metadata?.role as string | undefined;
+  const userRole = user.app_metadata?.role as string | undefined;
   if (userRole !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userRole = user.user_metadata?.role as string | undefined;
+  const userRole = user.app_metadata?.role as string | undefined;
   if (userRole !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
