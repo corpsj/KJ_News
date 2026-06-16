@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+// Per-user, auth-gated — never cache.
+export const dynamic = "force-dynamic";
+
 function maskKey(key: string): string {
   if (!key) return "";
   if (key.length <= 8) return "••••";
