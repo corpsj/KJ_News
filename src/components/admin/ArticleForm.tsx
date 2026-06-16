@@ -29,6 +29,9 @@ export default function ArticleForm({ article }: { article?: Article }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
+  const [thumbnailManual, setThumbnailManual] = useState(
+    isEdit && !!article?.thumbnailUrl && article.thumbnailUrl !== extractFirstImageUrl(article?.content ?? "")
+  );
   const [form, setForm] = useState<ArticleFormData>({
     title: article?.title ?? "",
     subtitle: article?.subtitle ?? "",
@@ -41,18 +44,17 @@ export default function ArticleForm({ article }: { article?: Article }) {
   });
 
   useEffect(() => {
-    if (!isEdit) {
-      const saved = localStorage.getItem(AUTOSAVE_KEY);
-      if (saved) {
-        try {
-          JSON.parse(saved);
-          setHasSavedDraft(true);
-        } catch {
-          localStorage.removeItem(AUTOSAVE_KEY);
-        }
+    // Offer recovery for both new and edit (autosave only persists when dirty).
+    const saved = localStorage.getItem(AUTOSAVE_KEY);
+    if (saved) {
+      try {
+        JSON.parse(saved);
+        setHasSavedDraft(true);
+      } catch {
+        localStorage.removeItem(AUTOSAVE_KEY);
       }
     }
-  }, [isEdit, AUTOSAVE_KEY]);
+  }, [AUTOSAVE_KEY]);
 
   function restoreDraft() {
     const saved = localStorage.getItem(AUTOSAVE_KEY);
@@ -70,15 +72,16 @@ export default function ArticleForm({ article }: { article?: Article }) {
     setHasSavedDraft(false);
   }
 
-  /* ── Auto-save every 10 seconds ── */
+  /* ── Auto-save every 10 seconds (only when there are unsaved changes) ── */
   useEffect(() => {
+    if (!isDirty) return;
     const timer = setInterval(() => {
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(form));
     }, 10000);
     return () => clearInterval(timer);
-  }, [form, AUTOSAVE_KEY]);
+  }, [form, isDirty, AUTOSAVE_KEY]);
 
-  /* ── Warn before leaving with unsaved changes ── */
+  /* ── Warn before leaving with unsaved changes (tab close / refresh) ── */
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) {
@@ -87,6 +90,26 @@ export default function ArticleForm({ article }: { article?: Article }) {
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  /* ── Guard in-app (SPA) navigation: beforeunload doesn't fire on <Link> nav ── */
+  useEffect(() => {
+    if (!isDirty) return;
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey) return;
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin === window.location.origin && url.pathname !== window.location.pathname) {
+        if (!window.confirm("저장하지 않은 변경사항이 있습니다. 이 페이지를 떠나시겠습니까?")) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
   }, [isDirty]);
 
   useEffect(() => {
@@ -105,12 +128,13 @@ export default function ArticleForm({ article }: { article?: Article }) {
 
   const contentForThumbnail = form.content;
   useEffect(() => {
+    if (thumbnailManual) return; // don't clobber an explicitly chosen thumbnail
     const url = extractFirstImageUrl(contentForThumbnail);
     setForm((prev) => {
       if (prev.thumbnailUrl === url) return prev;
       return { ...prev, thumbnailUrl: url };
     });
-  }, [contentForThumbnail]);
+  }, [contentForThumbnail, thumbnailManual]);
 
   async function handleSubmit(status: ArticleStatus = "draft") {
     if (!form.title.trim()) {
@@ -271,14 +295,52 @@ export default function ArticleForm({ article }: { article?: Article }) {
             placeholder="기사 본문을 입력하세요..."
             onImageUpload={handleEditorImageUpload}
           />
-          {form.thumbnailUrl ? (
-            <div className="flex items-center gap-2 mt-2">
-              <Image src={form.thumbnailUrl} alt="기사 썸네일 미리보기" width={64} height={40} className="object-cover rounded border border-gray-200" />
-              <span className="text-[11px] text-gray-400">썸네일로 사용될 이미지</span>
-            </div>
-          ) : (
-            <p className="text-[11px] text-gray-400 mt-1.5">본문의 첫 번째 이미지가 썸네일로 사용됩니다.</p>
-          )}
+        </div>
+
+        <div>
+          <label htmlFor="article-thumbnail" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            대표 이미지 (썸네일 · 선택)
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="article-thumbnail"
+              className="admin-input flex-1"
+              placeholder="https://... (미지정 시 본문 첫 이미지 사용)"
+              value={form.thumbnailUrl}
+              onChange={(e) => { setThumbnailManual(true); update("thumbnailUrl", e.target.value); }}
+            />
+            <label className="admin-btn admin-btn-ghost text-[13px] cursor-pointer whitespace-nowrap">
+              업로드
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const url = await handleEditorImageUpload(f);
+                  if (url) { setThumbnailManual(true); update("thumbnailUrl", url); }
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+          <div className="flex items-center gap-3 mt-2">
+            {form.thumbnailUrl ? (
+              <Image src={form.thumbnailUrl} alt="대표 이미지 미리보기" width={80} height={50} className="object-cover rounded border border-gray-200" />
+            ) : (
+              <span className="text-[11px] text-gray-400">미지정 시 본문의 첫 번째 이미지가 썸네일로 사용됩니다.</span>
+            )}
+            {thumbnailManual && (
+              <button
+                type="button"
+                className="text-[11px] text-gray-500 hover:text-gray-800 underline"
+                onClick={() => { setThumbnailManual(false); update("thumbnailUrl", extractFirstImageUrl(form.content)); }}
+              >
+                본문 첫 이미지로 되돌리기
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="border-t border-gray-100" />

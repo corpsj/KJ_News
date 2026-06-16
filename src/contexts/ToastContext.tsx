@@ -31,23 +31,30 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, toast: addToast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none">
+      <div
+        className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"
+        role="status"
+        aria-live="assertive"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
             className={`pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium shadow-sm border ${
               t.leaving ? "animate-toast-out" : "animate-toast-in"
             } ${
-              t.type === "success" ? "bg-white text-gray-900 border-gray-200" :
-              t.type === "error" ? "bg-white text-gray-900 border-gray-200" :
-              "bg-white text-gray-900 border-gray-200"
+              t.type === "success" ? "bg-green-50 text-green-800 border-green-200" :
+              t.type === "error" ? "bg-red-50 text-red-800 border-red-200" :
+              "bg-gray-900 text-white border-gray-900"
             }`}
           >
             {t.type === "success" && (
-              <svg className="w-4 h-4 text-gray-900 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
             )}
             {t.type === "error" && (
-              <svg className="w-4 h-4 text-gray-900 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg className="w-4 h-4 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            )}
+            {t.type === "info" && (
+              <svg className="w-4 h-4 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             )}
             {t.message}
           </div>
