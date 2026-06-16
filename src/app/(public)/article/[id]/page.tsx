@@ -265,7 +265,7 @@ export default async function ArticlePage({ params }: PageProps) {
                   className="block w-full h-auto"
                 />
               </div>
-              <figcaption className="text-xs text-gray-400 mt-2 text-center">
+              <figcaption className="text-xs text-gray-500 mt-2 text-center">
                 {article.title}
               </figcaption>
             </figure>

@@ -57,6 +57,16 @@ export default function LandingPopup() {
   }
 
   const visible = popups.filter((p) => !dismissed.has(p.id));
+
+  useEffect(() => {
+    if (visible.length === 0) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismiss(visible[visible.length - 1].id, false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [visible]);
+
   if (!mounted || visible.length === 0) return null;
 
   return (
@@ -64,6 +74,8 @@ export default function LandingPopup() {
       {visible.map((popup, idx) => (
         <div
           key={popup.id}
+          role="dialog"
+          aria-label={popup.title}
           className="fixed z-[100] shadow-lg border border-gray-300 bg-white"
           style={{
             left: 30 + idx * 24,

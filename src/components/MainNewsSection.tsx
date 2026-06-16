@@ -17,12 +17,13 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [paused, setPaused] = useState(false);
   const leftRef = useRef<HTMLDivElement>(null);
 
   const selected = limitedArticles[selectedIndex] || limitedArticles[0];
 
   useEffect(() => {
-    if (limitedArticles.length <= 1 || isHovering) return;
+    if (limitedArticles.length <= 1 || isHovering || paused) return;
 
     const interval = setInterval(() => {
       const nextIndex = (selectedIndex + 1) % limitedArticles.length;
@@ -34,7 +35,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
     }, AUTO_ROTATE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [limitedArticles.length, isHovering, selectedIndex, isAnimating]);
+  }, [limitedArticles.length, isHovering, paused, selectedIndex, isAnimating]);
 
   const handleSelect = (index: number) => {
     if (isAnimating || index === selectedIndex) return;
@@ -55,12 +56,25 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
   if (limitedArticles.length === 0) return null;
 
   return (
-    <div className="w-full">
-      <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 mb-3 border-b-2 border-gray-900">
-        주요 뉴스
-      </h2>
+    <section className="w-full" aria-label="주요 뉴스" aria-roledescription="회전식 뉴스">
+      <div className="flex items-center justify-between pb-2 mb-3 border-b-2 border-gray-900">
+        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+          주요 뉴스
+        </h2>
+        {limitedArticles.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setPaused((p) => !p)}
+            aria-pressed={paused}
+            aria-label={paused ? "주요 뉴스 자동 전환 재생" : "주요 뉴스 자동 전환 멈춤"}
+            className="text-[11px] text-gray-500 hover:text-gray-900 px-2 py-1 rounded"
+          >
+            {paused ? "▶ 재생" : "❚❚ 멈춤"}
+          </button>
+        )}
+      </div>
       <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
-        <div ref={leftRef} className="lg:w-[58%] flex-shrink-0">
+        <div ref={leftRef} className="lg:w-[58%] flex-shrink-0" aria-live="polite">
           <Link 
             href={`/article/${selected.id}`} 
             className="group block transition-all duration-500 ease-in-out"
@@ -102,7 +116,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
               <p className="text-[13px] md:text-[14px] text-gray-500 mt-2 line-clamp-3 leading-relaxed transition-opacity duration-500">
                 {selected.excerpt}
               </p>
-              <span className="text-xs text-gray-400 mt-2 block">
+              <span className="text-xs text-gray-600 mt-2 block">
                 {selected.author.name} · {formatDate(selected.publishedAt)}
               </span>
             </div>
@@ -126,6 +140,9 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
                   className="flex gap-2 w-full items-center cursor-pointer py-1"
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
+                  onFocus={() => handleMouseEnter(index)}
+                  onBlur={handleMouseLeave}
+                  aria-current={isActive ? "true" : undefined}
                 >
                   <div
                     className={`flex-shrink-0 w-1 rounded-full h-4 transition-all duration-300 ${
@@ -137,7 +154,7 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
                       <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-gray-200 text-gray-600">
                         {article.category.name}
                       </span>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-gray-600">
                         {formatDate(article.publishedAt)}
                       </span>
                     </div>
@@ -157,6 +174,6 @@ export default function MainNewsSection({ articles }: MainNewsSectionProps) {
           })}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

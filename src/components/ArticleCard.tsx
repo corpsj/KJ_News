@@ -21,7 +21,7 @@ export default function ArticleCard({ article }: { article: Article }) {
           <p className="text-[14px] text-gray-500 leading-relaxed line-clamp-3 mb-4">
             {article.excerpt}
           </p>
-          <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between text-xs text-gray-600 pt-3 border-t border-gray-100">
             <span>{article.author.name}</span>
             <span>{formatDate(article.publishedAt)}</span>
           </div>
@@ -54,7 +54,7 @@ export default function ArticleCard({ article }: { article: Article }) {
         <p className="text-[13px] md:text-sm text-gray-500 line-clamp-2 mb-3">
           {article.excerpt}
         </p>
-        <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center justify-between text-xs text-gray-600">
           <span>{article.author.name}</span>
           <span>{formatDate(article.publishedAt)}</span>
         </div>
